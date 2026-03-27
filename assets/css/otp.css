@@ -1,0 +1,21 @@
+.gf-otp-modal { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; }
+.gf-otp-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+.gf-otp-modal-content { position: relative; background: #fff; border-radius: 12px; width: 90%; max-width: 400px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+.gf-otp-modal-header { padding: 20px 24px; border-bottom: 1px solid #e5e7eb; }
+.gf-otp-modal-header h3 { margin: 0; font-size: 18px; font-weight: 600; color: #111827; }
+.gf-otp-modal-body { padding: 24px; }
+.gf-otp-info { margin: 0 0 16px; font-size: 14px; color: #6b7280; line-height: 1.5; }
+.gf-otp-message { margin-bottom: 12px; padding: 10px 14px; border-radius: 8px; font-size: 13px; display: none; }
+.gf-otp-message.gf-otp-error { display: block; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.gf-otp-message.gf-otp-success { display: block; background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.gf-otp-input-wrap { margin-bottom: 16px; }
+.gf-otp-input { width: 100%; padding: 12px 16px; font-size: 24px; letter-spacing: 0.5em; text-align: center; border: 2px solid #e5e7eb; border-radius: 8px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.gf-otp-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+.gf-otp-btn { display: block; width: 100%; padding: 12px; font-size: 15px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+.gf-otp-btn-primary { background: #6366f1; color: #fff; }
+.gf-otp-btn-primary:hover { background: #4f46e5; }
+.gf-otp-btn-primary:disabled { background: #a5b4fc; cursor: not-allowed; }
+.gf-otp-footer { margin-top: 16px; text-align: center; font-size: 13px; color: #6b7280; }
+.gf-otp-footer a { color: #6366f1; text-decoration: none; margin-left: 4px; }
+.gf-otp-footer a:hover { text-decoration: underline; }
+.gf-otp-countdown { color: #6b7280; margin-left: 4px; }

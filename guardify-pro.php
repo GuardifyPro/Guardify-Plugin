@@ -29,6 +29,9 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-delivery.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-search.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-phone-validation.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-smart-filter.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-otp.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-vpn-block.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-repeat-blocker.php';
 
 /**
  * Main plugin class.
@@ -64,6 +67,9 @@ final class Guardify_Pro {
         Guardify_Delivery::get_instance();
         Guardify_Phone_Validation::get_instance();
         Guardify_Smart_Filter::get_instance();
+        Guardify_OTP::get_instance();
+        Guardify_VPN_Block::get_instance();
+        Guardify_Repeat_Blocker::get_instance();
 
         // Admin menu
         add_action('admin_menu', [$this, 'register_menu']);

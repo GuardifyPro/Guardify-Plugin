@@ -95,8 +95,19 @@ class Guardify_Smart_Filter {
                 break;
 
             case 'otp':
-                // Phase 4: OTP verification will be added here
-                // For now, treat as flag
+                // Require OTP verification for low-DP customers
+                if (get_option('guardify_otp_enabled', 'no') === 'yes' && WC()->session) {
+                    $verified = WC()->session->get('guardify_otp_verified', false);
+                    if (!$verified) {
+                        wc_add_notice(
+                            sprintf(
+                                'এই ফোন নম্বরের DP রেশিও কম (%.1f%%)। অর্ডার দিতে ফোন ভেরিফিকেশন প্রয়োজন।',
+                                $dp_ratio
+                            ),
+                            'error'
+                        );
+                    }
+                }
                 WC()->session->set('guardify_dp_flagged', [
                     'phone'    => $phone,
                     'dp_ratio' => $dp_ratio,

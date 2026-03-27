@@ -1,0 +1,7 @@
+.gf-vpn-popup { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; }
+.gf-vpn-popup-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); }
+.gf-vpn-popup-content { position: relative; background: #fff; border-radius: 12px; width: 90%; max-width: 420px; padding: 32px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+.gf-vpn-popup-icon { font-size: 48px; margin-bottom: 16px; }
+.gf-vpn-popup-content h3 { margin: 0 0 12px; font-size: 20px; font-weight: 700; color: #dc2626; }
+.gf-vpn-popup-content p { margin: 0 0 8px; font-size: 14px; color: #4b5563; line-height: 1.6; }
+.gf-vpn-warning { font-weight: 600; color: #b91c1c !important; margin-top: 12px !important; }
