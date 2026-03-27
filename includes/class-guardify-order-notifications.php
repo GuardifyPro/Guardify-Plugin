@@ -42,7 +42,7 @@ class Guardify_Order_Notifications {
         }
 
         $saved = get_option('guardify_notification_templates', []);
-        $this->templates = !empty($saved) ? $saved : self::default_templates();
+        $this->templates = array_merge(self::default_templates(), is_array($saved) ? $saved : []);
     }
 
     /**

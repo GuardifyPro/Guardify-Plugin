@@ -501,6 +501,14 @@
     border-bottom-color: var(--gf-primary);
 }
 
+.gf-tab-content {
+    display: none;
+}
+
+.gf-tab-content.active {
+    display: block;
+}
+
 /* ─── Delivery Badge (Order Column) ───────────────────────────────────── */
 
 .gf-delivery-badge {

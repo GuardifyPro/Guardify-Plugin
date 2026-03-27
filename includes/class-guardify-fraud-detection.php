@@ -102,6 +102,7 @@ class Guardify_Fraud_Detection {
         }
 
         $ip = $this->get_client_ip();
+        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
 
         global $wpdb;
 
@@ -114,15 +115,17 @@ class Guardify_Fraud_Detection {
             $order_ids = $existing->order_ids ? $existing->order_ids . ',' . $order_id : (string) $order_id;
             $wpdb->update($this->table_name, [
                 'ip_address' => $ip,
+                'user_agent' => $user_agent,
                 'order_ids'  => $order_ids,
                 'last_seen'  => current_time('mysql'),
-            ], ['id' => $existing->id], ['%s', '%s', '%s'], ['%d']);
+            ], ['id' => $existing->id], ['%s', '%s', '%s', '%s'], ['%d']);
         } else {
             $wpdb->insert($this->table_name, [
                 'phone'      => $phone,
                 'ip_address' => $ip,
+                'user_agent' => $user_agent,
                 'order_ids'  => (string) $order_id,
-            ], ['%s', '%s', '%s']);
+            ], ['%s', '%s', '%s', '%s']);
         }
     }
 

@@ -50,7 +50,10 @@ class Guardify_VPN_Block {
         $d = isset($result['data']) ? $result['data'] : $result;
 
         $risk = isset($d['risk_level']) ? $d['risk_level'] : 'clean';
-        if ($risk === 'high_risk' || $risk === 'high') {
+        $is_vpn = !empty($d['is_vpn']);
+        $is_proxy = !empty($d['is_proxy']);
+
+        if ($risk === 'high_risk' || $risk === 'high' || $is_vpn || $is_proxy) {
             wc_add_notice('VPN/প্রক্সি সনাক্ত হয়েছে। নিরাপত্তার কারণে অর্ডার প্লেস করা যাচ্ছে না। অনুগ্রহ করে VPN বন্ধ করে আবার চেষ্টা করুন।', 'error');
         }
     }

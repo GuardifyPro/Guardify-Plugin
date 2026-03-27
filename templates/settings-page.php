@@ -255,7 +255,7 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
             </div>
             <div class="gf-card-body">
                 <p class="gf-text-muted" style="margin-bottom: 1rem;">
-                    ভেরিয়েবল: <code>{customer_name}</code>, <code>{order_id}</code>, <code>{order_total}</code>, <code>{site_name}</code>, <code>{status}</code>
+                    ভেরিয়েবল: <code>{customer_name}</code>, <code>{order_number}</code>, <code>{product_name}</code>, <code>{order_total}</code>, <code>{order_date}</code>, <code>{siteurl}</code>
                 </p>
                 <?php foreach ($wc_statuses as $slug => $label) : ?>
                 <div class="gf-form-group" style="margin-bottom: 1rem;">
