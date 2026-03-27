@@ -32,6 +32,12 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-smart-filter.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-otp.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-vpn-block.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-repeat-blocker.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-custom-status.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-phone-history.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-report-column.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-order-notifications.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-incomplete-orders.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-fraud-detection.php';
 
 /**
  * Main plugin class.
@@ -70,6 +76,12 @@ final class Guardify_Pro {
         Guardify_OTP::get_instance();
         Guardify_VPN_Block::get_instance();
         Guardify_Repeat_Blocker::get_instance();
+        Guardify_Custom_Status::get_instance();
+        Guardify_Phone_History::get_instance();
+        Guardify_Report_Column::get_instance();
+        Guardify_Order_Notifications::get_instance();
+        Guardify_Incomplete_Orders::get_instance();
+        Guardify_Fraud_Detection::get_instance();
 
         // Admin menu
         add_action('admin_menu', [$this, 'register_menu']);
@@ -114,6 +126,15 @@ final class Guardify_Pro {
             'guardify-search',
             [Guardify_Search::get_instance(), 'render_search_page']
         );
+
+        add_submenu_page(
+            'guardify-pro',
+            'ইনকমপ্লিট অর্ডার',
+            'ইনকমপ্লিট অর্ডার <span class="awaiting-mod">' . Guardify_Incomplete_Orders::get_pending_count() . '</span>',
+            'manage_woocommerce',
+            'guardify-incomplete',
+            [$this, 'render_incomplete_page']
+        );
     }
 
     public function render_settings_page() {
@@ -123,8 +144,15 @@ final class Guardify_Pro {
         include GUARDIFY_PATH . 'templates/settings-page.php';
     }
 
+    public function render_incomplete_page() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(esc_html__('Unauthorized', 'guardify-pro'));
+        }
+        include GUARDIFY_PATH . 'templates/incomplete-orders-page.php';
+    }
+
     public function enqueue_admin_assets($hook) {
-        $guardify_pages = ['guardify-pro', 'guardify-search'];
+        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete'];
         $is_guardify = false;
         foreach ($guardify_pages as $page) {
             if (strpos($hook, $page) !== false) {

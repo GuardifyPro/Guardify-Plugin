@@ -12,6 +12,10 @@ class Guardify_Activator {
             add_option('guardify_secret_key_enc', '');
         }
 
+        // Create custom DB tables
+        Guardify_Incomplete_Orders::create_table();
+        Guardify_Fraud_Detection::create_tables();
+
         // Flush rewrite rules
         flush_rewrite_rules();
     }
