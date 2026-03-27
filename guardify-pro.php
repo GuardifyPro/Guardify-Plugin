@@ -39,6 +39,17 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-order-notifications.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-incomplete-orders.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-fraud-detection.php';
 
+// ─── Auto-Update via GitHub Releases ─────────────────────────────
+require_once GUARDIFY_PATH . 'plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$guardifyUpdateChecker = PucFactory::buildUpdateChecker(
+    'https://github.com/GuardifyPro/Guardify-Plugin/',
+    GUARDIFY_FILE,
+    'guardify-pro'
+);
+$guardifyUpdateChecker->setBranch('main');
+
 /**
  * Main plugin class.
  */
