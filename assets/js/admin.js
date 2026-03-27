@@ -154,6 +154,46 @@
         });
     });
 
+    /* ── Support Ticket ──────────────────────────────────────────────── */
+
+    $(document).on('click', '#gf-support-submit', function () {
+        var subject = $('#gf-support-subject').val().trim();
+        var message = $('#gf-support-message').val().trim();
+        var $msg    = $('#gf-support-msg');
+
+        if (!subject || !message) {
+            $msg.text('বিষয় ও বিস্তারিত আবশ্যক').css('color', 'var(--gf-destructive)').show();
+            return;
+        }
+
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('পাঠানো হচ্ছে...');
+        $msg.hide();
+
+        $.post(data.ajaxUrl, {
+            action:   'guardify_support_ticket',
+            _wpnonce: data.nonce,
+            subject:  subject,
+            message:  message
+        })
+        .done(function (res) {
+            if (res.success) {
+                $msg.text('✓ টিকেট পাঠানো হয়েছে').css('color', 'var(--gf-success)').show();
+                $('#gf-support-subject').val('');
+                $('#gf-support-message').val('');
+            } else {
+                $msg.text('✕ ' + (res.data || 'টিকেট পাঠানো যায়নি')).css('color', 'var(--gf-destructive)').show();
+            }
+        })
+        .fail(function () {
+            $msg.text('✕ সার্ভারে সংযোগ ত্রুটি').css('color', 'var(--gf-destructive)').show();
+        })
+        .always(function () {
+            $btn.prop('disabled', false).text('টিকেট পাঠান');
+            setTimeout(function () { $msg.fadeOut(); }, 5000);
+        });
+    });
+
     /* ── Helpers ───────────────────────────────────────────────────────── */
 
     function showMsg(type, text) {

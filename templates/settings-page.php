@@ -9,6 +9,25 @@ $api       = new Guardify_API();
 $connected = $api->is_connected();
 $api_key   = get_option('guardify_api_key', '');
 
+// Fetch active banner and announcements
+$banner_data = null;
+$announcements_data = [];
+if ($connected) {
+    $banner_result = $api->get('/api/v1/content/banner');
+    if (!empty($banner_result['active'])) {
+        $banner_data = $banner_result;
+    } elseif (!empty($banner_result['data']['active'])) {
+        $banner_data = $banner_result['data'];
+    }
+    $ann_result = $api->get('/api/v1/content/announcement');
+    if (is_array($ann_result) && !isset($ann_result['error'])) {
+        $announcements_data = isset($ann_result['data']) && is_array($ann_result['data']) ? $ann_result['data'] : $ann_result;
+        if (!is_array($announcements_data)) {
+            $announcements_data = [];
+        }
+    }
+}
+
 // Load all settings
 $settings = [
     'smart_filter_enabled'        => get_option('guardify_smart_filter_enabled', 'yes'),
@@ -118,12 +137,47 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
         </div>
     </div>
 
+    <?php if ($banner_data && !empty($banner_data['message'])) : ?>
+    <!-- Active Banner -->
+    <div class="gf-card" style="margin-top: 1.25rem; border-left: 4px solid #f59e0b;">
+        <div class="gf-card-body" style="padding: 1rem 1.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.25rem;">📢</span>
+                <div style="flex: 1;">
+                    <p style="margin: 0; font-weight: 500; color: var(--gf-text);"><?php echo esc_html($banner_data['message']); ?></p>
+                    <?php if (!empty($banner_data['url'])) : ?>
+                    <a href="<?php echo esc_url($banner_data['url']); ?>" target="_blank" rel="noopener" style="font-size: 0.875rem; color: #3b82f6; text-decoration: underline;">বিস্তারিত দেখুন →</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <?php if (!empty($announcements_data)) : ?>
+    <!-- Announcements -->
+    <div class="gf-card" style="margin-top: 1rem;">
+        <div class="gf-card-header">
+            <h2 class="gf-card-title">📋 ঘোষণা</h2>
+        </div>
+        <div class="gf-card-body" style="padding: 0;">
+            <?php foreach ($announcements_data as $ann) : ?>
+            <div style="padding: 0.75rem 1.25rem; border-bottom: 1px solid var(--gf-border, #e5e7eb);">
+                <p style="margin: 0; font-weight: 500; color: var(--gf-text);"><?php echo esc_html($ann['message'] ?? ''); ?></p>
+                <span style="font-size: 0.75rem; color: var(--gf-muted, #6b7280);">v<?php echo esc_html($ann['version'] ?? ''); ?></span>
+            </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Tabs -->
     <div class="gf-tabs" style="margin-top: 2rem;">
         <button class="gf-tab active" data-tab="features">ফিচার সমূহ</button>
         <button class="gf-tab" data-tab="smart-filter">স্মার্ট ফিল্টার</button>
         <button class="gf-tab" data-tab="notifications">SMS নোটিফিকেশন</button>
         <button class="gf-tab" data-tab="connection">সংযোগ</button>
+        <button class="gf-tab" data-tab="support">সাপোর্ট</button>
     </div>
 
     <!-- Tab: Features -->
@@ -278,6 +332,30 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
                     সংযোগ বিচ্ছিন্ন করলে এই সাইটে Guardify Pro নিষ্ক্রিয় হবে।
                 </p>
                 <button id="gf-disconnect-btn" class="gf-btn gf-btn-danger">সংযোগ বিচ্ছিন্ন করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Support -->
+    <div class="gf-tab-content" id="gf-tab-support" style="display: none;">
+        <div class="gf-card">
+            <div class="gf-card-header">
+                <h2 class="gf-card-title">সাপোর্ট টিকেট পাঠান</h2>
+            </div>
+            <div class="gf-card-body">
+                <p class="gf-text-muted" style="margin-bottom: 1rem;">সমস্যা বা প্রশ্ন থাকলে আমাদের জানান। আমরা শীঘ্রই উত্তর দেব।</p>
+                <div class="gf-form">
+                    <div class="gf-form-group" style="margin-bottom: 1rem;">
+                        <label class="gf-label">বিষয় *</label>
+                        <input type="text" id="gf-support-subject" class="gf-input" placeholder="আপনার সমস্যার বিষয়" />
+                    </div>
+                    <div class="gf-form-group" style="margin-bottom: 1rem;">
+                        <label class="gf-label">বিস্তারিত *</label>
+                        <textarea id="gf-support-message" class="gf-input" rows="4" placeholder="আপনার সমস্যা বিস্তারিত লিখুন..."></textarea>
+                    </div>
+                    <button type="button" id="gf-support-submit" class="gf-btn gf-btn-primary">টিকেট পাঠান</button>
+                    <span id="gf-support-msg" style="display: none; margin-left: 1rem;" class="gf-text-muted"></span>
+                </div>
             </div>
         </div>
     </div>

@@ -106,6 +106,7 @@ final class Guardify_Pro {
         add_action('wp_ajax_guardify_disconnect', [$this, 'ajax_disconnect']);
         add_action('wp_ajax_guardify_status', [$this, 'ajax_status']);
         add_action('wp_ajax_guardify_save_settings', [$this, 'ajax_save_settings']);
+        add_action('wp_ajax_guardify_support_ticket', [$this, 'ajax_support_ticket']);
 
         // REST API
         add_action('rest_api_init', [$this, 'register_rest_routes']);
@@ -257,6 +258,34 @@ final class Guardify_Pro {
         $api = new Guardify_API();
         $api->clear_credentials();
         wp_send_json_success();
+    }
+
+    public function ajax_support_ticket() {
+        check_ajax_referer('guardify_nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $subject = isset($_POST['subject']) ? sanitize_text_field(wp_unslash($_POST['subject'])) : '';
+        $message = isset($_POST['message']) ? sanitize_textarea_field(wp_unslash($_POST['message'])) : '';
+
+        if (empty($subject) || empty($message)) {
+            wp_send_json_error('বিষয় ও বিস্তারিত আবশ্যক।');
+        }
+
+        $api = new Guardify_API();
+        $result = $api->post('/api/v1/support/ticket', [
+            'subject' => $subject,
+            'message' => $message,
+        ]);
+
+        if (!empty($result['data']['id']) || !empty($result['id'])) {
+            wp_send_json_success(['message' => 'টিকেট সফলভাবে পাঠানো হয়েছে।']);
+        }
+
+        $error = isset($result['error']) ? $result['error'] : 'টিকেট পাঠানো যায়নি।';
+        wp_send_json_error($error);
     }
 
     public function ajax_status() {
