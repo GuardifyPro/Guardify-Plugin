@@ -187,11 +187,17 @@ class Guardify_Search {
                 // Courier table
                 var $tbody = $('#gf-r-courier-rows').empty();
                 if (d.providers && d.providers.length > 0) {
-                    d.providers.forEach(function(p) {
+                    d.providers.forEach(function(p, idx) {
                         var sr = p.total_parcels > 0 ? ((p.total_delivered / p.total_parcels) * 100).toFixed(1) + '%' : '—';
+                        var hasDetails = p.details && p.details.length > 0;
+                        var toggleId = 'gf-detail-' + idx;
+                        var nameHtml = hasDetails
+                            ? '<button type="button" class="gf-expand-btn" data-target="' + toggleId + '" style="background:none;border:none;cursor:pointer;padding:0;font:inherit;color:var(--gf-primary);display:inline-flex;align-items:center;gap:4px;">' +
+                              '<span class="gf-expand-arrow" style="display:inline-block;transition:transform .2s;">&#9654;</span> ' + esc(p.provider) + '</button>'
+                            : '<strong>' + esc(p.provider) + '</strong>';
                         $tbody.append(
                             '<tr>' +
-                            '<td><strong>' + esc(p.provider) + '</strong></td>' +
+                            '<td>' + nameHtml + '</td>' +
                             '<td>' + p.total_parcels + '</td>' +
                             '<td style="color:var(--gf-success);">' + p.total_delivered + '</td>' +
                             '<td>' + (p.total_cancelled || 0) + '</td>' +
@@ -199,6 +205,31 @@ class Guardify_Search {
                             '<td><strong>' + sr + '</strong></td>' +
                             '</tr>'
                         );
+                        if (hasDetails) {
+                            var detailRows = '<tr id="' + toggleId + '" style="display:none;"><td colspan="6" style="padding:0;">' +
+                                '<table class="gf-table" style="background:var(--gf-muted);margin:0;"><thead><tr>' +
+                                '<th>ট্র্যাকিং</th><th>স্ট্যাটাস</th><th>COD</th><th>তারিখ</th>' +
+                                '</tr></thead><tbody>';
+                            p.details.forEach(function(det, di) {
+                                var statusCls = det.status === 'DELIVERED' ? 'gf-badge-success' : (det.status === 'CANCELLED' || det.status === 'RETURNED' ? 'gf-badge-danger' : 'gf-badge-secondary');
+                                detailRows += '<tr>' +
+                                    '<td style="font-family:monospace;">' + esc(det.tracking_id || '—') + '</td>' +
+                                    '<td><span class="gf-badge ' + statusCls + '">' + esc(det.status || '—') + '</span></td>' +
+                                    '<td>' + (det.cod_amount ? '৳' + det.cod_amount : '—') + '</td>' +
+                                    '<td>' + (det.created_at ? new Date(det.created_at).toLocaleDateString('bn-BD') : '—') + '</td>' +
+                                    '</tr>';
+                            });
+                            detailRows += '</tbody></table></td></tr>';
+                            $tbody.append(detailRows);
+                        }
+                    });
+                    // Toggle expand/collapse
+                    $tbody.on('click', '.gf-expand-btn', function() {
+                        var target = $(this).data('target');
+                        var $row = $('#' + target);
+                        var $arrow = $(this).find('.gf-expand-arrow');
+                        $row.toggle();
+                        $arrow.css('transform', $row.is(':visible') ? 'rotate(90deg)' : 'rotate(0deg)');
                     });
                     $('#gf-r-courier-table').show();
                 } else {
