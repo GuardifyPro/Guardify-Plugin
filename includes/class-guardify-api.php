@@ -92,15 +92,18 @@ class Guardify_API {
 
         $method = strtoupper($method);
         $url    = $this->engine_url . $path;
+        $signed_path = $path;
 
         if ($method === 'GET' && !empty($data)) {
-            $url .= '?' . http_build_query($data);
+            $query = http_build_query($data);
+            $url .= '?' . $query;
+            $signed_path = $path . '?' . $query;
             $body_str = '';
         } else {
             $body_str = wp_json_encode($data);
         }
 
-        $headers = $this->sign_request($method, $path, $body_str);
+        $headers = $this->sign_request($method, $signed_path, $body_str);
 
         $args = [
             'method'  => $method,

@@ -104,7 +104,7 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
             </div>
             <div>
                 <p class="gf-stat-label">API Key</p>
-                <p class="gf-stat-value" style="font-size: 0.875rem; word-break: break-all;"><?php echo esc_html($api_key); ?></p>
+                <p class="gf-stat-value" style="font-size: 0.875rem; word-break: break-all;"><?php echo esc_html(substr($api_key, 0, 8) . str_repeat('•', max(0, strlen($api_key) - 8))); ?></p>
             </div>
         </div>
         <div class="gf-stat-card">

@@ -46,6 +46,10 @@ class Guardify_OTP {
      */
     public function check_verification() {
         if (!WC()->session) {
+            $api = new Guardify_API();
+            if ($api->is_connected()) {
+                wc_add_notice('ফোন ভেরিফিকেশন সম্ভব হয়নি। অনুগ্রহ করে ব্রাউজার চেকআউট ব্যবহার করুন।', 'error');
+            }
             return;
         }
 

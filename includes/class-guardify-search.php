@@ -230,7 +230,7 @@ class Guardify_Search {
         }
 
         $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
-        if (empty($phone) || !preg_match('/^01\d{9}$/', $phone)) {
+        if (empty($phone) || !preg_match('/^01[3-9]\d{8}$/', $phone)) {
             wp_send_json_error('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)');
         }
 

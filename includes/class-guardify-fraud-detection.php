@@ -53,9 +53,10 @@ class Guardify_Fraud_Detection {
     public static function create_tables() {
         global $wpdb;
         $charset = $wpdb->get_charset_collate();
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
         $tracking = $wpdb->prefix . 'guardify_fraud_tracking';
-        $wpdb->query("CREATE TABLE IF NOT EXISTS {$tracking} (
+        dbDelta("CREATE TABLE {$tracking} (
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             phone VARCHAR(20) NOT NULL,
             ip_address VARCHAR(45) NULL,
@@ -70,7 +71,7 @@ class Guardify_Fraud_Detection {
         ) {$charset};");
 
         $blocks = $wpdb->prefix . 'guardify_blocks';
-        $wpdb->query("CREATE TABLE IF NOT EXISTS {$blocks} (
+        dbDelta("CREATE TABLE {$blocks} (
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             block_type VARCHAR(20) NOT NULL,
             block_value VARCHAR(255) NOT NULL,
@@ -410,7 +411,7 @@ class Guardify_Fraud_Detection {
                 if (strpos($ip, ',') !== false) {
                     $ip = trim(explode(',', $ip)[0]);
                 }
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
                     return $ip;
                 }
             }

@@ -196,7 +196,6 @@ final class Guardify_Pro {
             'ajaxUrl'  => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('guardify_nonce'),
             'checkoutNonce' => wp_create_nonce('guardify_checkout_nonce'),
-            'apiKey'   => get_option('guardify_api_key', ''),
             'connected' => !empty(get_option('guardify_api_key', '')),
         ]);
     }
@@ -227,9 +226,9 @@ final class Guardify_Pro {
         }
 
         $api_key    = isset($_POST['api_key']) ? sanitize_text_field(wp_unslash($_POST['api_key'])) : '';
-        $secret_key = isset($_POST['secret_key']) ? sanitize_text_field(wp_unslash($_POST['secret_key'])) : '';
+        $secret_key = isset($_POST['secret_key']) ? trim(wp_unslash($_POST['secret_key'])) : '';
 
-        if (empty($api_key) || empty($secret_key)) {
+        if (empty($api_key) || empty($secret_key) || !preg_match('/^[a-zA-Z0-9_\-]+$/', $secret_key)) {
             wp_send_json_error('API Key ও Secret Key প্রয়োজন।');
         }
 
@@ -347,10 +346,17 @@ final class Guardify_Pro {
             : [];
         update_option('guardify_notification_statuses', $statuses);
 
-        // Notification templates (associative array)
-        $templates = isset($_POST['guardify_notification_templates']) && is_array($_POST['guardify_notification_templates'])
-            ? array_map('sanitize_textarea_field', wp_unslash($_POST['guardify_notification_templates']))
-            : [];
+        // Notification templates (associative array — validate keys against WC statuses)
+        $valid_statuses = array_keys(wc_get_order_statuses());
+        $raw_templates = isset($_POST['guardify_notification_templates']) && is_array($_POST['guardify_notification_templates'])
+            ? $_POST['guardify_notification_templates'] : [];
+        $templates = [];
+        foreach ($raw_templates as $slug => $tpl) {
+            $slug = sanitize_text_field(wp_unslash($slug));
+            if (in_array($slug, $valid_statuses, true)) {
+                $templates[$slug] = sanitize_textarea_field(wp_unslash($tpl));
+            }
+        }
         update_option('guardify_notification_templates', $templates);
 
         wp_send_json_success(['message' => 'সেটিংস সংরক্ষিত হয়েছে।']);

@@ -121,6 +121,7 @@ class Guardify_Incomplete_Orders {
             foreach (WC()->cart->get_cart() as $item) {
                 $product = $item['data'];
                 $cart_items[] = [
+                    'product_id' => $item['product_id'],
                     'name' => $product->get_name(),
                     'qty'  => $item['quantity'],
                     'price' => $product->get_price(),
@@ -286,14 +287,23 @@ class Guardify_Incomplete_Orders {
         $order->set_billing_city($row->city ?: '');
 
         foreach ($cart_items as $item) {
-            // Try to find the product by name
-            $products = wc_get_products([
-                'limit'  => 1,
-                'status' => 'publish',
-                's'      => $item['name'],
-            ]);
-            if (!empty($products)) {
-                $order->add_product($products[0], $item['qty']);
+            // Try to find the product by stored product_id first, then by name
+            $product = null;
+            if (!empty($item['product_id'])) {
+                $product = wc_get_product($item['product_id']);
+            }
+            if (!$product) {
+                $products = wc_get_products([
+                    'limit'  => 1,
+                    'status' => 'publish',
+                    's'      => $item['name'],
+                ]);
+                if (!empty($products)) {
+                    $product = $products[0];
+                }
+            }
+            if ($product) {
+                $order->add_product($product, $item['qty']);
             } else {
                 // Add as a fee/line item with name
                 $fee = new WC_Order_Item_Fee();

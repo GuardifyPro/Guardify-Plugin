@@ -63,7 +63,10 @@ class Guardify_Smart_Filter {
         }
 
         $dp_ratio = isset($result['dp_ratio']) ? (float) $result['dp_ratio'] : (float) $result['data']['dp_ratio'];
-        $total    = isset($result['total']) ? (int) $result['total'] : (isset($result['data']['total']) ? (int) $result['data']['total'] : 0);
+        $total    = isset($result['total_parcels']) ? (int) $result['total_parcels']
+            : (isset($result['data']['total_parcels']) ? (int) $result['data']['total_parcels']
+            : (isset($result['total']) ? (int) $result['total']
+            : (isset($result['data']['total']) ? (int) $result['data']['total'] : 0)));
 
         // Skip new customers (no parcel history)
         if ($this->skip_new && $total === 0) {
