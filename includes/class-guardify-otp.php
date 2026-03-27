@@ -111,6 +111,14 @@ class Guardify_OTP {
             wp_send_json_error(['message' => 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)']);
         }
 
+        // Rate limit: max 3 OTP requests per phone per 5 minutes
+        $throttle_key = 'gf_otp_' . md5($phone);
+        $attempts = (int) get_transient($throttle_key);
+        if ($attempts >= 3) {
+            wp_send_json_error(['message' => 'অনেক বেশি চেষ্টা। ৫ মিনিট পর আবার চেষ্টা করুন।']);
+        }
+        set_transient($throttle_key, $attempts + 1, 5 * MINUTE_IN_SECONDS);
+
         $api = new Guardify_API();
         $result = $api->post('/api/v1/otp/send', [
             'phone'   => $phone,
@@ -121,7 +129,7 @@ class Guardify_OTP {
             wp_send_json_success(['message' => 'OTP পাঠানো হয়েছে।']);
         }
 
-        $msg = isset($result['message']) ? $result['message'] : 'OTP পাঠানো যায়নি।';
+        $msg = isset($result['error']) ? $result['error'] : 'OTP পাঠানো যায়নি।';
         wp_send_json_error(['message' => $msg]);
     }
 
@@ -156,7 +164,7 @@ class Guardify_OTP {
             wp_send_json_success(['message' => 'ফোন নম্বর ভেরিফাই হয়েছে!']);
         }
 
-        $msg = isset($result['message']) ? $result['message'] : 'ভুল OTP।';
+        $msg = isset($result['error']) ? $result['error'] : 'ভুল OTP।';
         wp_send_json_error(['message' => $msg]);
     }
 

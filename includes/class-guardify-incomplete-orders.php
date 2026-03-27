@@ -243,12 +243,7 @@ class Guardify_Incomplete_Orders {
             'purpose' => 'recovery',
         ]);
 
-        if (!empty($result['status']) && $result['status'] === 'sent') {
-            wp_send_json_success(['message' => 'SMS পাঠানো হয়েছে']);
-        }
-
-        // Accept any non-error response as success (gateway may return various formats)
-        if (!isset($result['error'])) {
+        if (!empty($result['success']) && $result['success'] === true) {
             wp_send_json_success(['message' => 'SMS পাঠানো হয়েছে']);
         }
 
