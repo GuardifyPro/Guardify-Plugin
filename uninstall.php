@@ -17,13 +17,16 @@ delete_option('guardify_smart_filter_action');
 delete_option('guardify_smart_filter_skip_new');
 delete_option('guardify_otp_enabled');
 delete_option('guardify_vpn_block_enabled');
-delete_option('guardify_repeat_block_enabled');
-delete_option('guardify_repeat_block_hours');
-delete_option('guardify_repeat_block_max');
+delete_option('guardify_repeat_blocker_enabled');
+delete_option('guardify_repeat_blocker_hours');
 delete_option('guardify_incomplete_orders_enabled');
 delete_option('guardify_sms_notifications_enabled');
-delete_option('guardify_fraud_dp_threshold');
-delete_option('guardify_auto_block_enabled');
+delete_option('guardify_notification_statuses');
+delete_option('guardify_notification_templates');
+delete_option('guardify_phone_history_enabled');
+delete_option('guardify_report_column_enabled');
+delete_option('guardify_fraud_detection_enabled');
+delete_option('guardify_fraud_auto_block_dp');
 
 // Drop custom tables
 global $wpdb;

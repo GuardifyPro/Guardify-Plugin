@@ -20,7 +20,7 @@
             action: 'guardify_check_vpn',
             nonce: guardifyVPN.nonce
         }, function (res) {
-            if (res.success && res.data && res.data.risk_level === 'high_risk') {
+            if (res.success && res.data && (res.data.risk_level === 'high_risk' || res.data.risk_level === 'high')) {
                 showPopup();
                 disableCheckout();
             }

@@ -139,7 +139,7 @@
 
     function showMessage(text, type) {
         var $msg = $('.gf-otp-message');
-        $msg.removeClass('gf-otp-error gf-otp-success').text(text);
+        $msg.removeClass('gf-otp-error gf-otp-success').text(text).show();
         if (type === 'error') $msg.addClass('gf-otp-error');
         else if (type === 'success') $msg.addClass('gf-otp-success');
         else $msg.addClass('gf-otp-success'); // info → success style

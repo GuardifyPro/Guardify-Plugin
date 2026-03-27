@@ -47,12 +47,15 @@ class Guardify_VPN_Block {
 
         $result = $api->post('/api/v1/ip/check', ['ip' => $ip]);
 
-        if (isset($result['risk_level'])) {
+        // Normalize wrapped API response
+        $d = isset($result['data']) ? $result['data'] : $result;
+
+        if (isset($d['risk_level'])) {
             wp_send_json_success([
-                'risk_level' => $result['risk_level'],
-                'is_proxy'   => !empty($result['is_proxy']),
-                'is_vpn'     => !empty($result['is_vpn']),
-                'country'    => isset($result['country']) ? $result['country'] : '',
+                'risk_level' => $d['risk_level'],
+                'is_proxy'   => !empty($d['is_proxy']),
+                'is_vpn'     => !empty($d['is_vpn']),
+                'country'    => isset($d['country']) ? $d['country'] : '',
             ]);
         }
 

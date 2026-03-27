@@ -196,12 +196,15 @@ class Guardify_Fraud_Detection {
 
         $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
 
-        if (!isset($result['dp_ratio'])) {
+        // Normalize wrapped API response
+        $d = isset($result['data']) ? $result['data'] : $result;
+
+        if (!isset($d['dp_ratio'])) {
             return;
         }
 
-        $dp    = (float) $result['dp_ratio'];
-        $total = isset($result['total']) ? (int) $result['total'] : 0;
+        $dp    = (float) $d['dp_ratio'];
+        $total = isset($d['total']) ? (int) $d['total'] : 0;
 
         // Skip if customer has no history (new customer)
         if ($total === 0) {

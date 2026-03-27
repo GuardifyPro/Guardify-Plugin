@@ -89,11 +89,13 @@ class Guardify_Smart_Filter {
 
             case 'flag':
                 // Store in order meta for admin review (order still goes through)
-                WC()->session->set('guardify_dp_flagged', [
-                    'phone'    => $phone,
-                    'dp_ratio' => $dp_ratio,
-                    'total'    => $total,
-                ]);
+                if (WC()->session) {
+                    WC()->session->set('guardify_dp_flagged', [
+                        'phone'    => $phone,
+                        'dp_ratio' => $dp_ratio,
+                        'total'    => $total,
+                    ]);
+                }
                 add_action('woocommerce_checkout_order_processed', [$this, 'save_flag_to_order'], 10, 1);
                 break;
 
@@ -111,11 +113,13 @@ class Guardify_Smart_Filter {
                         );
                     }
                 }
-                WC()->session->set('guardify_dp_flagged', [
-                    'phone'    => $phone,
-                    'dp_ratio' => $dp_ratio,
-                    'total'    => $total,
-                ]);
+                if (WC()->session) {
+                    WC()->session->set('guardify_dp_flagged', [
+                        'phone'    => $phone,
+                        'dp_ratio' => $dp_ratio,
+                        'total'    => $total,
+                    ]);
+                }
                 add_action('woocommerce_checkout_order_processed', [$this, 'save_flag_to_order'], 10, 1);
                 break;
         }
@@ -162,12 +166,15 @@ class Guardify_Smart_Filter {
         $api = new Guardify_API();
         $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
 
-        if (isset($result['dp_ratio'])) {
+        // Normalize wrapped API response
+        $d = isset($result['data']) ? $result['data'] : $result;
+
+        if (isset($d['dp_ratio'])) {
             wp_send_json_success([
-                'dp_ratio'   => $result['dp_ratio'],
-                'risk_level' => $result['risk_level'] ?? 'unknown',
-                'total'      => $result['total'] ?? 0,
-                'delivered'  => $result['delivered'] ?? 0,
+                'dp_ratio'   => $d['dp_ratio'],
+                'risk_level' => $d['risk_level'] ?? 'unknown',
+                'total'      => $d['total'] ?? 0,
+                'delivered'  => $d['delivered'] ?? 0,
             ]);
         }
 

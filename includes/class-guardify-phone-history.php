@@ -111,10 +111,13 @@ class Guardify_Phone_History {
 
         $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
 
-        if (isset($result['dp_ratio'])) {
-            $dp    = (float) $result['dp_ratio'];
-            $total = isset($result['total']) ? (int) $result['total'] : (isset($result['total_parcels']) ? (int) $result['total_parcels'] : 0);
-            $risk  = isset($result['risk_level']) ? $result['risk_level'] : 'unknown';
+        // Normalize wrapped API response
+        $d = isset($result['data']) ? $result['data'] : $result;
+
+        if (isset($d['dp_ratio'])) {
+            $dp    = (float) $d['dp_ratio'];
+            $total = isset($d['total']) ? (int) $d['total'] : (isset($d['total_parcels']) ? (int) $d['total_parcels'] : 0);
+            $risk  = isset($d['risk_level']) ? $d['risk_level'] : 'unknown';
 
             $color = $dp >= 80 ? '#16a34a' : ($dp >= 50 ? '#d97706' : '#dc2626');
 
