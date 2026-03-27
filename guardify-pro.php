@@ -25,6 +25,10 @@ define('GUARDIFY_ENGINE_URL', 'https://api.guardify.pro');
 // Autoload includes
 require_once GUARDIFY_PATH . 'includes/class-guardify-activator.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-api.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-delivery.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-search.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-phone-validation.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-smart-filter.php';
 
 /**
  * Main plugin class.
@@ -56,6 +60,11 @@ final class Guardify_Pro {
             return;
         }
 
+        // Initialize feature modules
+        Guardify_Delivery::get_instance();
+        Guardify_Phone_Validation::get_instance();
+        Guardify_Smart_Filter::get_instance();
+
         // Admin menu
         add_action('admin_menu', [$this, 'register_menu']);
 
@@ -81,6 +90,24 @@ final class Guardify_Pro {
             'dashicons-shield',
             56
         );
+
+        add_submenu_page(
+            'guardify-pro',
+            'সেটিংস',
+            'সেটিংস',
+            'manage_woocommerce',
+            'guardify-pro',
+            [$this, 'render_settings_page']
+        );
+
+        add_submenu_page(
+            'guardify-pro',
+            'ফোন সার্চ',
+            'ফোন সার্চ',
+            'manage_woocommerce',
+            'guardify-search',
+            [Guardify_Search::get_instance(), 'render_search_page']
+        );
     }
 
     public function render_settings_page() {
@@ -91,7 +118,15 @@ final class Guardify_Pro {
     }
 
     public function enqueue_admin_assets($hook) {
-        if (strpos($hook, 'guardify-pro') === false) {
+        $guardify_pages = ['guardify-pro', 'guardify-search'];
+        $is_guardify = false;
+        foreach ($guardify_pages as $page) {
+            if (strpos($hook, $page) !== false) {
+                $is_guardify = true;
+                break;
+            }
+        }
+        if (!$is_guardify) {
             return;
         }
 
