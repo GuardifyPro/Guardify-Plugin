@@ -235,7 +235,7 @@ class Guardify_Search {
         }
 
         $api = new Guardify_API();
-        $result = $api->get('/api/v1/courier/summary', ['phone' => $phone]);
+        $result = $api->get('/api/v1/courier/history', ['phone' => $phone]);
 
         if (!empty($result['success']) && isset($result['data'])) {
             wp_send_json_success($result['data']);
