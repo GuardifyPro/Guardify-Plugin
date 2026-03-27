@@ -525,3 +525,110 @@
     .gf-wrap { max-width: 100%; }
     .gf-btn, .gf-io-sms, .gf-io-convert, .gf-io-delete { display: none; }
 }
+/* ─── Toggle Switch ────────────────────────────────────────────────── */
+
+.gf-settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.gf-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--gf-border);
+    cursor: pointer;
+}
+
+.gf-toggle-row:last-child {
+    border-bottom: none;
+}
+
+.gf-toggle-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.gf-toggle-label {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--gf-fg);
+}
+
+.gf-toggle-desc {
+    font-size: 0.8125rem;
+    color: var(--gf-muted-fg);
+}
+
+.gf-switch {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.gf-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.gf-switch-slider {
+    display: block;
+    width: 44px;
+    height: 24px;
+    background: var(--gf-muted);
+    border-radius: 999px;
+    border: 1px solid var(--gf-border);
+    position: relative;
+    transition: background 0.2s, border-color 0.2s;
+    cursor: pointer;
+}
+
+.gf-switch-slider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+}
+
+.gf-switch input:checked + .gf-switch-slider {
+    background: var(--gf-primary);
+    border-color: var(--gf-primary);
+}
+
+.gf-switch input:checked + .gf-switch-slider::after {
+    transform: translateX(20px);
+}
+
+/* ─── Checkbox Grid ────────────────────────────────────────────────── */
+
+.gf-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.625rem;
+}
+
+.gf-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    color: var(--gf-fg);
+    cursor: pointer;
+}
+
+.gf-checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--gf-primary);
+}

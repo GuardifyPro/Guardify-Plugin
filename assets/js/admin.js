@@ -91,6 +91,69 @@
         });
     }
 
+    /* ── Tab Navigation ───────────────────────────────────────────────── */
+
+    $(document).on('click', '.gf-tab', function () {
+        var tab = $(this).data('tab');
+        $('.gf-tab').removeClass('active');
+        $(this).addClass('active');
+        $('.gf-tab-content').hide();
+        $('#gf-tab-' + tab).show();
+    });
+
+    /* ── Save Settings ────────────────────────────────────────────────── */
+
+    $(document).on('click', '#gf-save-settings', function () {
+        var $btn = $(this);
+        var $msg = $('#gf-save-msg');
+        $btn.prop('disabled', true).text('সংরক্ষণ হচ্ছে...');
+        $msg.hide();
+
+        var payload = {
+            action:   'guardify_save_settings',
+            _wpnonce: data.nonce
+        };
+
+        // Collect all toggle checkboxes
+        $('.gf-setting-toggle').each(function () {
+            var name = $(this).attr('name');
+            if (!name) return;
+            // Handle array names (e.g., guardify_notification_statuses[])
+            if (name.indexOf('[]') !== -1) {
+                var baseName = name.replace('[]', '');
+                if (!payload[baseName]) payload[baseName] = [];
+                if ($(this).is(':checked')) {
+                    payload[baseName].push($(this).val());
+                }
+            } else {
+                payload[name] = $(this).is(':checked') ? 'yes' : 'no';
+            }
+        });
+
+        // Collect text/number/select inputs
+        $('.gf-setting-input').each(function () {
+            var name = $(this).attr('name');
+            if (!name) return;
+            payload[name] = $(this).val();
+        });
+
+        $.post(data.ajaxUrl, payload)
+        .done(function (res) {
+            if (res.success) {
+                $msg.text('✓ সংরক্ষিত').css('color', 'var(--gf-success)').show();
+            } else {
+                $msg.text('✕ সংরক্ষণ ব্যর্থ').css('color', 'var(--gf-destructive)').show();
+            }
+        })
+        .fail(function () {
+            $msg.text('✕ সার্ভারে সংযোগ ত্রুটি').css('color', 'var(--gf-destructive)').show();
+        })
+        .always(function () {
+            $btn.prop('disabled', false).text('সেটিংস সংরক্ষণ করুন');
+            setTimeout(function () { $msg.fadeOut(); }, 3000);
+        });
+    });
+
     /* ── Helpers ───────────────────────────────────────────────────────── */
 
     function showMsg(type, text) {

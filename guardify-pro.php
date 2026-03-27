@@ -105,6 +105,7 @@ final class Guardify_Pro {
         add_action('wp_ajax_guardify_connect', [$this, 'ajax_connect']);
         add_action('wp_ajax_guardify_disconnect', [$this, 'ajax_disconnect']);
         add_action('wp_ajax_guardify_status', [$this, 'ajax_status']);
+        add_action('wp_ajax_guardify_save_settings', [$this, 'ajax_save_settings']);
 
         // REST API
         add_action('rest_api_init', [$this, 'register_rest_routes']);
@@ -277,6 +278,82 @@ final class Guardify_Pro {
         }
 
         wp_send_json_success(['active' => false]);
+    }
+
+    /**
+     * AJAX: Save plugin feature settings.
+     */
+    public function ajax_save_settings() {
+        check_ajax_referer('guardify_nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        // Toggle options (yes/no checkboxes)
+        $toggles = [
+            'guardify_smart_filter_enabled',
+            'guardify_otp_enabled',
+            'guardify_vpn_block_enabled',
+            'guardify_repeat_blocker_enabled',
+            'guardify_fraud_detection_enabled',
+            'guardify_sms_notifications_enabled',
+            'guardify_incomplete_orders_enabled',
+            'guardify_phone_history_enabled',
+            'guardify_report_column_enabled',
+        ];
+
+        foreach ($toggles as $key) {
+            $val = isset($_POST[$key]) && $_POST[$key] === 'yes' ? 'yes' : 'no';
+            update_option($key, $val);
+        }
+
+        // Numeric / string options
+        $safe_options = [
+            'guardify_smart_filter_threshold' => ['type' => 'float', 'min' => 0, 'max' => 100, 'default' => 70],
+            'guardify_smart_filter_action'    => ['type' => 'enum', 'values' => ['block', 'otp', 'flag'], 'default' => 'block'],
+            'guardify_smart_filter_skip_new'  => ['type' => 'yesno', 'default' => 'yes'],
+            'guardify_repeat_blocker_hours'   => ['type' => 'int', 'min' => 1, 'max' => 720, 'default' => 24],
+            'guardify_fraud_auto_block_dp'    => ['type' => 'float', 'min' => 0, 'max' => 100, 'default' => 0],
+        ];
+
+        foreach ($safe_options as $key => $rule) {
+            if (!isset($_POST[$key])) {
+                continue;
+            }
+            $raw = sanitize_text_field(wp_unslash($_POST[$key]));
+            switch ($rule['type']) {
+                case 'float':
+                    $val = max($rule['min'], min($rule['max'], (float) $raw));
+                    break;
+                case 'int':
+                    $val = max($rule['min'], min($rule['max'], absint($raw)));
+                    break;
+                case 'enum':
+                    $val = in_array($raw, $rule['values'], true) ? $raw : $rule['default'];
+                    break;
+                case 'yesno':
+                    $val = $raw === 'yes' ? 'yes' : 'no';
+                    break;
+                default:
+                    $val = $rule['default'];
+            }
+            update_option($key, $val);
+        }
+
+        // Notification statuses (array of status slugs)
+        $statuses = isset($_POST['guardify_notification_statuses']) && is_array($_POST['guardify_notification_statuses'])
+            ? array_map('sanitize_text_field', wp_unslash($_POST['guardify_notification_statuses']))
+            : [];
+        update_option('guardify_notification_statuses', $statuses);
+
+        // Notification templates (associative array)
+        $templates = isset($_POST['guardify_notification_templates']) && is_array($_POST['guardify_notification_templates'])
+            ? array_map('sanitize_textarea_field', wp_unslash($_POST['guardify_notification_templates']))
+            : [];
+        update_option('guardify_notification_templates', $templates);
+
+        wp_send_json_success(['message' => 'সেটিংস সংরক্ষিত হয়েছে।']);
     }
 }
 
