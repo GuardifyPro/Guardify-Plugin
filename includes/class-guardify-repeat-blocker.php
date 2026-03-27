@@ -106,6 +106,7 @@ class Guardify_Repeat_Blocker {
                 'limit'         => 1,
                 'orderby'       => 'date',
                 'order'         => 'DESC',
+                'status'        => ['wc-pending', 'wc-processing', 'wc-on-hold', 'wc-completed', 'wc-otp-pending'],
             ]);
 
             if (!empty($orders)) {

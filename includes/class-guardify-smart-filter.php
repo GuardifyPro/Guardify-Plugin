@@ -101,17 +101,27 @@ class Guardify_Smart_Filter {
 
             case 'otp':
                 // Require OTP verification for low-DP customers
-                if (get_option('guardify_otp_enabled', 'no') === 'yes' && WC()->session) {
+                $otp_enabled = get_option('guardify_otp_enabled', 'no') === 'yes';
+                if ($otp_enabled && WC()->session) {
                     $verified = WC()->session->get('guardify_otp_verified', false);
                     if (!$verified) {
                         wc_add_notice(
                             sprintf(
-                                'এই ফোন নম্বরের DP রেশিও কম (%.1f%%)। অর্ডার দিতে ফোন ভেরিফিকেশন প্রয়োজন।',
+                                'এই ফোন নম্বরের DP রেশিও কম (%.1f%%)। অর্ডার দিতে ফোন ভেরিফিকেশন প্রয়োজন।',
                                 $dp_ratio
                             ),
                             'error'
                         );
                     }
+                } elseif (!$otp_enabled) {
+                    // OTP disabled — fall back to block
+                    wc_add_notice(
+                        sprintf(
+                            'এই ফোন নম্বরের ডেলিভারি পারফর্ম্যান্স অপর্যাপ্ত (%.1f%%)। অর্ডার প্লেস করা যাচ্ছে না।',
+                            $dp_ratio
+                        ),
+                        'error'
+                    );
                 }
                 if (WC()->session) {
                     WC()->session->set('guardify_dp_flagged', [
@@ -129,6 +139,9 @@ class Guardify_Smart_Filter {
      * Save DP flag data to order meta.
      */
     public function save_flag_to_order($order_id) {
+        if (!WC()->session) {
+            return;
+        }
         $flag = WC()->session->get('guardify_dp_flagged');
         if ($flag) {
             $order = wc_get_order($order_id);

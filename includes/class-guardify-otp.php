@@ -12,6 +12,7 @@ class Guardify_OTP {
 
     private static $instance = null;
     private $session_key = 'guardify_otp_verified';
+    private $session_phone_key = 'guardify_otp_verified_phone';
 
     public static function get_instance() {
         if (null === self::$instance) {
@@ -56,6 +57,19 @@ class Guardify_OTP {
         $verified = WC()->session->get($this->session_key, false);
         if (!$verified) {
             wc_add_notice('অর্ডার নিশ্চিত করতে আপনার ফোন নম্বর ভেরিফাই করুন।', 'error');
+            return;
+        }
+
+        // Verify the OTP was for the current billing phone
+        $verified_phone = WC()->session->get($this->session_phone_key, '');
+        $billing_phone = isset($_POST['billing_phone']) ? sanitize_text_field(wp_unslash($_POST['billing_phone'])) : '';
+        $billing_phone = preg_replace('/[\s\-]/', '', $billing_phone);
+        $billing_phone = preg_replace('/^\+?88/', '', $billing_phone);
+
+        if ($verified_phone !== $billing_phone) {
+            WC()->session->set($this->session_key, null);
+            WC()->session->set($this->session_phone_key, null);
+            wc_add_notice('ফোন নম্বর পরিবর্তন হয়েছে। আবার OTP ভেরিফাই করুন।', 'error');
         }
     }
 
@@ -75,6 +89,7 @@ class Guardify_OTP {
         // Clear session
         if (WC()->session) {
             WC()->session->set($this->session_key, null);
+            WC()->session->set($this->session_phone_key, null);
         }
     }
 
@@ -129,9 +144,10 @@ class Guardify_OTP {
         ]);
 
         if (!empty($result['success']) && $result['success'] === true) {
-            // Mark verified in WC session
+            // Mark verified in WC session with the specific phone
             if (WC()->session) {
                 WC()->session->set($this->session_key, true);
+                WC()->session->set($this->session_phone_key, $phone);
             }
             wp_send_json_success(['message' => 'ফোন নম্বর ভেরিফাই হয়েছে!']);
         }

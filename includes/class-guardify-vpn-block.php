@@ -27,6 +27,32 @@ class Guardify_VPN_Block {
         add_action('wp_footer', [$this, 'render_popup']);
         add_action('wp_ajax_guardify_check_vpn', [$this, 'ajax_check_vpn']);
         add_action('wp_ajax_nopriv_guardify_check_vpn', [$this, 'ajax_check_vpn']);
+
+        // Server-side enforcement at checkout
+        add_action('woocommerce_checkout_process', [$this, 'block_vpn_at_checkout'], 5);
+    }
+
+    /**
+     * Server-side VPN/proxy block during checkout validation.
+     */
+    public function block_vpn_at_checkout() {
+        $ip = $this->get_client_ip();
+        if (empty($ip)) {
+            return;
+        }
+
+        $api = new Guardify_API();
+        if (!$api->is_connected()) {
+            return; // Fail open
+        }
+
+        $result = $api->post('/api/v1/ip/check', ['ip' => $ip]);
+        $d = isset($result['data']) ? $result['data'] : $result;
+
+        $risk = isset($d['risk_level']) ? $d['risk_level'] : 'clean';
+        if ($risk === 'high_risk' || $risk === 'high') {
+            wc_add_notice('VPN/প্রক্সি সনাক্ত হয়েছে। নিরাপত্তার কারণে অর্ডার প্লেস করা যাচ্ছে না। অনুগ্রহ করে VPN বন্ধ করে আবার চেষ্টা করুন।', 'error');
+        }
     }
 
     /**
