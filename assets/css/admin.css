@@ -360,3 +360,168 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ─── Search Results ───────────────────────────────────────────────────── */
+
+.gf-search-wrap {
+    margin-top: 1.5rem;
+}
+
+.gf-search-input-row {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.gf-search-input-row .gf-input {
+    flex: 1;
+}
+
+.gf-risk-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.gf-risk-low    { background: color-mix(in oklch, var(--gf-success) 12%, transparent); color: var(--gf-success); }
+.gf-risk-medium { background: color-mix(in oklch, var(--gf-warning) 12%, transparent); color: var(--gf-warning); }
+.gf-risk-high   { background: color-mix(in oklch, var(--gf-destructive) 12%, transparent); color: var(--gf-destructive); }
+
+.gf-dp-bar {
+    height: 8px;
+    border-radius: 999px;
+    background: var(--gf-muted);
+    overflow: hidden;
+    margin-top: 0.25rem;
+}
+
+.gf-dp-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.gf-dp-fill-low    { background: var(--gf-destructive); }
+.gf-dp-fill-medium { background: var(--gf-warning); }
+.gf-dp-fill-high   { background: var(--gf-success); }
+
+/* ─── Incomplete Orders ────────────────────────────────────────────────── */
+
+.gf-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--gf-muted-fg);
+}
+
+.gf-subtitle {
+    font-size: 0.9375rem;
+    color: var(--gf-muted-fg);
+    margin: 0.25rem 0 0;
+}
+
+/* ─── Spinner ──────────────────────────────────────────────────────────── */
+
+.gf-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--gf-muted);
+    border-top-color: var(--gf-primary);
+    border-radius: 50%;
+    animation: gf-spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 0.25rem;
+}
+
+@keyframes gf-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ─── Tooltip ──────────────────────────────────────────────────────────── */
+
+.gf-tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.gf-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gf-fg);
+    color: var(--gf-bg);
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--gf-radius);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    margin-bottom: 4px;
+}
+
+.gf-tooltip:hover::after {
+    opacity: 1;
+}
+
+/* ─── Tab Navigation ───────────────────────────────────────────────────── */
+
+.gf-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--gf-border);
+    margin-bottom: 1.5rem;
+}
+
+.gf-tab {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--gf-muted-fg);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    font-family: var(--gf-font);
+}
+
+.gf-tab:hover {
+    color: var(--gf-fg);
+}
+
+.gf-tab.active {
+    color: var(--gf-fg);
+    border-bottom-color: var(--gf-primary);
+}
+
+/* ─── Delivery Badge (Order Column) ───────────────────────────────────── */
+
+.gf-delivery-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.gf-delivery-success { background: color-mix(in oklch, var(--gf-success) 10%, transparent); color: var(--gf-success); }
+.gf-delivery-warning { background: color-mix(in oklch, var(--gf-warning) 10%, transparent); color: var(--gf-warning); }
+.gf-delivery-danger  { background: color-mix(in oklch, var(--gf-destructive) 10%, transparent); color: var(--gf-destructive); }
+.gf-delivery-muted   { background: var(--gf-muted); color: var(--gf-muted-fg); }
+
+/* ─── Print-friendly ───────────────────────────────────────────────────── */
+
+@media print {
+    .gf-wrap { max-width: 100%; }
+    .gf-btn, .gf-io-sms, .gf-io-convert, .gf-io-delete { display: none; }
+}
