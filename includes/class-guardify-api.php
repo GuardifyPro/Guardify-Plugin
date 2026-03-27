@@ -94,10 +94,12 @@ class Guardify_API {
         $url    = $this->engine_url . $path;
         $signed_path = $path;
 
-        if ($method === 'GET' && !empty($data)) {
-            $query = http_build_query($data);
-            $url .= '?' . $query;
-            $signed_path = $path . '?' . $query;
+        if ($method === 'GET') {
+            if (!empty($data)) {
+                $query = http_build_query($data);
+                $url .= '?' . $query;
+                $signed_path = $path . '?' . $query;
+            }
             $body_str = '';
         } else {
             $body_str = wp_json_encode($data);

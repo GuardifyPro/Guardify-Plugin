@@ -99,7 +99,9 @@ class Guardify_Smart_Filter {
                         'total'    => $total,
                     ]);
                 }
-                add_action('woocommerce_checkout_order_processed', [$this, 'save_flag_to_order'], 10, 1);
+                if (!has_action('woocommerce_checkout_order_processed', [$this, 'save_flag_to_order'])) {
+                    add_action('woocommerce_checkout_order_processed', [$this, 'save_flag_to_order'], 10, 1);
+                }
                 break;
 
             case 'otp':
@@ -133,7 +135,9 @@ class Guardify_Smart_Filter {
                         'total'    => $total,
                     ]);
                 }
-                add_action('woocommerce_checkout_order_processed', [$this, 'save_flag_to_order'], 10, 1);
+                if (!has_action('woocommerce_checkout_order_processed', [$this, 'save_flag_to_order'])) {
+                    add_action('woocommerce_checkout_order_processed', [$this, 'save_flag_to_order'], 10, 1);
+                }
                 break;
         }
     }

@@ -117,7 +117,6 @@ class Guardify_OTP {
         if ($attempts >= 3) {
             wp_send_json_error(['message' => 'অনেক বেশি চেষ্টা। ৫ মিনিট পর আবার চেষ্টা করুন।']);
         }
-        set_transient($throttle_key, $attempts + 1, 5 * MINUTE_IN_SECONDS);
 
         $api = new Guardify_API();
         $result = $api->post('/api/v1/otp/send', [
@@ -126,6 +125,8 @@ class Guardify_OTP {
         ]);
 
         if (!empty($result['success']) && $result['success'] === true) {
+            // Only increment rate limit after successful send
+            set_transient($throttle_key, $attempts + 1, 5 * MINUTE_IN_SECONDS);
             wp_send_json_success(['message' => 'OTP পাঠানো হয়েছে।']);
         }
 
@@ -157,10 +158,11 @@ class Guardify_OTP {
 
         if (!empty($result['success']) && $result['success'] === true) {
             // Mark verified in WC session with the specific phone
-            if (WC()->session) {
-                WC()->session->set($this->session_key, true);
-                WC()->session->set($this->session_phone_key, $phone);
+            if (!WC()->session) {
+                wp_send_json_error(['message' => 'সেশন পাওয়া যায়নি। পেজ রিলোড করে আবার চেষ্টা করুন।']);
             }
+            WC()->session->set($this->session_key, true);
+            WC()->session->set($this->session_phone_key, $phone);
             wp_send_json_success(['message' => 'ফোন নম্বর ভেরিফাই হয়েছে!']);
         }
 
