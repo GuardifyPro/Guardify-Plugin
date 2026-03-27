@@ -108,6 +108,14 @@ class Guardify_Incomplete_Orders {
             wp_send_json_error('Invalid phone');
         }
 
+        // Rate limit: max 5 captures per phone per 10 minutes
+        $throttle_key = 'gf_ic_' . $phone;
+        $count = (int) get_transient($throttle_key);
+        if ($count >= 5) {
+            wp_send_json_error('Too many requests');
+        }
+        set_transient($throttle_key, $count + 1, 10 * MINUTE_IN_SECONDS);
+
         global $wpdb;
 
         $name = isset($_POST['name']) ? sanitize_text_field(wp_unslash($_POST['name'])) : '';
