@@ -33,6 +33,9 @@ class Guardify_Smart_Filter {
             add_action('woocommerce_checkout_process', [$this, 'check_dp_at_checkout'], 20);
             add_action('wp_ajax_guardify_check_dp', [$this, 'ajax_check_dp']);
             add_action('wp_ajax_nopriv_guardify_check_dp', [$this, 'ajax_check_dp']);
+
+            // Provide checkout nonce for frontend AJAX (used by smart filter + fraud detection)
+            add_action('wp_enqueue_scripts', [$this, 'enqueue_checkout_data']);
         }
     }
 
@@ -169,5 +172,22 @@ class Guardify_Smart_Filter {
         }
 
         wp_send_json_error('DP check failed');
+    }
+
+    /**
+     * Enqueue checkout data (nonce) for frontend AJAX.
+     */
+    public function enqueue_checkout_data() {
+        if (!is_checkout()) {
+            return;
+        }
+
+        // Register inline script with checkout nonce (used by smart filter + fraud detection AJAX)
+        wp_register_script('guardify-checkout', false, [], GUARDIFY_VERSION, true);
+        wp_enqueue_script('guardify-checkout');
+        wp_localize_script('guardify-checkout', 'guardifyCheckout', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce('guardify_checkout_nonce'),
+        ]);
     }
 }

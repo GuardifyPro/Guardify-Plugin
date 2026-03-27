@@ -8,5 +8,28 @@
 
 defined('WP_UNINSTALL_PLUGIN') || exit;
 
+// Remove all options
 delete_option('guardify_api_key');
 delete_option('guardify_secret_key_enc');
+delete_option('guardify_smart_filter_enabled');
+delete_option('guardify_smart_filter_threshold');
+delete_option('guardify_smart_filter_action');
+delete_option('guardify_smart_filter_skip_new');
+delete_option('guardify_otp_enabled');
+delete_option('guardify_vpn_block_enabled');
+delete_option('guardify_repeat_block_enabled');
+delete_option('guardify_repeat_block_hours');
+delete_option('guardify_repeat_block_max');
+delete_option('guardify_incomplete_orders_enabled');
+delete_option('guardify_sms_notifications_enabled');
+delete_option('guardify_fraud_dp_threshold');
+delete_option('guardify_auto_block_enabled');
+
+// Drop custom tables
+global $wpdb;
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}guardify_incomplete_orders");
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}guardify_fraud_tracking");
+$wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}guardify_blocks");
+
+// Clear scheduled events
+wp_clear_scheduled_hook('guardify_cleanup_incomplete');

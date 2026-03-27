@@ -21,6 +21,12 @@ class Guardify_Activator {
     }
 
     public static function deactivate() {
+        // Clear scheduled events
+        $timestamp = wp_next_scheduled('guardify_cleanup_incomplete');
+        if ($timestamp) {
+            wp_unschedule_event($timestamp, 'guardify_cleanup_incomplete');
+        }
+
         flush_rewrite_rules();
     }
 }

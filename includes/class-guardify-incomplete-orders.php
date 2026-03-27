@@ -286,9 +286,12 @@ class Guardify_Incomplete_Orders {
         $order->set_billing_city($row->city ?: '');
 
         foreach ($cart_items as $item) {
-            // Try to find the product
-            $product_id = wc_get_product_id_by_sku('');
-            $products = wc_get_products(['name' => $item['name'], 'limit' => 1]);
+            // Try to find the product by name
+            $products = wc_get_products([
+                'limit'  => 1,
+                'status' => 'publish',
+                's'      => $item['name'],
+            ]);
             if (!empty($products)) {
                 $order->add_product($products[0], $item['qty']);
             } else {
@@ -333,7 +336,9 @@ class Guardify_Incomplete_Orders {
     public static function get_pending_count() {
         global $wpdb;
         $table = $wpdb->prefix . 'guardify_incomplete_orders';
-        return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'pending'");
+        return (int) $wpdb->get_var(
+            $wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE status = %s", 'pending')
+        );
     }
 
     /**
@@ -341,6 +346,11 @@ class Guardify_Incomplete_Orders {
      */
     public function cleanup() {
         global $wpdb;
-        $wpdb->query("DELETE FROM {$this->table_name} WHERE created_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM {$this->table_name} WHERE created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
+                30
+            )
+        );
     }
 }

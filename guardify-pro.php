@@ -82,6 +82,7 @@ final class Guardify_Pro {
         Guardify_Order_Notifications::get_instance();
         Guardify_Incomplete_Orders::get_instance();
         Guardify_Fraud_Detection::get_instance();
+        Guardify_Search::get_instance();
 
         // Admin menu
         add_action('admin_menu', [$this, 'register_menu']);
@@ -182,6 +183,7 @@ final class Guardify_Pro {
         wp_localize_script('guardify-admin', 'guardifyData', [
             'ajaxUrl'  => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('guardify_nonce'),
+            'checkoutNonce' => wp_create_nonce('guardify_checkout_nonce'),
             'apiKey'   => get_option('guardify_api_key', ''),
             'connected' => !empty(get_option('guardify_api_key', '')),
         ]);
