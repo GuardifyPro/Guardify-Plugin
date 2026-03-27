@@ -4,7 +4,12 @@
     <p class="gf-subtitle">চেকআউটে আসা কিন্তু অর্ডার সম্পন্ন না করা গ্রাহকদের তালিকা।</p>
 
     <?php
-    $orders = Guardify_Incomplete_Orders::get_pending();
+    $per_page = 20;
+    $current_page = isset($_GET['gf_page']) ? max(1, absint($_GET['gf_page'])) : 1;
+    $offset = ($current_page - 1) * $per_page;
+    $total_count = Guardify_Incomplete_Orders::get_pending_count();
+    $orders = Guardify_Incomplete_Orders::get_pending($per_page, $offset);
+    $total_pages = max(1, (int) ceil($total_count / $per_page));
 
     if (empty($orders)) {
         echo '<div class="gf-empty-state"><p>কোনো ইনকমপ্লিট অর্ডার নেই।</p></div>';
@@ -52,6 +57,28 @@
             <?php endforeach; ?>
         </tbody>
     </table>
+
+    <?php if ($total_pages > 1) : ?>
+    <div class="tablenav bottom" style="margin-top:12px;">
+        <div class="tablenav-pages">
+            <span class="displaying-num"><?php echo esc_html($total_count); ?> টি রেকর্ড</span>
+            <?php
+            $base_url = admin_url('admin.php?page=guardify-incomplete-orders');
+            $page_links = paginate_links(array(
+                'base'      => $base_url . '%_%',
+                'format'    => '&gf_page=%#%',
+                'current'   => $current_page,
+                'total'     => $total_pages,
+                'prev_text' => '&laquo;',
+                'next_text' => '&raquo;',
+            ));
+            if ($page_links) {
+                echo wp_kses_post($page_links);
+            }
+            ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <script>
