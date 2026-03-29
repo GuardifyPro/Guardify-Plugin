@@ -48,7 +48,12 @@ $guardifyUpdateChecker = PucFactory::buildUpdateChecker(
     GUARDIFY_FILE,
     'guardify-pro'
 );
-$guardifyUpdateChecker->setBranch('main');
+// Use tagged GitHub releases (not branch) for versioned updates
+$guardifyUpdateChecker->getVcsApi()->enableReleaseAssets();
+
+// Make checker instance globally accessible for manual checks
+global $guardify_update_checker;
+$guardify_update_checker = $guardifyUpdateChecker;
 
 /**
  * Main plugin class.
@@ -107,6 +112,7 @@ final class Guardify_Pro {
         add_action('wp_ajax_guardify_status', [$this, 'ajax_status']);
         add_action('wp_ajax_guardify_save_settings', [$this, 'ajax_save_settings']);
         add_action('wp_ajax_guardify_support_ticket', [$this, 'ajax_support_ticket']);
+        add_action('wp_ajax_guardify_check_update', [$this, 'ajax_check_update']);
 
         // REST API
         add_action('rest_api_init', [$this, 'register_rest_routes']);
@@ -306,6 +312,39 @@ final class Guardify_Pro {
         }
 
         wp_send_json_success(['active' => false]);
+    }
+
+    /**
+     * AJAX: Manually trigger an update check.
+     */
+    public function ajax_check_update() {
+        check_ajax_referer('guardify_nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        global $guardify_update_checker;
+        if (!$guardify_update_checker) {
+            wp_send_json_error('আপডেট চেকার পাওয়া যায়নি।');
+        }
+
+        // Force-check ignoring cache
+        $guardify_update_checker->resetUpdateState();
+        $update = $guardify_update_checker->checkForUpdates();
+
+        if (!empty($update)) {
+            wp_send_json_success([
+                'has_update'  => true,
+                'new_version' => $update->version,
+                'message'     => 'নতুন ভার্সন পাওয়া গেছে: ' . esc_html($update->version),
+            ]);
+        } else {
+            wp_send_json_success([
+                'has_update' => false,
+                'message'    => 'আপনার প্লাগইন আপ-টু-ডেট আছে। (ভার্সন ' . GUARDIFY_VERSION . ')',
+            ]);
+        }
     }
 
     /**

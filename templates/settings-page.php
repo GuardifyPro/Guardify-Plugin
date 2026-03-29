@@ -178,6 +178,7 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
         <button class="gf-tab" data-tab="notifications">SMS নোটিফিকেশন</button>
         <button class="gf-tab" data-tab="connection">সংযোগ</button>
         <button class="gf-tab" data-tab="support">সাপোর্ট</button>
+        <button class="gf-tab" data-tab="update">আপডেট</button>
     </div>
 
     <!-- Tab: Features -->
@@ -356,6 +357,35 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
                     <button type="button" id="gf-support-submit" class="gf-btn gf-btn-primary">টিকেট পাঠান</button>
                     <span id="gf-support-msg" style="display: none; margin-left: 1rem;" class="gf-text-muted"></span>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab: Update -->
+    <div class="gf-tab-content" id="gf-tab-update" style="display: none;">
+        <div class="gf-card">
+            <div class="gf-card-header">
+                <h2 class="gf-card-title">প্লাগইন আপডেট</h2>
+            </div>
+            <div class="gf-card-body">
+                <table class="widefat" style="max-width: 480px; border: none; background: transparent;">
+                    <tbody>
+                        <tr>
+                            <td style="padding: 6px 0; font-weight: 500; border: none;">বর্তমান ভার্সন</td>
+                            <td style="border: none;"><code><?php echo esc_html(GUARDIFY_VERSION); ?></code></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px 0; font-weight: 500; border: none;">গিটহাব রিপো</td>
+                            <td style="border: none;"><a href="https://github.com/GuardifyPro/Guardify-Plugin/releases" target="_blank" rel="noopener">GuardifyPro/Guardify-Plugin</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="gf-text-muted" style="margin: 1.25rem 0 1rem;">
+                    GitHub-এ নতুন রিলিজ পাবলিশ হলে WordPress ড্যাশবোর্ড থেকেই আপডেট নোটিফিকেশন পাবেন।
+                    নিচে বাটনে ক্লিক করে তাৎক্ষণিক আপডেট চেক করতে পারেন।
+                </p>
+                <button type="button" id="gf-check-update-btn" class="gf-btn gf-btn-primary">আপডেট চেক করুন</button>
+                <span id="gf-update-msg" style="display: none; margin-left: 1rem;"></span>
             </div>
         </div>
     </div>

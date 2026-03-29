@@ -194,6 +194,39 @@
         });
     });
 
+    /* ── Update Check ──────────────────────────────────────────────────── */
+
+    $(document).on('click', '#gf-check-update-btn', function () {
+        var $btn = $(this);
+        var $msg = $('#gf-update-msg');
+
+        $btn.prop('disabled', true).text('চেক হচ্ছে...');
+        $msg.hide();
+
+        $.post(data.ajaxUrl, {
+            action:   'guardify_check_update',
+            _wpnonce: data.nonce,
+        })
+        .done(function (res) {
+            if (res.success) {
+                var color = res.data.has_update ? 'var(--gf-warning, #d97706)' : 'var(--gf-success)';
+                $msg.text(res.data.message).css('color', color).show();
+                if (res.data.has_update) {
+                    // Reload so WP update nag appears
+                    setTimeout(function () { location.reload(); }, 2000);
+                }
+            } else {
+                $msg.text('✕ ' + (res.data || 'আপডেট চেক ব্যর্থ হয়েছে')).css('color', 'var(--gf-destructive)').show();
+            }
+        })
+        .fail(function () {
+            $msg.text('✕ সার্ভারে সংযোগ ত্রুটি').css('color', 'var(--gf-destructive)').show();
+        })
+        .always(function () {
+            $btn.prop('disabled', false).text('আপডেট চেক করুন');
+        });
+    });
+
     /* ── Helpers ───────────────────────────────────────────────────────── */
 
     function showMsg(type, text) {
