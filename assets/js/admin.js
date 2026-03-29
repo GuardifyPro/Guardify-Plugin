@@ -11,10 +11,16 @@
     $(document).on('submit', '#gf-connect-form', function (e) {
         e.preventDefault();
 
-        var apiKey    = $('#gf-api-key').val().trim();
-        var secretKey = $('#gf-secret-key').val().trim();
+        var connectionKey = $('#gf-connection-key').val().trim();
+        var parts         = connectionKey.split(':');
 
-        if (!apiKey || !secretKey) return;
+        if (parts.length < 2 || !parts[0] || !parts[1]) {
+            showMsg('error', 'সঠিক Connection Key পেস্ট করুন।');
+            return;
+        }
+
+        var apiKey    = parts[0].trim();
+        var secretKey = parts.slice(1).join(':').trim(); // handle sk_ containing colons
 
         var $btn = $('#gf-connect-btn');
         $btn.prop('disabled', true).text('যাচাই হচ্ছে...');
