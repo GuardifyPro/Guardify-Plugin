@@ -223,8 +223,8 @@ class Guardify_Search {
                             $tbody.append(detailRows);
                         }
                     });
-                    // Toggle expand/collapse
-                    $tbody.on('click', '.gf-expand-btn', function() {
+                    // Toggle expand/collapse (use off+on to prevent duplicate bindings)
+                    $tbody.off('click', '.gf-expand-btn').on('click', '.gf-expand-btn', function() {
                         var target = $(this).data('target');
                         var $row = $('#' + target);
                         var $arrow = $(this).find('.gf-expand-arrow');

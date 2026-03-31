@@ -113,6 +113,9 @@ final class Guardify_Pro {
         add_action('wp_ajax_guardify_save_settings', [$this, 'ajax_save_settings']);
         add_action('wp_ajax_guardify_support_ticket', [$this, 'ajax_support_ticket']);
         add_action('wp_ajax_guardify_check_update', [$this, 'ajax_check_update']);
+        add_action('wp_ajax_guardify_export_blocked', [$this, 'ajax_export_blocked']);
+        add_action('wp_ajax_guardify_export_rules', [$this, 'ajax_export_rules']);
+        add_action('wp_ajax_guardify_import_blocked', [$this, 'ajax_import_blocked']);
 
         // REST API
         add_action('rest_api_init', [$this, 'register_rest_routes']);
@@ -149,6 +152,15 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
+            'ফ্রড ম্যানেজমেন্ট',
+            'ফ্রড ম্যানেজমেন্ট',
+            'manage_woocommerce',
+            'guardify-fraud',
+            [$this, 'render_fraud_page']
+        );
+
+        add_submenu_page(
+            'guardify-pro',
             'ইনকমপ্লিট অর্ডার',
             'ইনকমপ্লিট অর্ডার <span class="awaiting-mod">' . Guardify_Incomplete_Orders::get_pending_count() . '</span>',
             'manage_woocommerce',
@@ -164,6 +176,13 @@ final class Guardify_Pro {
         include GUARDIFY_PATH . 'templates/settings-page.php';
     }
 
+    public function render_fraud_page() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(esc_html__('Unauthorized', 'guardify-pro'));
+        }
+        include GUARDIFY_PATH . 'templates/fraud-detection-page.php';
+    }
+
     public function render_incomplete_page() {
         if (!current_user_can('manage_woocommerce')) {
             wp_die(esc_html__('Unauthorized', 'guardify-pro'));
@@ -172,7 +191,7 @@ final class Guardify_Pro {
     }
 
     public function enqueue_admin_assets($hook) {
-        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete'];
+        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud'];
         $is_guardify = false;
         foreach ($guardify_pages as $page) {
             if (strpos($hook, $page) !== false) {
@@ -198,6 +217,11 @@ final class Guardify_Pro {
             GUARDIFY_VERSION,
             true
         );
+
+        // Hide non-Guardify admin notices on our pages
+        add_action('admin_notices', function () {
+            echo '<style>.notice:not(.guardify-notice) { display: none !important; }</style>';
+        }, 0);
 
         wp_localize_script('guardify-admin', 'guardifyData', [
             'ajaxUrl'  => admin_url('admin-ajax.php'),
@@ -345,6 +369,89 @@ final class Guardify_Pro {
                 'message'    => 'আপনার প্লাগইন আপ-টু-ডেট আছে। (ভার্সন ' . GUARDIFY_VERSION . ')',
             ]);
         }
+    }
+
+    /**
+     * AJAX: Export blocked users as CSV.
+     */
+    public function ajax_export_blocked() {
+        check_ajax_referer('guardify_nonce');
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'guardify_fraud_tracking';
+        $rows = $wpdb->get_results("SELECT phone, ip_address, block_reason, last_seen FROM {$table} WHERE is_blocked = 1 ORDER BY last_seen DESC");
+
+        $csv = "ফোন,IP,কারণ,সর্বশেষ\n";
+        foreach ($rows as $r) {
+            $csv .= sprintf(
+                "%s,%s,%s,%s\n",
+                $r->phone,
+                $r->ip_address ?: '',
+                str_replace(',', ';', $r->block_reason ?: ''),
+                $r->last_seen ?: ''
+            );
+        }
+
+        wp_send_json_success(['csv' => $csv]);
+    }
+
+    /**
+     * AJAX: Export block rules as CSV.
+     */
+    public function ajax_export_rules() {
+        check_ajax_referer('guardify_nonce');
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        global $wpdb;
+        $table = $wpdb->prefix . 'guardify_blocks';
+        $rows = $wpdb->get_results("SELECT block_type, block_value, reason, created_at FROM {$table} WHERE is_active = 1 ORDER BY created_at DESC");
+
+        $csv = "টাইপ,ভ্যালু,কারণ,তৈরির সময়\n";
+        foreach ($rows as $r) {
+            $csv .= sprintf(
+                "%s,%s,%s,%s\n",
+                $r->block_type,
+                $r->block_value,
+                str_replace(',', ';', $r->reason ?: ''),
+                $r->created_at ?: ''
+            );
+        }
+
+        wp_send_json_success(['csv' => $csv]);
+    }
+
+    /**
+     * AJAX: Import blocked phones from JSON array.
+     */
+    public function ajax_import_blocked() {
+        check_ajax_referer('guardify_nonce');
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $raw = isset($_POST['phones']) ? wp_unslash($_POST['phones']) : '';
+        $phones = json_decode($raw, true);
+        if (!is_array($phones) || empty($phones)) {
+            wp_send_json_error('কোনো ফোন নম্বর পাওয়া যায়নি');
+        }
+
+        $fraud = Guardify_Fraud_Detection::get_instance();
+        $count = 0;
+        foreach ($phones as $phone) {
+            $phone = preg_replace('/[\s\-]/', '', sanitize_text_field($phone));
+            $phone = preg_replace('/^\+?88/', '', $phone);
+            if (!empty($phone) && preg_match('/^01[3-9]\d{8}$/', $phone)) {
+                $fraud->block_phone($phone, 'ইম্পোর্ট থেকে ব্লক');
+                $count++;
+            }
+        }
+
+        wp_send_json_success(['message' => $count . ' টি ফোন নম্বর ইম্পোর্ট ও ব্লক করা হয়েছে।']);
     }
 
     /**

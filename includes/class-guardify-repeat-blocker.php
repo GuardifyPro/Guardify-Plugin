@@ -92,6 +92,7 @@ class Guardify_Repeat_Blocker {
 
     /**
      * Check if there's a recent WC order with this phone number.
+     * Uses a single query with date_after to avoid multiple DB calls.
      */
     private function has_recent_order($phone) {
         // Also check with 88 prefix variant
@@ -100,24 +101,20 @@ class Guardify_Repeat_Blocker {
             $phone_variants[] = '88' . $phone;
         }
 
+        $cutoff = gmdate('Y-m-d H:i:s', time() - ($this->time_limit * 3600));
+
         foreach ($phone_variants as $p) {
             $orders = wc_get_orders([
                 'billing_phone' => $p,
                 'limit'         => 1,
                 'orderby'       => 'date',
                 'order'         => 'DESC',
+                'date_after'    => $cutoff,
                 'status'        => ['pending', 'processing', 'on-hold', 'completed', 'otp-pending'],
             ]);
 
             if (!empty($orders)) {
-                $order = reset($orders);
-                $order_time = $order->get_date_created();
-                if ($order_time) {
-                    $diff_hours = (time() - $order_time->getTimestamp()) / 3600;
-                    if ($diff_hours < $this->time_limit) {
-                        return true;
-                    }
-                }
+                return true;
             }
         }
 

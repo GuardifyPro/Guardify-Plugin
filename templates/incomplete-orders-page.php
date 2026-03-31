@@ -63,7 +63,7 @@
         <div class="tablenav-pages">
             <span class="displaying-num"><?php echo esc_html($total_count); ?> টি রেকর্ড</span>
             <?php
-            $base_url = admin_url('admin.php?page=guardify-incomplete-orders');
+            $base_url = admin_url('admin.php?page=guardify-incomplete');
             $page_links = paginate_links(array(
                 'base'      => $base_url . '%_%',
                 'format'    => '&gf_page=%#%',

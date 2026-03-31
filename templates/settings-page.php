@@ -9,22 +9,38 @@ $api       = new Guardify_API();
 $connected = $api->is_connected();
 $api_key   = get_option('guardify_api_key', '');
 
-// Fetch active banner and announcements
+// Fetch active banner and announcements (cached 15 min)
 $banner_data = null;
 $announcements_data = [];
 if ($connected) {
-    $banner_result = $api->get('/api/v1/content/banner');
-    if (!empty($banner_result['active'])) {
-        $banner_data = $banner_result;
-    } elseif (!empty($banner_result['data']['active'])) {
-        $banner_data = $banner_result['data'];
+    $banner_data = get_transient('gf_settings_banner');
+    if (false === $banner_data) {
+        $banner_result = $api->get('/api/v1/content/banner');
+        if (!empty($banner_result['active'])) {
+            $banner_data = $banner_result;
+        } elseif (!empty($banner_result['data']['active'])) {
+            $banner_data = $banner_result['data'];
+        } else {
+            $banner_data = null;
+        }
+        set_transient('gf_settings_banner', $banner_data ?: 'empty', 15 * MINUTE_IN_SECONDS);
     }
-    $ann_result = $api->get('/api/v1/content/announcement');
-    if (is_array($ann_result) && !isset($ann_result['error'])) {
-        $announcements_data = isset($ann_result['data']) && is_array($ann_result['data']) ? $ann_result['data'] : $ann_result;
-        if (!is_array($announcements_data)) {
+    if ($banner_data === 'empty') {
+        $banner_data = null;
+    }
+
+    $announcements_data = get_transient('gf_settings_announcements');
+    if (false === $announcements_data) {
+        $ann_result = $api->get('/api/v1/content/announcement');
+        if (is_array($ann_result) && !isset($ann_result['error'])) {
+            $announcements_data = isset($ann_result['data']) && is_array($ann_result['data']) ? $ann_result['data'] : $ann_result;
+            if (!is_array($announcements_data)) {
+                $announcements_data = [];
+            }
+        } else {
             $announcements_data = [];
         }
+        set_transient('gf_settings_announcements', $announcements_data, 15 * MINUTE_IN_SECONDS);
     }
 }
 

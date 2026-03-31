@@ -198,7 +198,15 @@ class Guardify_Fraud_Detection {
             return;
         }
 
-        $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
+        // Use transient cache for DP check (2 min TTL)
+        $cache_key = 'gf_dp_' . md5($phone);
+        $result = get_transient($cache_key);
+        if (false === $result) {
+            $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
+            if (isset($result['dp_ratio']) || isset($result['data']['dp_ratio'])) {
+                set_transient($cache_key, $result, 2 * MINUTE_IN_SECONDS);
+            }
+        }
 
         // Normalize wrapped API response
         $d = isset($result['data']) ? $result['data'] : $result;

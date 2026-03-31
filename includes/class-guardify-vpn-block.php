@@ -46,7 +46,13 @@ class Guardify_VPN_Block {
             return; // Fail open
         }
 
-        $result = $api->post('/api/v1/ip/check', ['ip' => $ip]);
+        // Cache VPN check result per IP for 10 min
+        $cache_key = 'gf_vpn_' . md5($ip);
+        $result = get_transient($cache_key);
+        if (false === $result) {
+            $result = $api->post('/api/v1/ip/check', ['ip' => $ip]);
+            set_transient($cache_key, $result, 10 * MINUTE_IN_SECONDS);
+        }
         $d = isset($result['data']) ? $result['data'] : $result;
 
         $risk = isset($d['risk_level']) ? $d['risk_level'] : 'clean';
@@ -74,7 +80,13 @@ class Guardify_VPN_Block {
             wp_send_json_success(['risk_level' => 'clean']); // Fail open
         }
 
-        $result = $api->post('/api/v1/ip/check', ['ip' => $ip]);
+        // Cache VPN check result per IP for 10 min
+        $cache_key = 'gf_vpn_' . md5($ip);
+        $result = get_transient($cache_key);
+        if (false === $result) {
+            $result = $api->post('/api/v1/ip/check', ['ip' => $ip]);
+            set_transient($cache_key, $result, 10 * MINUTE_IN_SECONDS);
+        }
 
         // Normalize wrapped API response
         $d = isset($result['data']) ? $result['data'] : $result;

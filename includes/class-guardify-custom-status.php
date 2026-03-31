@@ -20,7 +20,7 @@ class Guardify_Custom_Status {
         add_action('init', [$this, 'register_status']);
         add_filter('wc_order_statuses', [$this, 'add_to_statuses']);
         add_filter('woocommerce_reports_order_statuses', [$this, 'add_to_reports']);
-        add_action('admin_head', [$this, 'admin_styles']);
+        add_action('admin_head', [$this, 'admin_styles_conditional']);
     }
 
     /**
@@ -64,9 +64,13 @@ class Guardify_Custom_Status {
     }
 
     /**
-     * Admin styles for the status badge.
+     * Admin styles for the status badge — only on order pages.
      */
-    public function admin_styles() {
+    public function admin_styles_conditional() {
+        $screen = get_current_screen();
+        if (!$screen || (strpos($screen->id, 'shop_order') === false && strpos($screen->id, 'woocommerce') === false)) {
+            return;
+        }
         echo '<style>
             .order-status.status-otp-pending,
             .woocommerce-order-status.status-otp-pending {

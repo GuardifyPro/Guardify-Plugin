@@ -65,7 +65,8 @@ class Guardify_Incomplete_Orders {
             status ENUM('pending','recovered','expired') DEFAULT 'pending',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             INDEX idx_phone (phone),
-            INDEX idx_status (status)
+            INDEX idx_status (status),
+            INDEX idx_created_at (created_at)
         ) {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -344,14 +345,20 @@ class Guardify_Incomplete_Orders {
     }
 
     /**
-     * Get count of pending records.
+     * Get count of pending records (cached 5 min).
      */
     public static function get_pending_count() {
+        $cached = get_transient('gf_incomplete_count');
+        if (false !== $cached) {
+            return (int) $cached;
+        }
         global $wpdb;
         $table = $wpdb->prefix . 'guardify_incomplete_orders';
-        return (int) $wpdb->get_var(
+        $count = (int) $wpdb->get_var(
             $wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE status = %s", 'pending')
         );
+        set_transient('gf_incomplete_count', $count, 5 * MINUTE_IN_SECONDS);
+        return $count;
     }
 
     /**

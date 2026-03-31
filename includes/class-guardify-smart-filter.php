@@ -56,7 +56,15 @@ class Guardify_Smart_Filter {
             return; // Phone validation handles invalid numbers
         }
 
-        $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
+        // Use transient cache to avoid repeated API calls for same phone (2 min TTL)
+        $cache_key = 'gf_dp_' . md5($phone);
+        $result = get_transient($cache_key);
+        if (false === $result) {
+            $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
+            if (isset($result['dp_ratio']) || isset($result['data']['dp_ratio'])) {
+                set_transient($cache_key, $result, 2 * MINUTE_IN_SECONDS);
+            }
+        }
 
         if (!isset($result['dp_ratio']) && !(isset($result['data']['dp_ratio']))) {
             return; // Fail open on API error
@@ -184,7 +192,15 @@ class Guardify_Smart_Filter {
         }
 
         $api = new Guardify_API();
-        $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
+        // Use transient cache for DP check (2 min TTL)
+        $cache_key = 'gf_dp_' . md5($phone);
+        $result = get_transient($cache_key);
+        if (false === $result) {
+            $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
+            if (isset($result['dp_ratio']) || (isset($result['data']['dp_ratio']))) {
+                set_transient($cache_key, $result, 2 * MINUTE_IN_SECONDS);
+            }
+        }
 
         // Normalize wrapped API response
         $d = isset($result['data']) ? $result['data'] : $result;
