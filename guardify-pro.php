@@ -38,6 +38,7 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-report-column.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-order-notifications.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-incomplete-orders.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-fraud-detection.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-send-courier.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
 require_once GUARDIFY_PATH . 'plugin-update-checker/plugin-update-checker.php';
@@ -98,6 +99,7 @@ final class Guardify_Pro {
         Guardify_Order_Notifications::get_instance();
         Guardify_Incomplete_Orders::get_instance();
         Guardify_Fraud_Detection::get_instance();
+        Guardify_Send_Courier::get_instance();
         Guardify_Search::get_instance();
 
         // Admin menu
@@ -489,6 +491,7 @@ final class Guardify_Pro {
             'guardify_smart_filter_skip_new'  => ['type' => 'yesno', 'default' => 'yes'],
             'guardify_repeat_blocker_hours'   => ['type' => 'int', 'min' => 1, 'max' => 720, 'default' => 24],
             'guardify_fraud_auto_block_dp'    => ['type' => 'float', 'min' => 0, 'max' => 100, 'default' => 0],
+            'guardify_default_courier'        => ['type' => 'enum', 'values' => ['steadfast', 'pathao'], 'default' => 'steadfast'],
         ];
 
         foreach ($safe_options as $key => $rule) {

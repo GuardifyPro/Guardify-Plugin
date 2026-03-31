@@ -227,6 +227,18 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
                     </label>
                     <?php endforeach; ?>
                 </div>
+
+                <div style="margin-top:1.5rem; border-top:1px solid var(--gf-border, #e5e7eb); padding-top:1.5rem;">
+                    <h3 style="font-size:0.9375rem; font-weight:600; margin-bottom:0.75rem; color:var(--gf-text);">🚚 কুরিয়ার সেটিংস</h3>
+                    <div class="gf-form-group">
+                        <label class="gf-label">ডিফল্ট কুরিয়ার</label>
+                        <select name="guardify_default_courier" class="gf-input gf-setting-input" style="max-width:250px;">
+                            <option value="steadfast" <?php selected(get_option('guardify_default_courier', 'steadfast'), 'steadfast'); ?>>Steadfast</option>
+                            <option value="pathao" <?php selected(get_option('guardify_default_courier', 'steadfast'), 'pathao'); ?>>Pathao</option>
+                        </select>
+                        <span class="gf-text-muted" style="font-size:0.8125rem;">অর্ডার পাঠানোর সময় ডিফল্ট কোন কুরিয়ার সিলেক্ট থাকবে</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
