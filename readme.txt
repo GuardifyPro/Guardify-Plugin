@@ -4,7 +4,7 @@ Tags: fraud detection, woocommerce, delivery, otp, courier
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.1.0-beta
+Stable tag: 0.2.0
 License: Proprietary
 License URI: https://guardify.pro/license
 
@@ -50,6 +50,15 @@ Updates are delivered via GitHub Releases. When a new version is published, your
 
 == Changelog ==
 
+= 0.2.0 =
+* Send to Courier — Steadfast ও Pathao-তে সরাসরি অর্ডার পাঠান
+* Bulk action — একাধিক অর্ডার একসাথে কুরিয়ারে পাঠান
+* Orders list কুরিয়ার কলাম — প্রোভাইডার, কনসাইনমেন্ট ও স্ট্যাটাস
+* ডিফল্ট কুরিয়ার সেটিংস
+* Consignment status refresh from order page
+* Performance ও caching উন্নতি
+* Plugin error fixes ও UI improvements
+
 = 0.1.0-beta =
 * Initial beta release
 * Fraud detection with DP ratio filtering
@@ -63,6 +72,9 @@ Updates are delivered via GitHub Releases. When a new version is published, your
 * Automatic updates via GitHub Releases
 
 == Upgrade Notice ==
+
+= 0.2.0 =
+কুরিয়ার ইন্টিগ্রেশন আপডেট — Steadfast/Pathao-তে সরাসরি অর্ডার পাঠান।
 
 = 0.1.0-beta =
 Initial beta release. Please test on a staging site before deploying to production.
