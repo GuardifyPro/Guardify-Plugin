@@ -18,6 +18,35 @@ class Guardify_Phone_Validation {
     private function __construct() {
         add_action('woocommerce_checkout_process', [$this, 'validate_checkout_phone']);
         add_filter('woocommerce_checkout_fields', [$this, 'set_phone_attributes']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+    }
+
+    /**
+     * Enqueue phone validation scripts and styles on checkout.
+     */
+    public function enqueue_scripts() {
+        if (!is_checkout()) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'guardify-phone-validation',
+            GUARDIFY_URL . 'assets/css/phone-validation.css',
+            [],
+            GUARDIFY_VERSION
+        );
+
+        wp_enqueue_script(
+            'guardify-phone-validation',
+            GUARDIFY_URL . 'assets/js/phone-validation.js',
+            ['jquery'],
+            GUARDIFY_VERSION,
+            true
+        );
+
+        wp_localize_script('guardify-phone-validation', 'guardifyPhoneVal', [
+            'message' => 'সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)',
+        ]);
     }
 
     /**

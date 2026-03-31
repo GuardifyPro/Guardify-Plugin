@@ -34,8 +34,8 @@ class Guardify_Smart_Filter {
             add_action('wp_ajax_guardify_check_dp', [$this, 'ajax_check_dp']);
             add_action('wp_ajax_nopriv_guardify_check_dp', [$this, 'ajax_check_dp']);
 
-            // Provide checkout nonce for frontend AJAX (used by smart filter + fraud detection)
-            add_action('wp_enqueue_scripts', [$this, 'enqueue_checkout_data']);
+            // Frontend assets and checkout nonce
+            add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         }
     }
 
@@ -218,14 +218,40 @@ class Guardify_Smart_Filter {
     }
 
     /**
-     * Enqueue checkout data (nonce) for frontend AJAX.
+     * Enqueue frontend scripts and styles for live DP checking.
      */
-    public function enqueue_checkout_data() {
+    public function enqueue_scripts() {
         if (!is_checkout()) {
             return;
         }
 
-        // Register inline script with checkout nonce (used by smart filter + fraud detection AJAX)
+        // CSS
+        wp_enqueue_style(
+            'guardify-smart-filter',
+            GUARDIFY_URL . 'assets/css/smart-filter.css',
+            [],
+            GUARDIFY_VERSION
+        );
+
+        // JS
+        wp_enqueue_script(
+            'guardify-smart-filter',
+            GUARDIFY_URL . 'assets/js/smart-filter.js',
+            ['jquery'],
+            GUARDIFY_VERSION,
+            true
+        );
+
+        wp_localize_script('guardify-smart-filter', 'guardifySmartFilter', [
+            'ajaxUrl'   => admin_url('admin-ajax.php'),
+            'nonce'     => wp_create_nonce('guardify_checkout_nonce'),
+            'enabled'   => $this->enabled ? 'yes' : 'no',
+            'threshold' => $this->threshold,
+            'action'    => $this->action,
+            'skipNew'   => $this->skip_new ? 'yes' : 'no',
+        ]);
+
+        // Also register the checkout nonce globally for other features
         wp_register_script('guardify-checkout', false, [], GUARDIFY_VERSION, true);
         wp_enqueue_script('guardify-checkout');
         wp_localize_script('guardify-checkout', 'guardifyCheckout', [

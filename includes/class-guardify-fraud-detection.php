@@ -40,6 +40,14 @@ class Guardify_Fraud_Detection {
         // Auto-block by DP ratio
         add_action('woocommerce_checkout_order_processed', [$this, 'auto_block_check'], 20, 1);
 
+        // Frontend device tracking
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+        add_action('wp_ajax_guardify_track_visit', [$this, 'ajax_track_visit']);
+        add_action('wp_ajax_nopriv_guardify_track_visit', [$this, 'ajax_track_visit']);
+
+        // Blocked user frontend check
+        add_action('wp', [$this, 'check_blocked_on_page']);
+
         // Admin actions
         add_action('wp_ajax_guardify_block_user', [$this, 'ajax_block_user']);
         add_action('wp_ajax_guardify_unblock_user', [$this, 'ajax_unblock_user']);
@@ -86,6 +94,127 @@ class Guardify_Fraud_Detection {
     }
 
     /**
+     * Enqueue fraud detection frontend scripts.
+     */
+    public function enqueue_scripts() {
+        if (!is_checkout() && !is_cart()) {
+            return;
+        }
+
+        wp_enqueue_script(
+            'guardify-fraud-detection',
+            GUARDIFY_URL . 'assets/js/fraud-detection.js',
+            ['jquery'],
+            GUARDIFY_VERSION,
+            true
+        );
+
+        wp_localize_script('guardify-fraud-detection', 'guardifyFraud', [
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce'   => wp_create_nonce('guardify_fraud_nonce'),
+        ]);
+    }
+
+    /**
+     * AJAX: Track frontend visit with device fingerprint.
+     */
+    public function ajax_track_visit() {
+        check_ajax_referer('guardify_fraud_nonce', 'nonce');
+
+        $device_id = isset($_POST['device_id']) ? sanitize_text_field(wp_unslash($_POST['device_id'])) : '';
+        if (empty($device_id) || strlen($device_id) > 100) {
+            wp_send_json_error('Invalid device ID');
+        }
+
+        $ip = $this->get_client_ip();
+        $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+
+        // Store device ID in a cookie for use during checkout
+        setcookie('guardify_device_id', $device_id, time() + YEAR_IN_SECONDS, '/', '', is_ssl(), true);
+
+        global $wpdb;
+
+        // Check if this device was already tracked
+        $existing = $wpdb->get_row($wpdb->prepare(
+            "SELECT id, ip_address FROM {$this->table_name} WHERE phone = %s",
+            'device:' . $device_id
+        ));
+
+        if ($existing) {
+            $wpdb->update($this->table_name, [
+                'ip_address' => $ip,
+                'user_agent' => $user_agent,
+                'last_seen'  => current_time('mysql'),
+            ], ['id' => $existing->id], ['%s', '%s', '%s'], ['%d']);
+        } else {
+            $wpdb->insert($this->table_name, [
+                'phone'      => 'device:' . $device_id,
+                'ip_address' => $ip,
+                'user_agent' => $user_agent,
+            ], ['%s', '%s', '%s']);
+        }
+
+        wp_send_json_success();
+    }
+
+    /**
+     * Check if the current visitor is blocked (on checkout/shop pages).
+     */
+    public function check_blocked_on_page() {
+        if (is_admin() || !is_checkout()) {
+            return;
+        }
+
+        $ip = $this->get_client_ip();
+        if (empty($ip)) {
+            return;
+        }
+
+        global $wpdb;
+        $blocked = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->blocks_table}
+             WHERE is_active = 1 AND block_type = 'ip' AND block_value = %s",
+            $ip
+        ));
+
+        if ($blocked > 0) {
+            // Show blocked user popup
+            add_action('wp_footer', [$this, 'render_blocked_popup']);
+        }
+    }
+
+    /**
+     * Render blocked user popup on frontend.
+     */
+    public function render_blocked_popup() {
+        ?>
+        <div id="guardify-blocked-popup" class="gf-blocked-popup" style="display:flex;">
+            <div class="gf-blocked-popup-overlay"></div>
+            <div class="gf-blocked-popup-content">
+                <div class="gf-blocked-popup-icon">🚫</div>
+                <h3>অর্ডার ব্লক করা হয়েছে</h3>
+                <p>নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।</p>
+            </div>
+        </div>
+        <style>
+            .gf-blocked-popup { position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center; }
+            .gf-blocked-popup-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); }
+            .gf-blocked-popup-content { position:relative; background:#fff; border-radius:12px; width:90%; max-width:420px; padding:32px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.2); }
+            .gf-blocked-popup-icon { font-size:48px; margin-bottom:16px; }
+            .gf-blocked-popup-content h3 { margin:0 0 12px; font-size:20px; font-weight:700; color:#dc2626; }
+            .gf-blocked-popup-content p { margin:0; font-size:14px; color:#4b5563; line-height:1.6; }
+        </style>
+        <script>
+        jQuery(function($){
+            $('#place_order').prop('disabled', true).css('opacity', '0.5');
+            $('form.checkout').on('submit', function(e){ e.preventDefault(); return false; });
+            $(document.body).on('checkout_place_order', function(){ return false; });
+        });
+        </script>
+        <?php
+    }
+
+    /**
      * Track order: Store phone + IP for fraud scoring.
      */
     public function track_order($order_id) {
@@ -104,6 +233,28 @@ class Guardify_Fraud_Detection {
 
         $ip = $this->get_client_ip();
         $user_agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
+
+        // Save device fingerprint to order meta if available
+        $device_id = isset($_COOKIE['guardify_device_id']) ? sanitize_text_field(wp_unslash($_COOKIE['guardify_device_id'])) : '';
+        if (!empty($device_id)) {
+            $order->update_meta_data('_guardify_device_id', $device_id);
+            $order->save();
+
+            // Link device record to this phone in tracking table
+            global $wpdb;
+            $device_record = $wpdb->get_row($wpdb->prepare(
+                "SELECT id, is_blocked FROM {$this->table_name} WHERE phone = %s",
+                'device:' . $device_id
+            ));
+            if ($device_record && $device_record->is_blocked) {
+                // If device was previously blocked, block this phone too
+                $this->block_phone($phone, 'ব্লক করা ডিভাইস থেকে অর্ডার');
+            }
+        }
+
+        // Save IP to order meta
+        $order->update_meta_data('_guardify_ip_address', $ip);
+        $order->save();
 
         global $wpdb;
 

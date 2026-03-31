@@ -1,0 +1,177 @@
+/* ==========================================================================
+   Guardify Pro — Smart Filter Styles
+   Live DP ratio checking with popups and visual indicators on checkout
+   ========================================================================== */
+
+/* ─── DP Status Indicator (next to phone field) ───────────────────────── */
+
+.gf-dp-status {
+    display: none;
+    margin-top: 6px;
+}
+
+.gf-dp-status.gf-visible {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gf-dp-spinner {
+    animation: gf-spin 0.8s linear infinite;
+}
+
+@keyframes gf-spin {
+    to { transform: rotate(360deg); }
+}
+
+.gf-dp-status-icon {
+    display: inline-flex;
+    align-items: center;
+}
+
+.gf-dp-status-icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+.gf-dp-status-text {
+    font-size: 12px;
+    line-height: 1;
+}
+
+.gf-dp-status-text.gf-text-success { color: #16a34a; }
+.gf-dp-status-text.gf-text-warning { color: #d97706; }
+.gf-dp-status-text.gf-text-danger  { color: #dc2626; }
+
+/* ─── DP Popup ─────────────────────────────────────────────────────────── */
+
+.gf-dp-popup {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    animation: gf-fadeIn 0.3s ease;
+}
+
+.gf-dp-popup.gf-active {
+    display: flex;
+}
+
+.gf-dp-popup-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.gf-dp-popup-content {
+    position: relative;
+    background: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    animation: gf-slideUp 0.3s ease;
+}
+
+.gf-dp-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.gf-dp-popup-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.gf-dp-popup-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #9ca3af;
+    transition: color 0.2s;
+    line-height: 0;
+}
+
+.gf-dp-popup-close:hover {
+    color: #374151;
+}
+
+.gf-dp-popup-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.gf-dp-popup-icon {
+    margin-bottom: 12px;
+}
+
+.gf-dp-popup-icon svg {
+    width: 48px;
+    height: 48px;
+}
+
+.gf-dp-popup.gf-popup-error .gf-dp-popup-icon svg { fill: #dc2626; }
+.gf-dp-popup.gf-popup-warning .gf-dp-popup-icon svg { fill: #d97706; }
+
+.gf-dp-popup-message {
+    font-size: 14px;
+    color: #4b5563;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.gf-dp-popup-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.gf-dp-popup-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gf-dp-popup-btn.gf-btn-primary {
+    background: #6366f1;
+    color: #fff;
+}
+
+.gf-dp-popup-btn.gf-btn-primary:hover {
+    background: #4f46e5;
+}
+
+.gf-dp-popup-btn.gf-btn-secondary {
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.gf-dp-popup-btn.gf-btn-secondary:hover {
+    background: #e5e7eb;
+}
+
+/* ─── Animations ──────────────────────────────────────────────────────── */
+
+@keyframes gf-fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes gf-slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
