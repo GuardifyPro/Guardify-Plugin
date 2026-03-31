@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
+
 /* ==========================================================================
    Guardify Pro — Admin Styles
    shadcn/ui-inspired, tyro-dashboard-matching design system
@@ -8,20 +10,20 @@
     --gf-fg: oklch(0.145 0 0);
     --gf-card: oklch(1 0 0);
     --gf-card-fg: oklch(0.145 0 0);
-    --gf-primary: oklch(0.205 0 0);
+    --gf-primary: oklch(0.55 0.15 250);
     --gf-primary-fg: oklch(0.985 0 0);
     --gf-secondary: oklch(0.97 0 0);
     --gf-muted: oklch(0.97 0 0);
     --gf-muted-fg: oklch(0.556 0 0);
     --gf-border: oklch(0.922 0 0);
     --gf-input: oklch(0.922 0 0);
-    --gf-ring: oklch(0.708 0 0);
+    --gf-ring: oklch(0.55 0.15 250);
     --gf-destructive: oklch(0.577 0.245 27.325);
     --gf-success: oklch(0.627 0.194 149.214);
     --gf-warning: oklch(0.769 0.188 70.08);
     --gf-info: oklch(0.623 0.214 259.815);
     --gf-radius: 8px;
-    --gf-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --gf-font: 'Inter', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ─── Base ─────────────────────────────────────────────────────────────── */
