@@ -15,7 +15,7 @@
         var parts         = connectionKey.split(':');
 
         if (parts.length < 2 || !parts[0] || !parts[1]) {
-            showMsg('error', 'সঠিক Connection Key পেস্ট করুন।');
+            showMsg('error', 'সঠিক Connection Key পেস্ট করুন। ফরম্যাট: gp_xxxx:sk_xxxx — guardify.pro/api-keys থেকে কপি করুন।');
             return;
         }
 

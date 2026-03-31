@@ -100,12 +100,12 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
         </div>
         <div class="gf-card-body">
             <p class="gf-text-muted" style="margin-bottom: 0.5rem;">
-                <a href="https://guardify.pro/api-keys" target="_blank" rel="noopener">guardify.pro &rarr; API Keys</a> পেজ থেকে <strong>Plugin Connection Key</strong> কপি করে নিচে পেস্ট করুন।
+                <a href="https://guardify.pro/api-keys" target="_blank" rel="noopener">guardify.pro &rarr; API Keys</a> পেজ থেকে <strong>নতুন কী</strong> তৈরি করে বা <strong>সিক্রেট কী রিজেনারেট</strong> করে কানেকশন কী কপি করুন, তারপর নিচে পেস্ট করুন।
             </p>
             <form id="gf-connect-form" class="gf-form">
                 <div class="gf-form-group" style="margin-bottom: 1rem;">
                     <label class="gf-label">Plugin Connection Key</label>
-                    <input type="password" id="gf-connection-key" class="gf-input" placeholder="gp_...:sk_..." autocomplete="off" required style="font-family: monospace;" />
+                    <input type="text" id="gf-connection-key" class="gf-input" placeholder="gp_abc123...:sk_def456..." autocomplete="off" required style="font-family: monospace;" />
                 </div>
                 <button type="submit" class="gf-btn gf-btn-primary" id="gf-connect-btn">
                     সংযুক্ত করুন

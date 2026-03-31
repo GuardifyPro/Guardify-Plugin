@@ -4,7 +4,7 @@ Tags: fraud detection, woocommerce, delivery, otp, courier
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.2.0
+Stable tag: 0.2.1
 License: Proprietary
 License URI: https://guardify.pro/license
 
@@ -49,6 +49,11 @@ No. WooCommerce 7.0+ is required.
 Updates are delivered via GitHub Releases. When a new version is published, your WordPress dashboard will show the update notification automatically. You can also manually check for updates under **Guardify Pro → Settings → আপডেট**.
 
 == Changelog ==
+
+= 0.2.1 =
+* Fix: Connection Key ফর্ম্যাট নির্দেশনা উন্নত এরর মেসেজ
+* Fix: ইনপুট টাইপ password থেকে text এ পরিবর্তন (পেস্ট ভেরিফাই করতে)
+* সেটিংস পেজে স্পষ্ট কানেকশন নির্দেশনা
 
 = 0.2.0 =
 * Send to Courier — Steadfast ও Pathao-তে সরাসরি অর্ডার পাঠান
