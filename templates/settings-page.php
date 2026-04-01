@@ -54,8 +54,16 @@ $settings = [
     'vpn_block_enabled'           => get_option('guardify_vpn_block_enabled', 'no'),
     'repeat_blocker_enabled'      => get_option('guardify_repeat_blocker_enabled', 'no'),
     'repeat_blocker_hours'        => get_option('guardify_repeat_blocker_hours', 24),
+    'repeat_blocker_message'      => get_option('guardify_repeat_blocker_message', 'এই ফোন নম্বর থেকে ইতিমধ্যে অর্ডার করা হয়েছে। অনুগ্রহ করে %d ঘণ্টা পর আবার চেষ্টা করুন।'),
+    'repeat_blocker_support'      => get_option('guardify_repeat_blocker_support', ''),
     'fraud_detection_enabled'     => get_option('guardify_fraud_detection_enabled', 'no'),
     'fraud_auto_block_dp'         => get_option('guardify_fraud_auto_block_dp', 0),
+    'fraud_auto_block_count_enabled' => get_option('guardify_fraud_auto_block_count_enabled', 'no'),
+    'fraud_auto_block_order_limit'   => get_option('guardify_fraud_auto_block_order_limit', 3),
+    'fraud_auto_block_time_limit'    => get_option('guardify_fraud_auto_block_time_limit', 24),
+    'fraud_blocked_user_title'    => get_option('guardify_blocked_user_title', 'অর্ডার ব্লক করা হয়েছে'),
+    'fraud_blocked_user_message'  => get_option('guardify_blocked_user_message', 'নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।'),
+    'fraud_support_number'        => get_option('guardify_fraud_support_number', ''),
     'sms_notifications_enabled'   => get_option('guardify_sms_notifications_enabled', 'no'),
     'notification_statuses'       => get_option('guardify_notification_statuses', []),
     'notification_templates'      => get_option('guardify_notification_templates', []),
@@ -382,6 +390,16 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
                     <input type="number" name="guardify_repeat_blocker_hours" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['repeat_blocker_hours']); ?>" min="1" max="720" />
                     <span class="gf-text-muted" style="font-size: 0.8125rem;">একই ফোনে পুনরায় অর্ডারের জন্য ন্যূনতম অপেক্ষার সময়</span>
                 </div>
+                <div class="gf-form-group" style="max-width: 500px; margin-top: 1rem;">
+                    <label class="gf-label">কাস্টম এরর মেসেজ</label>
+                    <input type="text" name="guardify_repeat_blocker_message" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['repeat_blocker_message']); ?>" />
+                    <span class="gf-text-muted" style="font-size: 0.8125rem;">%d লিখলে সেখানে ঘন্টার সংখ্যা বসবে</span>
+                </div>
+                <div class="gf-form-group" style="max-width: 300px; margin-top: 1rem;">
+                    <label class="gf-label">সাপোর্ট ফোন নম্বর (ঐচ্ছিক)</label>
+                    <input type="text" name="guardify_repeat_blocker_support" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['repeat_blocker_support']); ?>" placeholder="01XXXXXXXXX" />
+                    <span class="gf-text-muted" style="font-size: 0.8125rem;">পপআপে "কল করুন" বাটন দেখাবে</span>
+                </div>
             </div>
         </div>
 
@@ -394,6 +412,50 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
                     <label class="gf-label">অটো-ব্লক DP থ্রেশহোল্ড (%)</label>
                     <input type="number" name="guardify_fraud_auto_block_dp" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['fraud_auto_block_dp']); ?>" min="0" max="100" step="1" />
                     <span class="gf-text-muted" style="font-size: 0.8125rem;">০ = অটো-ব্লক অফ। এই % এর নিচে DP হলে ফোন নম্বর অটো-ব্লক হবে।</span>
+                </div>
+
+                <div style="margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--gf-border);">
+                    <label class="gf-setting-row">
+                        <div>
+                            <strong>অর্ডার সংখ্যা অনুযায়ী অটো-ব্লক</strong>
+                            <p class="gf-text-muted" style="font-size: 0.8125rem; margin: 2px 0 0;">নির্দিষ্ট সময়ে নির্দিষ্ট সংখ্যার বেশি অর্ডার আসলে অটো-ব্লক</p>
+                        </div>
+                        <div class="gf-switch">
+                            <input type="checkbox" name="guardify_fraud_auto_block_count_enabled" value="yes" <?php checked($settings['fraud_auto_block_count_enabled'], 'yes'); ?> class="gf-setting-toggle" />
+                            <span class="gf-switch-slider"></span>
+                        </div>
+                    </label>
+                    <div class="gf-form-group" style="max-width: 300px; margin-top: 0.75rem;">
+                        <label class="gf-label">অটো-ব্লক অর্ডার সীমা</label>
+                        <input type="number" name="guardify_fraud_auto_block_order_limit" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['fraud_auto_block_order_limit']); ?>" min="1" max="50" />
+                        <span class="gf-text-muted" style="font-size: 0.8125rem;">সর্বোচ্চ কতটি অর্ডার পর ব্লক হবে</span>
+                    </div>
+                    <div class="gf-form-group" style="max-width: 300px; margin-top: 0.75rem;">
+                        <label class="gf-label">অটো-ব্লক সময়সীমা (ঘন্টা)</label>
+                        <input type="number" name="guardify_fraud_auto_block_time_limit" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['fraud_auto_block_time_limit']); ?>" min="1" max="720" />
+                        <span class="gf-text-muted" style="font-size: 0.8125rem;">কত ঘন্টার মধ্যে অর্ডার গুনবে</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="gf-card" style="margin-top: 1.5rem;">
+            <div class="gf-card-header">
+                <h2 class="gf-card-title">ব্লক করা ব্যবহারকারীর পপআপ</h2>
+            </div>
+            <div class="gf-card-body">
+                <div class="gf-form-group" style="max-width: 400px;">
+                    <label class="gf-label">পপআপ টাইটেল</label>
+                    <input type="text" name="guardify_blocked_user_title" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['fraud_blocked_user_title']); ?>" />
+                </div>
+                <div class="gf-form-group" style="max-width: 500px; margin-top: 1rem;">
+                    <label class="gf-label">পপআপ মেসেজ</label>
+                    <textarea name="guardify_blocked_user_message" class="gf-input gf-setting-input" rows="3" style="resize: vertical;"><?php echo esc_textarea($settings['fraud_blocked_user_message']); ?></textarea>
+                </div>
+                <div class="gf-form-group" style="max-width: 300px; margin-top: 1rem;">
+                    <label class="gf-label">সাপোর্ট ফোন নম্বর (ঐচ্ছিক)</label>
+                    <input type="text" name="guardify_fraud_support_number" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['fraud_support_number']); ?>" placeholder="01XXXXXXXXX" />
+                    <span class="gf-text-muted" style="font-size: 0.8125rem;">ব্লক পপআপে কল বাটন দেখাবে</span>
                 </div>
             </div>
         </div>

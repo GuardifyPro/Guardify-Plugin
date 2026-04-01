@@ -151,7 +151,7 @@ class Guardify_Search {
             $('#gf-search-form').on('submit', function(e) {
                 e.preventDefault();
                 var phone = $('#gf-search-phone').val().trim();
-                if (!/^01\d{9}$/.test(phone)) {
+                if (!/^01[3-9]\\d{8}$/.test(phone)) {
                     showMsg('error', 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)');
                     return;
                 }

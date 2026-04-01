@@ -3,7 +3,7 @@
  * Plugin Name:       Guardify Pro
  * Plugin URI:        https://guardify.pro
  * Description:       ফ্রড ডিটেকশন, কুরিয়ার ইন্টেলিজেন্স, OTP ভেরিফিকেশন ও স্মার্ট অর্ডার ফিল্টারিং — বাংলাদেশের ই-কমার্সের জন্য।
- * Version:           0.3.6
+ * Version:           0.3.7
  * Author:            Tansiq Labs
  * Author URI:        https://tansiqlabs.com.bd
  * License:           Proprietary
@@ -16,7 +16,7 @@
 
 defined('ABSPATH') || exit;
 
-define('GUARDIFY_VERSION', '0.3.6');
+define('GUARDIFY_VERSION', '0.3.7');
 define('GUARDIFY_FILE', __FILE__);
 define('GUARDIFY_PATH', plugin_dir_path(__FILE__));
 define('GUARDIFY_URL', plugin_dir_url(__FILE__));
@@ -42,6 +42,7 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-send-courier.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-sms-logs.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-phone-sync.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-quick-view.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-backup.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
 require_once GUARDIFY_PATH . 'plugin-update-checker/plugin-update-checker.php';
@@ -106,6 +107,7 @@ final class Guardify_Pro {
         Guardify_Search::get_instance();
         Guardify_Phone_Sync::get_instance();
         Guardify_Quick_View::get_instance();
+        Guardify_Backup::get_instance();
 
         // Admin menu
         add_action('admin_menu', [$this, 'register_menu']);
@@ -184,6 +186,15 @@ final class Guardify_Pro {
             'guardify-sms-logs',
             [$this, 'render_sms_logs_page']
         );
+
+        add_submenu_page(
+            'guardify-pro',
+            'ব্যাকআপ',
+            'ব্যাকআপ',
+            'manage_woocommerce',
+            'guardify-backup',
+            [$this, 'render_backup_page']
+        );
     }
 
     public function render_settings_page() {
@@ -214,8 +225,15 @@ final class Guardify_Pro {
         include GUARDIFY_PATH . 'templates/sms-logs-page.php';
     }
 
+    public function render_backup_page() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(esc_html__('Unauthorized', 'guardify-pro'));
+        }
+        include GUARDIFY_PATH . 'templates/backup-page.php';
+    }
+
     public function enqueue_admin_assets($hook) {
-        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs'];
+        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs', 'guardify-backup'];
         $is_guardify = false;
         foreach ($guardify_pages as $page) {
             if (strpos($hook, $page) !== false) {
@@ -663,6 +681,7 @@ final class Guardify_Pro {
             'guardify_vpn_block_enabled',
             'guardify_repeat_blocker_enabled',
             'guardify_fraud_detection_enabled',
+            'guardify_fraud_auto_block_count_enabled',
             'guardify_sms_notifications_enabled',
             'guardify_incomplete_orders_enabled',
             'guardify_phone_history_enabled',
@@ -676,12 +695,17 @@ final class Guardify_Pro {
 
         // Numeric / string options
         $safe_options = [
-            'guardify_smart_filter_threshold' => ['type' => 'float', 'min' => 0, 'max' => 100, 'default' => 70],
-            'guardify_smart_filter_action'    => ['type' => 'enum', 'values' => ['block', 'otp', 'flag'], 'default' => 'block'],
-            'guardify_smart_filter_skip_new'  => ['type' => 'yesno', 'default' => 'yes'],
-            'guardify_repeat_blocker_hours'   => ['type' => 'int', 'min' => 1, 'max' => 720, 'default' => 24],
-            'guardify_fraud_auto_block_dp'    => ['type' => 'float', 'min' => 0, 'max' => 100, 'default' => 0],
-            'guardify_default_courier'        => ['type' => 'enum', 'values' => ['steadfast', 'pathao'], 'default' => 'steadfast'],
+            'guardify_smart_filter_threshold'         => ['type' => 'float', 'min' => 0, 'max' => 100, 'default' => 70],
+            'guardify_smart_filter_action'             => ['type' => 'enum', 'values' => ['block', 'otp', 'flag'], 'default' => 'block'],
+            'guardify_smart_filter_skip_new'           => ['type' => 'yesno', 'default' => 'yes'],
+            'guardify_repeat_blocker_hours'            => ['type' => 'int', 'min' => 1, 'max' => 720, 'default' => 24],
+            'guardify_fraud_auto_block_dp'             => ['type' => 'float', 'min' => 0, 'max' => 100, 'default' => 0],
+            'guardify_fraud_auto_block_order_limit'    => ['type' => 'int', 'min' => 1, 'max' => 50, 'default' => 3],
+            'guardify_fraud_auto_block_time_limit'     => ['type' => 'int', 'min' => 1, 'max' => 720, 'default' => 24],
+            'guardify_incomplete_retention'             => ['type' => 'int', 'min' => 1, 'max' => 365, 'default' => 30],
+            'guardify_incomplete_cooldown_enabled'      => ['type' => 'yesno', 'default' => 'yes'],
+            'guardify_incomplete_cooldown'              => ['type' => 'int', 'min' => 1, 'max' => 1440, 'default' => 30],
+            'guardify_default_courier'                 => ['type' => 'enum', 'values' => ['steadfast', 'pathao'], 'default' => 'steadfast'],
         ];
 
         foreach ($safe_options as $key => $rule) {
@@ -706,6 +730,24 @@ final class Guardify_Pro {
                     $val = $rule['default'];
             }
             update_option($key, $val);
+        }
+
+        // Text settings (sanitized)
+        $text_options = [
+            'guardify_repeat_blocker_message',
+            'guardify_repeat_blocker_support',
+            'guardify_blocked_user_title',
+            'guardify_fraud_support_number',
+        ];
+        foreach ($text_options as $key) {
+            if (isset($_POST[$key])) {
+                update_option($key, sanitize_text_field(wp_unslash($_POST[$key])));
+            }
+        }
+
+        // Textarea settings
+        if (isset($_POST['guardify_blocked_user_message'])) {
+            update_option('guardify_blocked_user_message', sanitize_textarea_field(wp_unslash($_POST['guardify_blocked_user_message'])));
         }
 
         // Notification statuses (array of status slugs)

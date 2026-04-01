@@ -4,7 +4,7 @@ Tags: fraud detection, woocommerce, delivery, otp, courier
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.3.6
+Stable tag: 0.3.7
 License: Proprietary
 License URI: https://guardify.pro/license
 
@@ -49,6 +49,17 @@ No. WooCommerce 7.0+ is required.
 Updates are delivered via GitHub Releases. When a new version is published, your WordPress dashboard will show the update notification automatically. You can also manually check for updates under **Guardify Pro → Settings → আপডেট**.
 
 == Changelog ==
+
+= 0.3.7 =
+* ডাটাবেইজ অটো ব্যাকআপ ও ইজি রিস্টোর সিস্টেম
+* পার-API-কী কুরিয়ার কনফিগ আর্কিটেকচার
+* ব্যাকআপ শিডিউল (প্রতি ৬ ঘণ্টা, ১২ ঘণ্টা, দৈনিক, সাপ্তাহিক)
+* ম্যানুয়াল ব্যাকআপ ও রিস্টোর UI
+* রিস্টোরের আগে স্বয়ংক্রিয় সেফটি ব্যাকআপ
+* ফ্রড ডিটেকশন ডুপ্লিকেট হুক ফিক্স
+* ফোন সিংক ক্রন শিডিউল অর্ডার ফিক্স
+* সার্চ ফোন ভ্যালিডেশন স্ট্রিক্ট ম্যাচিং
+* সর্বোচ্চ ব্যাকআপ সাইজ 1000MB
 
 = 0.3.6 =
 * ইনকমপ্লিট অর্ডার সম্পূর্ণ রিবিল্ড (OrderGuard প্যাটার্ন অনুসরণ)

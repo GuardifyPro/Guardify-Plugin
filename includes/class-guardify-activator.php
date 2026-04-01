@@ -27,6 +27,9 @@ class Guardify_Activator {
             wp_unschedule_event($timestamp, 'guardify_cleanup_incomplete');
         }
 
+        // Clear backup cron
+        wp_clear_scheduled_hook('guardify_scheduled_backup');
+
         flush_rewrite_rules();
     }
 }

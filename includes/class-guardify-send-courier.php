@@ -379,7 +379,7 @@ class Guardify_Send_Courier {
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
             if ($key === 'order_status') {
-                $new['guardify_courier'] = 'Send Courier';
+                $new['guardify_courier'] = 'Send to Courier';
             }
         }
         return $new;
@@ -428,9 +428,11 @@ class Guardify_Send_Courier {
             return;
         }
 
-        // Not sent — show send button
+        // Not sent — show send button with COD field
         $default = get_option('guardify_default_courier', 'steadfast');
+        $total   = $order->get_total();
         echo '<div class="gf-sc-cell" id="gf-sc-' . esc_attr($order_id) . '">';
+        echo '<input type="number" class="gf-sc-cod" value="' . esc_attr($total) . '" step="0.01" min="0" title="COD Amount (৳)" />';
         echo '<button type="button" class="gf-sc-send" data-order-id="' . esc_attr($order_id) . '" data-provider="' . esc_attr($default) . '">Send</button>';
         echo '</div>';
     }
@@ -450,8 +452,13 @@ class Guardify_Send_Courier {
 
         // CSS
         wp_add_inline_style('woocommerce_admin_styles', "
-.column-guardify_courier { width: 120px; }
+.column-guardify_courier { width: 140px; }
 .gf-sc-cell { font-size: 11px; line-height: 1.5; }
+.gf-sc-cod {
+    display: block; width: 100%; padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 4px;
+    font-size: 11px; margin-bottom: 4px; box-sizing: border-box;
+}
+.gf-sc-cod:focus { border-color: #16a34a; outline: none; }
 .gf-sc-send {
     display: inline-block; padding: 4px 14px; border: none; border-radius: 4px;
     font-size: 12px; font-weight: 600; cursor: pointer;
@@ -485,13 +492,15 @@ jQuery(function($){
     // Send button click
     $(document).on('click', '.gf-sc-send', function(){
         var btn = $(this), id = btn.data('order-id'), provider = btn.data('provider');
+        var codInput = btn.siblings('.gf-sc-cod');
+        var codVal = codInput.length ? parseFloat(codInput.val()) || 0 : 0;
         btn.prop('disabled', true).text('Sending...');
         $.post(ajaxurl, {
             action: 'guardify_send_to_courier',
             _wpnonce: nonce,
             order_id: id,
             provider: provider,
-            cod_amount: 0,
+            cod_amount: codVal,
             note: ''
         }, function(r){
             if (r.success) {

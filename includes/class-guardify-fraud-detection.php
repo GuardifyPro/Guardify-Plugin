@@ -32,21 +32,26 @@ class Guardify_Fraud_Detection {
         // Checkout tracking
         add_action('woocommerce_checkout_order_processed', [$this, 'track_order'], 10, 1);
 
-        // Block checks
+        // Block checks — checkout + ALL pages
         add_action('woocommerce_checkout_process', [$this, 'check_blocked'], 5);
+        add_action('wp', [$this, 'check_blocked_on_page']);
         add_action('wp_ajax_guardify_check_phone_blocked', [$this, 'ajax_check_phone_blocked']);
         add_action('wp_ajax_nopriv_guardify_check_phone_blocked', [$this, 'ajax_check_phone_blocked']);
 
         // Auto-block by DP ratio
         add_action('woocommerce_checkout_order_processed', [$this, 'auto_block_check'], 20, 1);
 
+        // Auto-block by order count within time window
+        add_action('woocommerce_checkout_order_processed', [$this, 'auto_block_order_count'], 25, 1);
+
+        // WooCommerce order action — Block User
+        add_filter('woocommerce_order_actions', [$this, 'add_block_user_order_action']);
+        add_action('woocommerce_order_action_guardify_block_user', [$this, 'process_block_user_order_action']);
+
         // Frontend device tracking
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_action('wp_ajax_guardify_track_visit', [$this, 'ajax_track_visit']);
         add_action('wp_ajax_nopriv_guardify_track_visit', [$this, 'ajax_track_visit']);
-
-        // Blocked user frontend check
-        add_action('wp', [$this, 'check_blocked_on_page']);
 
         // Admin actions
         add_action('wp_ajax_guardify_block_user', [$this, 'ajax_block_user']);
@@ -158,42 +163,89 @@ class Guardify_Fraud_Detection {
     }
 
     /**
-     * Check if the current visitor is blocked (on checkout/shop pages).
+     * Check if the current visitor is blocked — ALL frontend pages, not just checkout.
+     * Checks: IP block rules, phone tracking table, device cookie link.
      */
     public function check_blocked_on_page() {
-        if (is_admin() || !is_checkout()) {
+        if (is_admin()) {
+            return;
+        }
+
+        // Skip order-received / thank-you pages to avoid blocking right after purchase
+        if (function_exists('is_order_received_page') && is_order_received_page()) {
+            return;
+        }
+        if (is_wc_endpoint_url('order-received') || is_wc_endpoint_url('view-order')) {
             return;
         }
 
         $ip = $this->get_client_ip();
-        if (empty($ip)) {
-            return;
-        }
+        $device_id = isset($_COOKIE['guardify_device_id']) ? sanitize_text_field(wp_unslash($_COOKIE['guardify_device_id'])) : '';
+        $blocked_reason = '';
 
         global $wpdb;
-        $blocked = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$this->blocks_table}
-             WHERE is_active = 1 AND block_type = 'ip' AND block_value = %s",
-            $ip
-        ));
 
-        if ($blocked > 0) {
-            // Show blocked user popup
+        // 1. Check IP in block rules table
+        if (!empty($ip)) {
+            $ip_blocked = $wpdb->get_var($wpdb->prepare(
+                "SELECT COUNT(*) FROM {$this->blocks_table}
+                 WHERE is_active = 1 AND block_type = 'ip' AND block_value = %s",
+                $ip
+            ));
+            if ($ip_blocked > 0) {
+                $blocked_reason = 'IP ব্লক করা হয়েছে';
+            }
+        }
+
+        // 2. Check IP in tracking table (is_blocked)
+        if (empty($blocked_reason) && !empty($ip)) {
+            $tracking_blocked = $wpdb->get_var($wpdb->prepare(
+                "SELECT block_reason FROM {$this->table_name}
+                 WHERE is_blocked = 1 AND ip_address = %s LIMIT 1",
+                $ip
+            ));
+            if ($tracking_blocked) {
+                $blocked_reason = $tracking_blocked;
+            }
+        }
+
+        // 3. Check device cookie link
+        if (empty($blocked_reason) && !empty($device_id)) {
+            $device_blocked = $wpdb->get_var($wpdb->prepare(
+                "SELECT is_blocked FROM {$this->table_name} WHERE phone = %s",
+                'device:' . $device_id
+            ));
+            if ($device_blocked) {
+                $blocked_reason = 'ডিভাইস ব্লক করা হয়েছে';
+            }
+        }
+
+        if (!empty($blocked_reason)) {
             add_action('wp_footer', [$this, 'render_blocked_popup']);
         }
     }
 
     /**
-     * Render blocked user popup on frontend.
+     * Render non-dismissible blocked user popup on frontend.
      */
     public function render_blocked_popup() {
+        $title   = get_option('guardify_blocked_user_title', 'অর্ডার ব্লক করা হয়েছে');
+        $message = get_option('guardify_blocked_user_message', 'নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।');
+        $support = get_option('guardify_fraud_support_number', '');
         ?>
         <div id="guardify-blocked-popup" class="gf-blocked-popup" style="display:flex;">
             <div class="gf-blocked-popup-overlay"></div>
             <div class="gf-blocked-popup-content">
                 <div class="gf-blocked-popup-icon">🚫</div>
-                <h3>অর্ডার ব্লক করা হয়েছে</h3>
-                <p>নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।</p>
+                <h3><?php echo esc_html($title); ?></h3>
+                <p><?php echo esc_html($message); ?></p>
+                <?php if (!empty($support)) : ?>
+                <div style="margin-top:16px;">
+                    <a href="tel:<?php echo esc_attr($support); ?>" style="display:inline-flex;align-items:center;gap:6px;padding:10px 24px;background:#16a34a;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
+                        <span class="dashicons dashicons-phone"></span> কল করুন: <?php echo esc_html($support); ?>
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
         <style>
@@ -206,9 +258,17 @@ class Guardify_Fraud_Detection {
         </style>
         <script>
         jQuery(function($){
+            // Disable place order and prevent checkout submission
             $('#place_order').prop('disabled', true).css('opacity', '0.5');
             $('form.checkout').on('submit', function(e){ e.preventDefault(); return false; });
             $(document.body).on('checkout_place_order', function(){ return false; });
+            // Prevent popup dismissal
+            $(document).on('click keydown', function(e){
+                if ($('#guardify-blocked-popup').is(':visible') && $(e.target).closest('.gf-blocked-popup-content').length === 0) {
+                    e.stopPropagation();
+                    return false;
+                }
+            });
         });
         </script>
         <?php
@@ -282,7 +342,7 @@ class Guardify_Fraud_Detection {
     }
 
     /**
-     * Check if customer is blocked at checkout.
+     * Check if customer is blocked at checkout — uses throw Exception for strong block.
      */
     public function check_blocked() {
         $phone = isset($_POST['billing_phone']) ? sanitize_text_field(wp_unslash($_POST['billing_phone'])) : '';
@@ -301,8 +361,7 @@ class Guardify_Fraud_Detection {
         ));
 
         if ($blocked) {
-            wc_add_notice('এই ফোন নম্বর থেকে অর্ডার ব্লক করা হয়েছে।', 'error');
-            return;
+            throw new \Exception('এই ফোন নম্বর থেকে অর্ডার ব্লক করা হয়েছে।');
         }
 
         // Check advanced block rules
@@ -318,7 +377,7 @@ class Guardify_Fraud_Detection {
         ));
 
         if ($rule_blocked > 0) {
-            wc_add_notice('এই অর্ডারটি নিরাপত্তার কারণে ব্লক করা হয়েছে।', 'error');
+            throw new \Exception('এই অর্ডারটি নিরাপত্তার কারণে ব্লক করা হয়েছে।');
         }
     }
 
@@ -385,6 +444,136 @@ class Guardify_Fraud_Detection {
     }
 
     /**
+     * Auto-block by order count within time window — like OrderGuard.
+     * If a phone has placed >= X orders in Y hours, block it.
+     */
+    public function auto_block_order_count($order_id) {
+        $enabled = get_option('guardify_fraud_auto_block_count_enabled', 'no');
+        if ($enabled !== 'yes') {
+            return;
+        }
+
+        $order_limit = absint(get_option('guardify_fraud_auto_block_order_limit', 3));
+        $time_limit  = absint(get_option('guardify_fraud_auto_block_time_limit', 24));
+        if ($order_limit < 1 || $time_limit < 1) {
+            return;
+        }
+
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+
+        $phone = $order->get_billing_phone();
+        $phone = preg_replace('/[\s\-]/', '', $phone);
+        $phone = preg_replace('/^\+?88/', '', $phone);
+
+        if (empty($phone)) {
+            return;
+        }
+
+        // Check if already blocked
+        global $wpdb;
+        $already_blocked = $wpdb->get_var($wpdb->prepare(
+            "SELECT is_blocked FROM {$this->table_name} WHERE phone = %s",
+            $phone
+        ));
+        if ($already_blocked) {
+            return;
+        }
+
+        // Count recent orders for this phone
+        $phone_variants = [$phone];
+        if (strpos($phone, '88') !== 0) {
+            $phone_variants[] = '88' . $phone;
+        }
+        $phone_variants[] = '+88' . ltrim($phone, '0');
+
+        $cutoff = current_time('timestamp') - ($time_limit * 3600);
+        $recent_count = 0;
+
+        foreach ($phone_variants as $p) {
+            $orders = wc_get_orders([
+                'billing_phone' => $p,
+                'limit'         => $order_limit + 1,
+                'orderby'       => 'date',
+                'order'         => 'DESC',
+            ]);
+
+            foreach ($orders as $o) {
+                $order_ts_utc = $o->get_date_created()->getTimestamp();
+                $order_ts_wp  = $order_ts_utc + (get_option('gmt_offset') * 3600);
+                if ($order_ts_wp >= $cutoff) {
+                    $recent_count++;
+                }
+            }
+        }
+
+        if ($recent_count >= $order_limit) {
+            $reason = sprintf(
+                'অটো-ব্লক: %d ঘণ্টায় %d টি অর্ডার (সীমা: %d)',
+                $time_limit, $recent_count, $order_limit
+            );
+            $this->block_phone($phone, $reason);
+            $order->add_order_note('Guardify: ' . $reason);
+            $order->save();
+        }
+    }
+
+    /**
+     * Add "Block User" action to WooCommerce order actions dropdown.
+     */
+    public function add_block_user_order_action($actions) {
+        global $theorder;
+        if ($theorder) {
+            $phone = $theorder->get_billing_phone();
+            if (!empty($phone)) {
+                $actions['guardify_block_user'] = 'Guardify: ব্যবহারকারী ব্লক করুন (ফ্রড প্রোটেকশন)';
+            }
+        }
+        return $actions;
+    }
+
+    /**
+     * Process "Block User" order action.
+     */
+    public function process_block_user_order_action($order) {
+        if (!$order) {
+            return;
+        }
+
+        $phone = $order->get_billing_phone();
+        $phone = preg_replace('/[\s\-]/', '', $phone);
+        $phone = preg_replace('/^\+?88/', '', $phone);
+
+        if (empty($phone)) {
+            $order->add_order_note('Guardify: ব্লক ব্যর্থ — ফোন নম্বর পাওয়া যায়নি।');
+            return;
+        }
+
+        $this->block_phone($phone, 'অ্যাডমিন কর্তৃক অর্ডার অ্যাকশন থেকে ব্লক');
+
+        // Also block the IP if available
+        $ip = $order->get_meta('_guardify_ip_address');
+        if (!empty($ip)) {
+            global $wpdb;
+            $wpdb->replace($this->blocks_table, [
+                'block_type'  => 'ip',
+                'block_value' => $ip,
+                'reason'      => 'অর্ডার #' . $order->get_id() . ' থেকে ব্লক',
+                'created_by'  => get_current_user_id(),
+                'is_active'   => 1,
+            ], ['%s', '%s', '%s', '%d', '%d']);
+        }
+
+        $order->add_order_note(sprintf(
+            'Guardify: ফোন %s ব্লক করা হয়েছে। %s',
+            $phone,
+            (!empty($ip) ? 'IP ' . $ip . ' ও ব্লক করা হয়েছে।' : '')
+        ));
+    }
+
+    /**
      * Block a phone number.
      */
     public function block_phone($phone, $reason = '') {
@@ -422,9 +611,10 @@ class Guardify_Fraud_Detection {
 
     /**
      * AJAX: Check if phone is blocked (frontend).
+     * Also checks advanced block rules for the phone.
      */
     public function ajax_check_phone_blocked() {
-        check_ajax_referer('guardify_checkout_nonce', 'nonce');
+        check_ajax_referer('guardify_fraud_nonce', 'nonce');
 
         $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
         $phone = preg_replace('/[\s\-]/', '', $phone);
@@ -435,12 +625,25 @@ class Guardify_Fraud_Detection {
         }
 
         global $wpdb;
+
+        // Check tracking table
         $blocked = $wpdb->get_var($wpdb->prepare(
             "SELECT is_blocked FROM {$this->table_name} WHERE phone = %s",
             $phone
         ));
 
-        wp_send_json_success(['blocked' => (bool) $blocked]);
+        if ($blocked) {
+            wp_send_json_success(['blocked' => true]);
+        }
+
+        // Check advanced block rules (phone type)
+        $rule_blocked = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$this->blocks_table}
+             WHERE is_active = 1 AND block_type = 'phone' AND block_value = %s",
+            $phone
+        ));
+
+        wp_send_json_success(['blocked' => (bool) ($rule_blocked > 0)]);
     }
 
     /**

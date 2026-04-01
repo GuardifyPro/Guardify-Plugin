@@ -46,11 +46,7 @@ class Guardify_Phone_Sync {
      * Schedule a recurring cron event (every 5 minutes).
      */
     public function schedule_cron() {
-        if (!wp_next_scheduled(self::CRON_HOOK)) {
-            wp_schedule_event(time(), 'guardify_five_minutes', self::CRON_HOOK);
-        }
-
-        // Register custom interval
+        // Register custom interval first (must exist before scheduling)
         add_filter('cron_schedules', function ($schedules) {
             $schedules['guardify_five_minutes'] = [
                 'interval' => 300,
@@ -58,6 +54,10 @@ class Guardify_Phone_Sync {
             ];
             return $schedules;
         });
+
+        if (!wp_next_scheduled(self::CRON_HOOK)) {
+            wp_schedule_event(time(), 'guardify_five_minutes', self::CRON_HOOK);
+        }
     }
 
     public function on_activate() {
