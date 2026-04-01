@@ -44,12 +44,12 @@ class Guardify_Report_Column {
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
             if ($key === 'billing_address' || $key === 'order_total') {
-                $new['gf_report'] = 'Guardify রিপোর্ট';
+                $new['gf_report'] = 'Guardify Report';
             }
         }
         // Fallback if target column not found
         if (!isset($new['gf_report'])) {
-            $new['gf_report'] = 'Guardify রিপোর্ট';
+            $new['gf_report'] = 'Guardify Report';
         }
         return $new;
     }
@@ -80,12 +80,12 @@ class Guardify_Report_Column {
     private function output_container($order_id) {
         $order = wc_get_order($order_id);
         if (!$order || empty($order->get_billing_phone())) {
-            echo '<span style="color:#9ca3af">ফোন নেই</span>';
+            echo '<span style="color:#9ca3af">No phone</span>';
             return;
         }
 
         echo '<div class="gf-report-wrap">';
-        echo '<button type="button" class="button button-small gf-report-btn" data-order-id="' . esc_attr($order_id) . '">রিপোর্ট দেখুন</button>';
+        echo '<button type="button" class="button button-small gf-report-btn" data-order-id="' . esc_attr($order_id) . '">View Report</button>';
         echo '<div class="gf-report-result" id="gf-report-' . esc_attr($order_id) . '"></div>';
         echo '</div>';
     }
@@ -103,7 +103,7 @@ class Guardify_Report_Column {
         $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
         $order    = wc_get_order($order_id);
         if (!$order) {
-            wp_send_json_error('অর্ডার পাওয়া যায়নি');
+            wp_send_json_error('Order not found');
         }
 
         $phone = $order->get_billing_phone();
@@ -111,18 +111,18 @@ class Guardify_Report_Column {
         $phone = preg_replace('/^\+?88/', '', $phone);
 
         if (empty($phone) || !preg_match('/^01[3-9]\d{8}$/', $phone)) {
-            wp_send_json_error('ভ্যালিড ফোন নেই');
+            wp_send_json_error('No valid phone');
         }
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error('API সংযুক্ত নয়');
+            wp_send_json_error('API not connected');
         }
 
         $result = $api->get('/api/v1/courier/summary', ['phone' => $phone]);
 
         if (!isset($result['dp_ratio']) && !isset($result['data']['dp_ratio'])) {
-            wp_send_json_error('ডেটা পাওয়া যায়নি');
+            wp_send_json_error('Data not found');
         }
 
         // Normalize response
@@ -134,7 +134,7 @@ class Guardify_Report_Column {
         $risk     = $data['risk_level'] ?? 'unknown';
 
         $dp_color = $dp >= 80 ? '#16a34a' : ($dp >= 50 ? '#d97706' : '#dc2626');
-        $risk_label = $risk === 'low' ? 'নিম্ন' : ($risk === 'medium' ? 'মাঝারি' : 'উচ্চ');
+        $risk_label = $risk === 'low' ? 'Low' : ($risk === 'medium' ? 'Medium' : 'High');
 
         // Build compact HTML report
         $html = '<div class="gf-mini-report" style="font-size:12px;line-height:1.6;">';
@@ -148,8 +148,8 @@ class Guardify_Report_Column {
         $html .= '<div style="background:' . $dp_color . ';height:6px;border-radius:4px;width:' . min($dp, 100) . '%;"></div>';
         $html .= '</div>';
 
-        $html .= '<div style="color:#374151;">📦 ' . $total . ' মোট &bull; ✅ ' . $delivered . ' সফল &bull; ❌ ' . $failed . ' ব্যর্থ</div>';
-        $html .= '<div style="color:#6b7280;">ঝুঁকি: <strong style="color:' . $dp_color . ';">' . esc_html($risk_label) . '</strong></div>';
+        $html .= '<div style="color:#374151;">📦 ' . $total . ' Total &bull; ✅ ' . $delivered . ' Delivered &bull; ❌ ' . $failed . ' Failed</div>';
+        $html .= '<div style="color:#6b7280;">Risk: <strong style="color:' . $dp_color . ';">' . esc_html($risk_label) . '</strong></div>';
 
         // Provider breakdown if available
         if (!empty($data['providers'])) {
@@ -184,11 +184,11 @@ class Guardify_Report_Column {
             jQuery(function($){
                 $(document).on('click','.gf-report-btn',function(){
                     var btn=$(this), id=btn.data('order-id'), res=$('#gf-report-'+id);
-                    btn.hide(); res.html('<em>লোড হচ্ছে...</em>');
+                    btn.hide(); res.html('<em>Loading...</em>');
                     $.post(ajaxurl,{action:'guardify_fetch_report',order_id:id,_ajax_nonce:'" . wp_create_nonce('guardify_nonce') . "'},function(r){
                         if(r.success) res.html(r.data.html);
                         else { res.html('<span style=\"color:#dc2626\">'+r.data+'</span>'); btn.show(); }
-                    }).fail(function(){ res.html('<span style=\"color:#dc2626\">ত্রুটি</span>'); btn.show(); });
+                    }).fail(function(){ res.html('<span style=\\\"color:#dc2626\\\">Error</span>'); btn.show(); });
                 });
             });
         ");

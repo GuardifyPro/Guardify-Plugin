@@ -44,7 +44,7 @@ class Guardify_Phone_History {
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
             if ($key === 'order_status') {
-                $new['gf_phone_history'] = 'ফোন হিস্ট্রি';
+                $new['gf_phone_history'] = 'Phone History';
             }
         }
         return $new;
@@ -75,7 +75,7 @@ class Guardify_Phone_History {
      */
     private function output_column($order_id) {
         echo '<div class="gf-ph-wrap">';
-        echo '<button type="button" class="button button-small gf-ph-load" data-order-id="' . esc_attr($order_id) . '">চেক করুন</button>';
+        echo '<button type="button" class="button button-small gf-ph-load" data-order-id="' . esc_attr($order_id) . '">Check</button>';
         echo '<span class="gf-ph-result" id="gf-ph-' . esc_attr($order_id) . '"></span>';
         echo '</div>';
     }
@@ -91,22 +91,29 @@ class Guardify_Phone_History {
         }
 
         $order_id = isset($_POST['order_id']) ? absint($_POST['order_id']) : 0;
-        $order    = wc_get_order($order_id);
-        if (!$order) {
-            wp_send_json_error('অর্ডার পাওয়া যায়নি');
+
+        // Support direct phone param (from Quick View) or order-based lookup
+        $phone = '';
+        if (!empty($_POST['phone'])) {
+            $phone = sanitize_text_field(wp_unslash($_POST['phone']));
+        } elseif ($order_id) {
+            $order = wc_get_order($order_id);
+            if (!$order) {
+                wp_send_json_error('Order not found');
+            }
+            $phone = $order->get_billing_phone();
         }
 
-        $phone = $order->get_billing_phone();
         $phone = preg_replace('/[\s\-]/', '', $phone);
         $phone = preg_replace('/^\+?88/', '', $phone);
 
         if (empty($phone) || !preg_match('/^01[3-9]\d{8}$/', $phone)) {
-            wp_send_json_error('ভ্যালিড ফোন নম্বর নেই');
+            wp_send_json_error('No valid phone number');
         }
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error('API সংযুক্ত নয়');
+            wp_send_json_error('API not connected');
         }
 
         $result = $api->get('/api/v1/courier/dp-ratio', ['phone' => $phone]);
@@ -116,7 +123,7 @@ class Guardify_Phone_History {
 
         // Check for API error
         if (isset($result['success']) && $result['success'] === false) {
-            $err_msg = isset($result['error']) ? $result['error'] : 'API ত্রুটি';
+            $err_msg = isset($result['error']) ? $result['error'] : 'API error';
             wp_send_json_error($err_msg);
         }
 
@@ -126,7 +133,7 @@ class Guardify_Phone_History {
             $risk  = isset($d['risk_level']) ? $d['risk_level'] : 'unknown';
 
             if ($total === 0) {
-                wp_send_json_success(['html' => '<span style="color:#6b7280;font-size:12px;">কোনো কুরিয়ার ডেটা নেই</span>']);
+                wp_send_json_success(['html' => '<span style="color:#6b7280;font-size:12px;">No courier data</span>']);
             }
 
             $color = $dp >= 80 ? '#16a34a' : ($dp >= 50 ? '#d97706' : '#dc2626');
@@ -134,12 +141,12 @@ class Guardify_Phone_History {
             $html = '<span class="gf-ph-badge" style="color:' . $color . ';font-weight:600;">'
                   . esc_html(number_format($dp, 1)) . '%</span>'
                   . '<span class="gf-ph-meta" style="color:#6b7280;font-size:12px;margin-left:4px;">'
-                  . esc_html($total) . ' পার্সেল</span>';
+                  . esc_html($total) . ' parcels</span>';
 
             wp_send_json_success(['html' => $html]);
         }
 
-        wp_send_json_error('DP ডেটা পাওয়া যায়নি');
+        wp_send_json_error('DP data not found');
     }
 
     /**
@@ -157,11 +164,11 @@ class Guardify_Phone_History {
             jQuery(function($){
                 $(document).on('click','.gf-ph-load',function(){
                     var btn=$(this), id=btn.data('order-id'), res=$('#gf-ph-'+id);
-                    btn.hide(); res.html('<em>লোড হচ্ছে...</em>');
+                    btn.hide(); res.html('<em>Loading...</em>');
                     $.post(ajaxurl,{action:'guardify_phone_history',order_id:id,_ajax_nonce:'" . wp_create_nonce('guardify_nonce') . "'},function(r){
                         if(r.success) res.html(r.data.html);
                         else { res.html('<span style=\"color:#dc2626\">'+r.data+'</span>'); btn.show(); }
-                    }).fail(function(){ res.html('<span style=\"color:#dc2626\">ত্রুটি</span>'); btn.show(); });
+                    }).fail(function(){ res.html('<span style=\"color:#dc2626\">Error</span>'); btn.show(); });
                 });
             });
         ");

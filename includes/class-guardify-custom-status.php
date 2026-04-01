@@ -28,14 +28,14 @@ class Guardify_Custom_Status {
      */
     public function register_status() {
         register_post_status('wc-otp-pending', [
-            'label'                     => 'OTP পেন্ডিং',
+            'label'                     => 'OTP Pending',
             'public'                    => true,
             'exclude_from_search'       => false,
             'show_in_admin_all_list'    => true,
             'show_in_admin_status_list' => true,
             'label_count'               => _n_noop(
-                'OTP পেন্ডিং <span class="count">(%s)</span>',
-                'OTP পেন্ডিং <span class="count">(%s)</span>',
+                'OTP Pending <span class="count">(%s)</span>',
+                'OTP Pending <span class="count">(%s)</span>',
                 'guardify-pro'
             ),
         ]);
@@ -49,7 +49,7 @@ class Guardify_Custom_Status {
         foreach ($statuses as $key => $label) {
             $new[$key] = $label;
             if ($key === 'wc-pending') {
-                $new['wc-otp-pending'] = 'OTP পেন্ডিং';
+                $new['wc-otp-pending'] = 'OTP Pending';
             }
         }
         return $new;
@@ -80,7 +80,7 @@ class Guardify_Custom_Status {
             }
             .widefat .column-order_status mark.otp-pending { background: #f59e0b; color: #fff; }
             .widefat .column-order_status mark.otp-pending::after {
-                content: "OTP পেন্ডিং"; font-size: 11px; font-weight: 500;
+                content: "OTP Pending"; font-size: 11px; font-weight: 500;
             }
         </style>';
     }

@@ -3,7 +3,7 @@
  * Plugin Name:       Guardify Pro
  * Plugin URI:        https://guardify.pro
  * Description:       ফ্রড ডিটেকশন, কুরিয়ার ইন্টেলিজেন্স, OTP ভেরিফিকেশন ও স্মার্ট অর্ডার ফিল্টারিং — বাংলাদেশের ই-কমার্সের জন্য।
- * Version:           0.2.1
+ * Version:           0.3.0
  * Author:            Tansiq Labs
  * Author URI:        https://tansiqlabs.com.bd
  * License:           Proprietary
@@ -16,7 +16,7 @@
 
 defined('ABSPATH') || exit;
 
-define('GUARDIFY_VERSION', '0.2.1');
+define('GUARDIFY_VERSION', '0.3.0');
 define('GUARDIFY_FILE', __FILE__);
 define('GUARDIFY_PATH', plugin_dir_path(__FILE__));
 define('GUARDIFY_URL', plugin_dir_url(__FILE__));
@@ -40,6 +40,8 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-incomplete-orders.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-fraud-detection.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-send-courier.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-sms-logs.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-phone-sync.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-quick-view.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
 require_once GUARDIFY_PATH . 'plugin-update-checker/plugin-update-checker.php';
@@ -102,6 +104,8 @@ final class Guardify_Pro {
         Guardify_Fraud_Detection::get_instance();
         Guardify_Send_Courier::get_instance();
         Guardify_Search::get_instance();
+        Guardify_Phone_Sync::get_instance();
+        Guardify_Quick_View::get_instance();
 
         // Admin menu
         add_action('admin_menu', [$this, 'register_menu']);
@@ -275,20 +279,36 @@ final class Guardify_Pro {
             wp_send_json_error('Unauthorized');
         }
 
-        $api_key    = isset($_POST['api_key']) ? sanitize_text_field(wp_unslash($_POST['api_key'])) : '';
-        $secret_key = isset($_POST['secret_key']) ? trim(wp_unslash($_POST['secret_key'])) : '';
+        $api_key = isset($_POST['api_key']) ? sanitize_text_field(wp_unslash($_POST['api_key'])) : '';
 
-        if (empty($api_key) || empty($secret_key) || !preg_match('/^[a-zA-Z0-9_\-]+$/', $secret_key)) {
-            wp_send_json_error('API Key ও Secret Key প্রয়োজন।');
+        if (empty($api_key) || !preg_match('/^gp_[a-f0-9]+$/i', $api_key)) {
+            wp_send_json_error('সঠিক API কী দিন। ফরম্যাট: gp_xxxx');
         }
 
         $api = new Guardify_API();
-        $api->save_credentials($api_key, $secret_key);
+        $api->save_credentials($api_key);
 
         $result = $api->check_key();
 
         if (!empty($result['success']) && $result['success'] === true) {
-            wp_send_json_success();
+            // Report domain to engine
+            $api->get('/api/v1/auth/domain-update', ['domain' => site_url()]);
+
+            // Fetch subscription details to show immediately
+            $sub_result = $api->get('/api/v1/subscription/status');
+            $sub_data = [];
+            if (!empty($sub_result['success']) && !empty($sub_result['data'])) {
+                $sub_data = $sub_result['data'];
+            } elseif (!empty($sub_result['plan'])) {
+                $sub_data = $sub_result;
+            }
+
+            wp_send_json_success([
+                'plan'        => isset($sub_data['plan']) ? $sub_data['plan'] : 'free',
+                'sms_balance' => isset($sub_data['sms_balance']) ? (int) $sub_data['sms_balance'] : 0,
+                'expires_at'  => isset($sub_data['expires_at']) ? $sub_data['expires_at'] : null,
+                'domain'      => site_url(),
+            ]);
         }
 
         // Verification failed — clear credentials
@@ -348,9 +368,25 @@ final class Guardify_Pro {
         $result = $api->check_status();
 
         if (!empty($result['success']) && $result['success'] === true) {
+            // Report domain to engine on every status check
+            $api->get('/api/v1/auth/domain-update', ['domain' => site_url()]);
+
+            // Fetch subscription details
+            $sub_result = $api->get('/api/v1/subscription/status');
+            $sub_data = [];
+            if (!empty($sub_result['success']) && !empty($sub_result['data'])) {
+                $sub_data = $sub_result['data'];
+            } elseif (!empty($sub_result['plan'])) {
+                $sub_data = $sub_result;
+            }
+
             wp_send_json_success([
-                'active' => true,
-                'plan'   => isset($result['data']['plan']) ? $result['data']['plan'] : 'Free',
+                'active'      => true,
+                'plan'        => isset($sub_data['plan']) ? $sub_data['plan'] : (isset($result['data']['plan']) ? $result['data']['plan'] : 'free'),
+                'status'      => isset($result['data']['status']) ? $result['data']['status'] : 'active',
+                'sms_balance' => isset($sub_data['sms_balance']) ? (int) $sub_data['sms_balance'] : 0,
+                'expires_at'  => isset($sub_data['expires_at']) ? $sub_data['expires_at'] : null,
+                'domain'      => site_url(),
             ]);
         }
 

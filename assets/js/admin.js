@@ -11,16 +11,12 @@
     $(document).on('submit', '#gf-connect-form', function (e) {
         e.preventDefault();
 
-        var connectionKey = $('#gf-connection-key').val().trim();
-        var parts         = connectionKey.split(':');
+        var apiKey = $('#gf-connection-key').val().trim();
 
-        if (parts.length < 2 || !parts[0] || !parts[1]) {
-            showMsg('error', 'সঠিক Connection Key পেস্ট করুন। ফরম্যাট: gp_xxxx:sk_xxxx — guardify.pro/api-keys থেকে কপি করুন।');
+        if (!apiKey || !apiKey.match(/^gp_[a-f0-9]+$/i)) {
+            showMsg('error', 'সঠিক API কী দিন। ফরম্যাট: gp_xxxx — guardify.pro/api-keys থেকে কপি করুন।');
             return;
         }
-
-        var apiKey    = parts[0].trim();
-        var secretKey = parts.slice(1).join(':').trim(); // handle sk_ containing colons
 
         var $btn = $('#gf-connect-btn');
         $btn.prop('disabled', true).text('যাচাই হচ্ছে...');
@@ -29,13 +25,25 @@
         $.post(data.ajaxUrl, {
             action:     'guardify_connect',
             _wpnonce:   data.nonce,
-            api_key:    apiKey,
-            secret_key: secretKey
+            api_key:    apiKey
         })
         .done(function (res) {
             if (res.success) {
-                showMsg('success', 'সফলভাবে সংযুক্ত হয়েছে। পেজ রিলোড হচ্ছে...');
-                setTimeout(function () { location.reload(); }, 800);
+                var d = res.data || {};
+                var planMap = { free: 'Free', starter: 'Starter', business: 'Business' };
+                var planName = planMap[d.plan] || d.plan || 'Free';
+                var sms = d.sms_balance !== undefined ? d.sms_balance : 0;
+                var info = '✅ সফলভাবে সংযুক্ত হয়েছে!\n\n';
+                info += '📦 প্ল্যান: ' + planName + '\n';
+                info += '💬 SMS ব্যালেন্স: ' + sms + '\n';
+                if (d.expires_at) {
+                    var exp = new Date(d.expires_at);
+                    var now = new Date();
+                    var days = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+                    info += '📅 মেয়াদ: ' + (days > 0 ? days + ' দিন বাকি' : 'মেয়াদ শেষ');
+                }
+                showMsg('success', info.replace(/\n/g, '<br>'));
+                setTimeout(function () { location.reload(); }, 2000);
             } else {
                 showMsg('error', res.data || 'সংযোগ ব্যর্থ হয়েছে।');
                 $btn.prop('disabled', false).text('সংযুক্ত করুন');
@@ -86,7 +94,18 @@
             if (res.success && res.data) {
                 $('#gf-status-text').text(res.data.active ? 'সক্রিয়' : 'নিষ্ক্রিয়');
                 if (res.data.plan) {
-                    $('#gf-plan-text').text(res.data.plan);
+                    var planMap = { free: 'Free', starter: 'Starter', business: 'Business' };
+                    $('#gf-plan-text').text(planMap[res.data.plan] || res.data.plan);
+                }
+                if (res.data.sms_balance !== undefined) {
+                    $('#gf-sms-text').text(res.data.sms_balance.toLocaleString('bn-BD'));
+                }
+                if (res.data.expires_at) {
+                    var exp = new Date(res.data.expires_at);
+                    var now = new Date();
+                    var days = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+                    var daysText = days > 0 ? days + ' দিন বাকি' : 'মেয়াদ শেষ';
+                    $('#gf-plan-text').append(' <small style="opacity:0.7">(' + daysText + ')</small>');
                 }
             } else {
                 $('#gf-status-text').text('যাচাই ব্যর্থ');

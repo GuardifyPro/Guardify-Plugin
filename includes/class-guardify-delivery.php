@@ -28,10 +28,10 @@ class Guardify_Delivery {
         if ($screen) {
             add_meta_box(
                 'guardify-delivery-summary',
-                'Guardify — ডেলিভারি ইন্টেলিজেন্স',
+                'Guardify — Delivery Intelligence',
                 [$this, 'render_meta_box'],
                 $screen,
-                'side',
+                'normal',
                 'high'
             );
         }
@@ -43,34 +43,122 @@ class Guardify_Delivery {
     public function render_meta_box($post_or_order) {
         $order = $this->get_order_from($post_or_order);
         if (!$order) {
-            echo '<p>অর্ডার পাওয়া যায়নি।</p>';
+            echo '<p>Order not found.</p>';
             return;
         }
 
         $phone = $order->get_billing_phone();
         if (empty($phone)) {
-            echo '<p class="gf-text-muted">বিলিং ফোন নম্বর নেই।</p>';
+            echo '<p class="gf-text-muted">No billing phone number.</p>';
             return;
         }
 
         $nonce = wp_create_nonce('guardify_delivery_nonce');
         ?>
         <div id="gf-delivery-box" data-phone="<?php echo esc_attr($phone); ?>" data-nonce="<?php echo esc_attr($nonce); ?>">
-            <div class="gf-delivery-loading" style="text-align:center; padding:1rem;">
+            <div class="gf-delivery-loading" style="text-align:center; padding:20px;">
                 <span class="spinner is-active" style="float:none;"></span>
-                <p style="margin-top:0.5rem; color:#666; font-size:13px;">কুরিয়ার ডেটা লোড হচ্ছে...</p>
+                <p style="margin-top:0.5rem; color:#4a5568; font-size:13px;">Loading courier data...</p>
             </div>
         </div>
         <style>
-            #guardify-delivery-summary .gf-dp-bar { height:6px; border-radius:3px; background:#e5e7eb; margin-top:6px; }
-            #guardify-delivery-summary .gf-dp-fill { height:100%; border-radius:3px; transition:width 0.3s; }
-            #guardify-delivery-summary .gf-risk-high { color:#dc2626; font-weight:600; }
-            #guardify-delivery-summary .gf-risk-medium { color:#d97706; font-weight:600; }
-            #guardify-delivery-summary .gf-risk-low { color:#16a34a; font-weight:600; }
-            #guardify-delivery-summary .gf-courier-row { display:flex; justify-content:space-between; padding:4px 0; font-size:13px; border-bottom:1px solid #f3f4f6; }
-            #guardify-delivery-summary .gf-courier-row:last-child { border-bottom:none; }
-            #guardify-delivery-summary .gf-summary-label { font-size:12px; color:#6b7280; }
-            #guardify-delivery-summary .gf-summary-value { font-size:18px; font-weight:700; }
+            #guardify-delivery-summary .inside { padding: 0; }
+            .gf-delivery-wrapper {
+                padding: 15px;
+                background: #fff;
+            }
+            .gf-delivery-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 15px;
+                background: #fff;
+            }
+            .gf-delivery-table th,
+            .gf-delivery-table td {
+                padding: 10px 12px;
+                text-align: center;
+                border: 1px solid #e2e8f0;
+                font-size: 13px;
+            }
+            .gf-delivery-table th {
+                background: #f8fafc;
+                font-weight: 600;
+                color: #1e293b;
+            }
+            .gf-delivery-table td.gf-courier-name {
+                text-align: left;
+                font-weight: 500;
+                text-transform: capitalize;
+            }
+            .gf-delivery-table td.gf-delivered {
+                background-color: #f0fdf4;
+                color: #166534;
+                font-weight: 600;
+            }
+            .gf-delivery-table td.gf-returned {
+                background-color: #fef2f2;
+                color: #991b1b;
+                font-weight: 600;
+            }
+            .gf-delivery-table tr.gf-totals-row {
+                background: #f8fafc;
+                font-weight: 700;
+            }
+            .gf-progress-bar {
+                height: 22px;
+                background: rgba(91, 10, 250, 0.1);
+                border-radius: 11px;
+                overflow: hidden;
+                margin: 15px 0;
+                position: relative;
+            }
+            .gf-progress-fill {
+                height: 100%;
+                background: linear-gradient(90deg, #7c3aed, #5b0afa);
+                border-radius: 11px;
+                transition: width 0.5s ease;
+                position: relative;
+            }
+            .gf-progress-text {
+                position: absolute;
+                width: 100%;
+                text-align: center;
+                color: #fff;
+                font-size: 12px;
+                font-weight: 600;
+                line-height: 22px;
+                top: 0;
+                left: 0;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            }
+            .gf-fraud-report {
+                margin-top: 15px;
+                padding: 15px;
+                background: #f6efff;
+                border-radius: 8px;
+                border: 1px solid #e9d5ff;
+            }
+            .gf-fraud-report h4 {
+                margin: 0 0 10px;
+                color: #5b21b6;
+                font-size: 14px;
+                font-weight: 700;
+            }
+            .gf-fraud-report ul {
+                margin: 0;
+                padding-left: 18px;
+                color: #4a5568;
+                line-height: 1.6;
+                list-style-type: disc;
+            }
+            .gf-fraud-report li { margin-bottom: 4px; }
+            .gf-fraud-report li:last-child { margin-bottom: 0; }
+            .gf-no-data {
+                text-align: center;
+                padding: 20px;
+                color: #6b7280;
+                font-size: 13px;
+            }
         </style>
         <script>
         jQuery(function($){
@@ -87,40 +175,88 @@ class Guardify_Delivery {
                 if (res.success && res.data) {
                     box.html(renderDelivery(res.data));
                 } else {
-                    box.html('<p style="color:#dc2626; font-size:13px;">ডেটা লোড ব্যর্থ হয়েছে।</p>');
+                    box.html('<div class="gf-no-data">Failed to load delivery data.</div>');
                 }
             }).fail(function() {
-                box.html('<p style="color:#dc2626; font-size:13px;">সার্ভারে সংযোগ করা যায়নি।</p>');
+                box.html('<div class="gf-no-data">Could not connect to server.</div>');
             });
 
             function renderDelivery(d) {
-                var dpColor = d.dp_ratio >= 80 ? '#16a34a' : (d.dp_ratio >= 50 ? '#d97706' : '#dc2626');
-                var riskClass = 'gf-risk-' + (d.risk_level || 'high');
-                var riskBn = { low: 'নিম্ন ঝুঁকি', medium: 'মাঝারি ঝুঁকি', high: 'উচ্চ ঝুঁকি' };
+                var providers = d.providers || [];
+                var totalParcels = d.total_parcels || 0;
+                var totalDelivered = d.total_delivered || 0;
+                var totalCancelled = d.total_cancelled || 0;
+                var totalReturned = d.total_returned || 0;
+                var totalFailed = totalCancelled + totalReturned;
+                var dpRatio = parseFloat(d.dp_ratio) || 0;
 
-                var html = '<div style="text-align:center; padding:4px 0 8px;">';
-                html += '<div class="gf-summary-label">ডেলিভারি পারফরম্যান্স</div>';
-                html += '<div class="gf-summary-value" style="color:' + dpColor + ';">' + (d.dp_ratio || 0).toFixed(1) + '%</div>';
-                html += '<span class="' + riskClass + '" style="font-size:12px;">' + (riskBn[d.risk_level] || 'অজানা') + '</span>';
-                html += '<div class="gf-dp-bar"><div class="gf-dp-fill" style="width:' + Math.min(d.dp_ratio || 0, 100) + '%; background:' + dpColor + ';"></div></div>';
-                html += '</div>';
-
-                html += '<div style="margin-top:8px; font-size:13px;">';
-                html += '<div class="gf-courier-row"><span>মোট পার্সেল</span><strong>' + (d.total_parcels || 0) + '</strong></div>';
-                html += '<div class="gf-courier-row"><span>ডেলিভার্ড</span><strong style="color:#16a34a;">' + (d.total_delivered || 0) + '</strong></div>';
-                html += '<div class="gf-courier-row"><span>ক্যান্সেল্ড</span><strong style="color:#d97706;">' + (d.total_cancelled || 0) + '</strong></div>';
-                html += '<div class="gf-courier-row"><span>রিটার্ন্ড</span><strong style="color:#dc2626;">' + (d.total_returned || 0) + '</strong></div>';
-                html += '</div>';
-
-                if (d.providers && d.providers.length > 0) {
-                    html += '<div style="margin-top:10px; border-top:1px solid #e5e7eb; padding-top:8px;">';
-                    html += '<div class="gf-summary-label" style="margin-bottom:4px;">কুরিয়ার ব্রেকডাউন</div>';
-                    d.providers.forEach(function(p) {
-                        html += '<div class="gf-courier-row"><span>' + esc(p.provider) + '</span><span>' + p.total_delivered + '/' + p.total_parcels + '</span></div>';
-                    });
-                    html += '</div>';
+                if (providers.length === 0 && totalParcels === 0) {
+                    return '<div class="gf-no-data">No delivery history found for this phone number.</div>';
                 }
 
+                var html = '<div class="gf-delivery-wrapper">';
+
+                // Courier breakdown table
+                html += '<table class="gf-delivery-table">';
+                html += '<thead><tr><th style="text-align:left;">Courier</th><th>Total</th><th>Delivered</th><th>Returned</th><th>Success Ratio</th></tr></thead>';
+                html += '<tbody>';
+
+                var fraudDetails = [];
+
+                for (var i = 0; i < providers.length; i++) {
+                    var p = providers[i];
+                    var pTotal = p.total_parcels || 0;
+                    var pDelivered = p.total_delivered || 0;
+                    var pReturned = (p.total_cancelled || 0) + (p.total_returned || 0);
+                    var pRatio = pTotal > 0 ? ((pDelivered / pTotal) * 100).toFixed(2) : '0.00';
+
+                    html += '<tr>';
+                    html += '<td class="gf-courier-name">' + esc(p.provider) + '</td>';
+                    html += '<td>' + pTotal + '</td>';
+                    html += '<td class="gf-delivered">' + pDelivered + '</td>';
+                    html += '<td class="gf-returned">' + pReturned + '</td>';
+                    html += '<td>' + pRatio + '%</td>';
+                    html += '</tr>';
+
+                    // Collect fraud details from Steadfast
+                    if (p.fraud_details && p.fraud_details.length > 0) {
+                        fraudDetails = fraudDetails.concat(p.fraud_details);
+                    }
+                }
+
+                // Totals row
+                html += '<tr class="gf-totals-row">';
+                html += '<td class="gf-courier-name"><strong>Total</strong></td>';
+                html += '<td><strong>' + totalParcels + '</strong></td>';
+                html += '<td class="gf-delivered"><strong>' + totalDelivered + '</strong></td>';
+                html += '<td class="gf-returned"><strong>' + totalFailed + '</strong></td>';
+                html += '<td><strong>' + dpRatio.toFixed(2) + '%</strong></td>';
+                html += '</tr>';
+
+                html += '</tbody></table>';
+
+                // Progress bar
+                var barWidth = Math.min(dpRatio, 100);
+                html += '<div class="gf-progress-bar">';
+                html += '<div class="gf-progress-fill" style="width:' + barWidth + '%;"></div>';
+                html += '<div class="gf-progress-text">' + dpRatio.toFixed(2) + '%</div>';
+                html += '</div>';
+
+                // Steadfast Fraud Report (if available)
+                if (fraudDetails.length > 0) {
+                    html += '<div class="gf-fraud-report">';
+                    html += '<h4>Steadfast Fraud Report</h4>';
+                    html += '<ul>';
+                    for (var j = 0; j < fraudDetails.length; j++) {
+                        var detail = fraudDetails[j];
+                        if (detail && detail !== 'null' && detail !== '[]') {
+                            html += '<li>' + esc(detail) + '</li>';
+                        }
+                    }
+                    html += '</ul></div>';
+                }
+
+                html += '</div>';
                 return html;
             }
 
@@ -142,7 +278,7 @@ class Guardify_Delivery {
 
         $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
         if (empty($phone)) {
-            wp_send_json_error('ফোন নম্বর প্রয়োজন।');
+            wp_send_json_error('Phone number required.');
         }
 
         $api = new Guardify_API();
@@ -155,7 +291,7 @@ class Guardify_Delivery {
             wp_send_json_success($result);
         }
 
-        $error = isset($result['error']) ? $result['error'] : 'ডেটা লোড ব্যর্থ।';
+        $error = isset($result['error']) ? $result['error'] : 'Failed to load data.';
         wp_send_json_error($error);
     }
 

@@ -43,7 +43,7 @@ class Guardify_Send_Courier {
         if ($screen) {
             add_meta_box(
                 'guardify-send-courier',
-                'Guardify — কুরিয়ারে পাঠান',
+                'Guardify — Send to Courier',
                 [$this, 'render_meta_box'],
                 $screen,
                 'side',
@@ -55,7 +55,7 @@ class Guardify_Send_Courier {
     public function render_meta_box($post_or_order) {
         $order = $this->get_order_from($post_or_order);
         if (!$order) {
-            echo '<p>অর্ডার পাওয়া যায়নি।</p>';
+            echo '<p>Order not found.</p>';
             return;
         }
 
@@ -70,19 +70,19 @@ class Guardify_Send_Courier {
             ?>
             <div id="gf-courier-box" data-nonce="<?php echo esc_attr($nonce); ?>" data-order-id="<?php echo esc_attr($order_id); ?>">
                 <div style="padding:4px 0;">
-                    <div class="gf-courier-row"><span>কুরিয়ার</span><strong><?php echo esc_html(ucfirst($courier)); ?></strong></div>
-                    <div class="gf-courier-row"><span>কনসাইনমেন্ট</span><strong style="font-family:monospace; font-size:12px;"><?php echo esc_html($consignment); ?></strong></div>
-                    <div class="gf-courier-row"><span>স্ট্যাটাস</span><strong id="gf-cs-status"><?php echo esc_html($courier_status ?: 'pending'); ?></strong></div>
+                    <div class="gf-courier-row"><span>Courier</span><strong><?php echo esc_html(ucfirst($courier)); ?></strong></div>
+                    <div class="gf-courier-row"><span>Consignment</span><strong style="font-family:monospace; font-size:12px;"><?php echo esc_html($consignment); ?></strong></div>
+                    <div class="gf-courier-row"><span>Status</span><strong id="gf-cs-status"><?php echo esc_html($courier_status ?: 'pending'); ?></strong></div>
                 </div>
                 <button type="button" class="button button-small" id="gf-cs-refresh" style="margin-top:8px;">
-                    স্ট্যাটাস রিফ্রেশ
+                    Refresh Status
                 </button>
             </div>
             <script>
             jQuery(function($){
                 $('#gf-cs-refresh').on('click', function(){
                     var btn = $(this);
-                    btn.prop('disabled', true).text('চেক হচ্ছে...');
+                    btn.prop('disabled', true).text('Checking...');
                     $.post(ajaxurl, {
                         action: 'guardify_check_courier_status',
                         _wpnonce: '<?php echo esc_js($nonce); ?>',
@@ -90,11 +90,11 @@ class Guardify_Send_Courier {
                         consignment_id: '<?php echo esc_js($consignment); ?>',
                         provider: '<?php echo esc_js($courier); ?>'
                     }, function(res){
-                        btn.prop('disabled', false).text('স্ট্যাটাস রিফ্রেশ');
+                        btn.prop('disabled', false).text('Refresh Status');
                         if (res.success && res.data.status) {
                             $('#gf-cs-status').text(res.data.status);
                         }
-                    }).fail(function(){ btn.prop('disabled', false).text('স্ট্যাটাস রিফ্রেশ'); });
+                    }).fail(function(){ btn.prop('disabled', false).text('Refresh Status'); });
                 });
             });
             </script>
@@ -113,23 +113,23 @@ class Guardify_Send_Courier {
         ?>
         <div id="gf-courier-box" data-nonce="<?php echo esc_attr($nonce); ?>" data-order-id="<?php echo esc_attr($order_id); ?>">
             <div style="margin-bottom:8px;">
-                <label class="gf-label" style="display:block; margin-bottom:4px; font-size:12px; color:#6b7280;">কুরিয়ার সিলেক্ট করুন</label>
+                <label class="gf-label" style="display:block; margin-bottom:4px; font-size:12px; color:#6b7280;">Select Courier</label>
                 <select id="gf-courier-select" style="width:100%;">
                     <option value="steadfast" <?php selected($default_provider, 'steadfast'); ?>>Steadfast</option>
                     <option value="pathao" <?php selected($default_provider, 'pathao'); ?>>Pathao</option>
                 </select>
             </div>
             <div style="margin-bottom:8px;">
-                <label class="gf-label" style="display:block; margin-bottom:4px; font-size:12px; color:#6b7280;">COD পরিমাণ (৳)</label>
+                <label class="gf-label" style="display:block; margin-bottom:4px; font-size:12px; color:#6b7280;">COD Amount (৳)</label>
                 <input type="number" id="gf-courier-cod" value="<?php echo esc_attr($total); ?>" style="width:100%;" step="0.01" />
             </div>
             <div style="margin-bottom:8px;">
-                <label class="gf-label" style="display:block; margin-bottom:4px; font-size:12px; color:#6b7280;">নোট (ঐচ্ছিক)</label>
-                <input type="text" id="gf-courier-note" value="" style="width:100%;" placeholder="বিশেষ নির্দেশনা..." />
+                <label class="gf-label" style="display:block; margin-bottom:4px; font-size:12px; color:#6b7280;">Note (optional)</label>
+                <input type="text" id="gf-courier-note" value="" style="width:100%;" placeholder="Special instructions..." />
             </div>
             <div id="gf-courier-msg" style="display:none; margin-bottom:8px; font-size:13px;"></div>
             <button type="button" class="button button-primary" id="gf-send-courier-btn" style="width:100%;">
-                কুরিয়ারে পাঠান
+                Send to Courier
             </button>
         </div>
         <script>
@@ -141,7 +141,7 @@ class Guardify_Send_Courier {
             $('#gf-send-courier-btn').on('click', function(){
                 var btn = $(this);
                 var msg = $('#gf-courier-msg');
-                btn.prop('disabled', true).text('পাঠানো হচ্ছে...');
+                btn.prop('disabled', true).text('Sending...');
                 msg.hide();
 
                 $.post(ajaxurl, {
@@ -153,15 +153,15 @@ class Guardify_Send_Courier {
                     note: $('#gf-courier-note').val()
                 }, function(res){
                     if (res.success) {
-                        msg.css('color', '#16a34a').text('✓ কুরিয়ারে পাঠানো হয়েছে। কনসাইনমেন্ট: ' + (res.data.consignment_id || '')).show();
+                        msg.css('color', '#16a34a').text('✓ Sent to courier. Consignment: ' + (res.data.consignment_id || '')).show();
                         setTimeout(function(){ location.reload(); }, 1500);
                     } else {
-                        msg.css('color', '#dc2626').text('✗ ' + (res.data || 'পাঠানো ব্যর্থ')).show();
-                        btn.prop('disabled', false).text('কুরিয়ারে পাঠান');
+                        msg.css('color', '#dc2626').text('✗ ' + (res.data || 'Send failed')).show();
+                        btn.prop('disabled', false).text('Send to Courier');
                     }
                 }).fail(function(){
-                    msg.css('color', '#dc2626').text('✗ সার্ভারে সংযোগ ব্যর্থ').show();
-                    btn.prop('disabled', false).text('কুরিয়ারে পাঠান');
+                    msg.css('color', '#dc2626').text('✗ Server connection failed').show();
+                    btn.prop('disabled', false).text('Send to Courier');
                 });
             });
         });
@@ -182,17 +182,17 @@ class Guardify_Send_Courier {
         $note     = isset($_POST['note']) ? sanitize_text_field(wp_unslash($_POST['note'])) : '';
 
         if (!$order_id || !$provider) {
-            wp_send_json_error('অর্ডার বা কুরিয়ার সিলেক্ট করুন');
+            wp_send_json_error('Select order and courier');
         }
 
         $order = wc_get_order($order_id);
         if (!$order) {
-            wp_send_json_error('অর্ডার পাওয়া যায়নি');
+            wp_send_json_error('Order not found');
         }
 
         // Check if already sent
         if ($order->get_meta('_guardify_consignment_id')) {
-            wp_send_json_error('অর্ডার ইতিমধ্যে কুরিয়ারে পাঠানো হয়েছে');
+            wp_send_json_error('Order already sent to courier');
         }
 
         $api = new Guardify_API();
@@ -231,7 +231,7 @@ class Guardify_Send_Courier {
             wp_send_json_success($result);
         }
 
-        $error = isset($result['error']['message']) ? $result['error']['message'] : (isset($result['error']) ? $result['error'] : 'পাঠানো ব্যর্থ হয়েছে');
+        $error = isset($result['error']['message']) ? $result['error']['message'] : (isset($result['error']) ? $result['error'] : 'Send failed');
         wp_send_json_error($error);
     }
 
@@ -295,7 +295,7 @@ class Guardify_Send_Courier {
             wp_send_json_success($result);
         }
 
-        wp_send_json_error('ব্যালেন্স চেক ব্যর্থ');
+        wp_send_json_error('Balance check failed');
     }
 
     // --- AJAX: Pathao locations ---
@@ -318,13 +318,13 @@ class Guardify_Send_Courier {
             wp_send_json_success($result);
         }
 
-        wp_send_json_error('লোকেশন লোড ব্যর্থ');
+        wp_send_json_error('Failed to load locations');
     }
 
     // --- Bulk action ---
     public function add_bulk_action($actions) {
-        $actions['guardify_send_steadfast'] = 'Guardify → Steadfast-এ পাঠান';
-        $actions['guardify_send_pathao']    = 'Guardify → Pathao-তে পাঠান';
+        $actions['guardify_send_steadfast'] = 'Guardify → Send to Steadfast';
+        $actions['guardify_send_pathao']    = 'Guardify → Send to Pathao';
         return $actions;
     }
 
@@ -375,7 +375,7 @@ class Guardify_Send_Courier {
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
             if ($key === 'order_status') {
-                $new['guardify_courier'] = 'কুরিয়ার';
+                $new['guardify_courier'] = 'Courier';
             }
         }
         return $new;
@@ -395,7 +395,7 @@ class Guardify_Send_Courier {
         $status      = $order->get_meta('_guardify_courier_status');
 
         if (!$consignment) {
-            echo '<span style="color:#9ca3af; font-size:12px;">পাঠানো হয়নি</span>';
+            echo '<span style="color:#9ca3af; font-size:12px;">Not sent</span>';
             return;
         }
 

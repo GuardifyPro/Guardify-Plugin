@@ -100,12 +100,12 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
         </div>
         <div class="gf-card-body">
             <p class="gf-text-muted" style="margin-bottom: 0.5rem;">
-                <a href="https://guardify.pro/api-keys" target="_blank" rel="noopener">guardify.pro &rarr; API Keys</a> পেজ থেকে <strong>নতুন কী</strong> তৈরি করে বা <strong>সিক্রেট কী রিজেনারেট</strong> করে কানেকশন কী কপি করুন, তারপর নিচে পেস্ট করুন।
+                <a href="https://guardify.pro/api-keys" target="_blank" rel="noopener">guardify.pro &rarr; API Keys</a> পেজ থেকে নতুন কী তৈরি করে কপি করুন, তারপর নিচে পেস্ট করুন।
             </p>
             <form id="gf-connect-form" class="gf-form">
                 <div class="gf-form-group" style="margin-bottom: 1rem;">
-                    <label class="gf-label">Plugin Connection Key</label>
-                    <input type="text" id="gf-connection-key" class="gf-input" placeholder="gp_abc123...:sk_def456..." autocomplete="off" required style="font-family: monospace;" />
+                    <label class="gf-label">API Key</label>
+                    <input type="text" id="gf-connection-key" class="gf-input" placeholder="gp_xxxx" autocomplete="off" required style="font-family: monospace;" />
                 </div>
                 <button type="submit" class="gf-btn gf-btn-primary" id="gf-connect-btn">
                     সংযুক্ত করুন
@@ -129,11 +129,11 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
         </div>
         <div class="gf-stat-card">
             <div class="gf-stat-icon gf-stat-icon-info">
-                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
             </div>
             <div>
-                <p class="gf-stat-label">API Key</p>
-                <p class="gf-stat-value" style="font-size: 0.875rem; word-break: break-all;"><?php echo esc_html(substr($api_key, 0, 8) . str_repeat('•', max(0, strlen($api_key) - 8))); ?></p>
+                <p class="gf-stat-label">ডোমেইন</p>
+                <p class="gf-stat-value" id="gf-domain-text" style="font-size: 0.875rem; word-break: break-all;"><?php echo esc_html(wp_parse_url(site_url(), PHP_URL_HOST)); ?></p>
             </div>
         </div>
         <div class="gf-stat-card">
@@ -143,6 +143,15 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
             <div>
                 <p class="gf-stat-label">সাবস্ক্রিপশন</p>
                 <p class="gf-stat-value" id="gf-plan-text">—</p>
+            </div>
+        </div>
+        <div class="gf-stat-card">
+            <div class="gf-stat-icon gf-stat-icon-info">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            </div>
+            <div>
+                <p class="gf-stat-label">SMS ব্যালেন্স</p>
+                <p class="gf-stat-value" id="gf-sms-text">—</p>
             </div>
         </div>
     </div>
