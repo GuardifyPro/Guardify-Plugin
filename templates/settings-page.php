@@ -103,11 +103,11 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
         </div>
         <div class="gf-card-body">
             <!-- Connection method tabs -->
-            <div style="display: flex; gap: 0; margin-bottom: 1.25rem; border-bottom: 2px solid var(--gf-border, #e5e7eb);">
-                <button type="button" class="gf-connect-tab active" data-method="auto" style="padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; color: var(--gf-text-muted, #6b7280); transition: all 0.15s;">
+            <div style="display: flex; gap: 0; margin-bottom: 1.25rem; border-bottom: 2px solid var(--gf-border, #e5e7eb); overflow-x: auto;">
+                <button type="button" class="gf-connect-tab active" data-method="auto" style="padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; color: var(--gf-text-muted, #6b7280); transition: all 0.15s; white-space: nowrap; flex-shrink: 0;">
                     🔑 অটো কানেক্ট
                 </button>
-                <button type="button" class="gf-connect-tab" data-method="manual" style="padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; color: var(--gf-text-muted, #6b7280); transition: all 0.15s;">
+                <button type="button" class="gf-connect-tab" data-method="manual" style="padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; color: var(--gf-text-muted, #6b7280); transition: all 0.15s; white-space: nowrap; flex-shrink: 0;">
                     📋 ম্যানুয়াল কী
                 </button>
             </div>

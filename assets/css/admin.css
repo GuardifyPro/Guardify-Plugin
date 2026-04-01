@@ -343,6 +343,12 @@
 
 /* ─── Responsive ───────────────────────────────────────────────────────── */
 
+/* Table horizontal scroll wrapper */
+.gf-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 @media (max-width: 768px) {
     .gf-wrap {
         padding: 0 0.5rem;
@@ -359,7 +365,130 @@
     }
 
     .gf-stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+    }
+
+    .gf-stat-card {
+        padding: 0.875rem;
+    }
+
+    .gf-stat-value {
+        font-size: 1.25rem;
+    }
+
+    /* Tabs: horizontal scroll on mobile */
+    .gf-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .gf-tabs::-webkit-scrollbar { display: none; }
+
+    .gf-tab {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.8125rem;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    /* Tables: reduce padding, smaller font */
+    .gf-table th,
+    .gf-table td {
+        padding: 0.5rem 0.625rem;
+        font-size: 0.8125rem;
+    }
+
+    .gf-table th {
+        font-size: 0.75rem;
+    }
+
+    .gf-table .gf-col-action {
+        white-space: normal;
+    }
+
+    /* Search input rows */
+    .gf-search-input-row {
+        flex-wrap: wrap;
+    }
+
+    .gf-search-input-row .gf-input {
+        width: 100%;
+        max-width: none;
+    }
+
+    /* Toggle rows */
+    .gf-toggle-row {
+        gap: 0.75rem;
+    }
+
+    .gf-toggle-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Pagination wrap */
+    .gf-pagination {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    /* Modals full-width on mobile */
+    .gf-modal {
+        width: 95%;
+        max-width: none;
+        margin: 1rem;
+    }
+
+    /* Icon buttons: slightly smaller */
+    .gf-icon-btn {
+        width: 28px;
+        height: 28px;
+    }
+
+    /* Cards: reduce padding */
+    .gf-card-header,
+    .gf-card-body {
+        padding: 0.875rem;
+    }
+
+    /* Header actions row wrap */
+    .gf-header-right {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Bulk bar wrap */
+    .gf-bulk-bar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    /* Button sizing */
+    .gf-btn {
+        font-size: 0.8125rem;
+        padding: 0.5rem 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .gf-stats-grid {
         grid-template-columns: 1fr;
+    }
+
+    .gf-page-title {
+        font-size: 1.25rem;
+    }
+
+    .gf-page-desc {
+        font-size: 0.8125rem;
+    }
+
+    .gf-stat-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
     }
 }
 

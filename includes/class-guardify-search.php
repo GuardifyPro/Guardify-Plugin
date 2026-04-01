@@ -43,12 +43,12 @@ class Guardify_Search {
             <!-- Search Form -->
             <div class="gf-card" style="margin-bottom:1.5rem;">
                 <div class="gf-card-body">
-                    <form id="gf-search-form" style="display:flex; gap:1rem; align-items:flex-end;">
-                        <div class="gf-form-group" style="flex:1;">
+                    <form id="gf-search-form" style="display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap;">
+                        <div class="gf-form-group" style="flex:1; min-width:0;">
                             <label class="gf-label">ফোন নম্বর</label>
                             <input type="tel" id="gf-search-phone" class="gf-input" placeholder="01XXXXXXXXX" maxlength="11" required />
                         </div>
-                        <button type="submit" class="gf-btn gf-btn-primary" id="gf-search-btn" style="height:44px;">
+                        <button type="submit" class="gf-btn gf-btn-primary" id="gf-search-btn" style="height:44px; white-space:nowrap;">
                             সার্চ করুন
                         </button>
                     </form>
@@ -116,6 +116,7 @@ class Guardify_Search {
                         <h2 class="gf-card-title">কুরিয়ার ব্রেকডাউন</h2>
                     </div>
                     <div class="gf-card-body" style="padding:0;">
+                        <div class="gf-table-wrap">
                         <table class="gf-table">
                             <thead>
                                 <tr>
@@ -129,6 +130,7 @@ class Guardify_Search {
                             </thead>
                             <tbody id="gf-r-courier-rows"></tbody>
                         </table>
+                        </div>
                     </div>
                 </div>
             </div>

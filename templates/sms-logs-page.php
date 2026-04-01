@@ -46,8 +46,8 @@ if ($result['success']) {
                     <span class="gf-count-pill"><?php echo esc_html($total); ?></span>
                 <?php endif; ?>
             </h2>
-            <div style="display:flex;gap:0.5rem;align-items:center;">
-                <input type="text" id="gf-sms-search" class="gf-input" placeholder="ফোন বা মেসেজ সার্চ করুন..." style="width:240px;height:34px;font-size:0.8125rem;" />
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                <input type="text" id="gf-sms-search" class="gf-input" placeholder="ফোন বা মেসেজ সার্চ করুন..." style="min-width:0;width:min(100%,240px);height:34px;font-size:0.8125rem;" />
                 <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-sms-logs')); ?>" class="gf-btn gf-btn-secondary" style="height:34px;display:inline-flex;align-items:center;gap:4px;font-size:0.8125rem;padding:0 12px;">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
                     রিফ্রেশ
@@ -66,6 +66,7 @@ if ($result['success']) {
                     <p style="font-weight:500;color:var(--gf-fg);">কোনো ফলাফল পাওয়া যায়নি</p>
                     <p class="gf-text-muted" style="font-size:0.8125rem;">আপনার সার্চ মানদণ্ডের সাথে কোনো SMS মেলেনি।</p>
                 </div>
+                <div class="gf-table-wrap">
                 <table class="gf-table" id="gf-sms-table">
                     <thead>
                         <tr>
@@ -136,6 +137,7 @@ if ($result['success']) {
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </div>
             <?php endif; ?>
         </div>
     </div>

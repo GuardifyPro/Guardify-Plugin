@@ -93,6 +93,7 @@ $total_pages   = max(1, (int) ceil($total_blocked / $per_page));
                 <?php if (empty($blocked_users)) : ?>
                 <div class="gf-empty-state"><p>কোনো ব্লক করা ব্যবহারকারী নেই।</p></div>
                 <?php else : ?>
+                <div class="gf-table-wrap">
                 <table class="gf-table">
                     <thead>
                         <tr>
@@ -125,6 +126,7 @@ $total_pages   = max(1, (int) ceil($total_blocked / $per_page));
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </div>
                 <?php endif; ?>
             </div>
         </div>
@@ -173,6 +175,7 @@ $total_pages   = max(1, (int) ceil($total_blocked / $per_page));
                 <?php if (empty($block_rules)) : ?>
                 <div class="gf-empty-state"><p>কোনো ব্লক রুল নেই।</p></div>
                 <?php else : ?>
+                <div class="gf-table-wrap">
                 <table class="gf-table">
                     <thead>
                         <tr>
@@ -203,6 +206,7 @@ $total_pages   = max(1, (int) ceil($total_blocked / $per_page));
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </div>
                 <?php endif; ?>
             </div>
         </div>

@@ -59,9 +59,9 @@
                 অসম্পন্ন অর্ডার <span class="gf-count-pill"><?php echo esc_html($total_count); ?></span>
             </h2>
             <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
-                <form method="get" style="display:flex;gap:0.375rem;align-items:center;">
+                <form method="get" style="display:flex;gap:0.375rem;align-items:center;flex-wrap:wrap;">
                     <input type="hidden" name="page" value="guardify-incomplete" />
-                    <input type="text" name="s" value="<?php echo esc_attr($search); ?>" class="gf-input" placeholder="ফোন বা নাম খুঁজুন..." style="width:200px;height:34px;font-size:0.8125rem;" />
+                    <input type="text" name="s" value="<?php echo esc_attr($search); ?>" class="gf-input" placeholder="ফোন বা নাম খুঁজুন..." style="min-width:0;width:min(100%,200px);height:34px;font-size:0.8125rem;" />
                     <button type="submit" class="gf-btn gf-btn-secondary" style="height:34px;font-size:0.8125rem;padding:0 12px;">সার্চ</button>
                 </form>
                 <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-ajax.php?action=guardify_export_incomplete'), 'guardify_export_nonce', 'nonce')); ?>" class="gf-btn gf-btn-secondary" style="height:34px;display:inline-flex;align-items:center;gap:4px;font-size:0.8125rem;padding:0 12px;">
@@ -98,6 +98,7 @@
                 </p>
             </div>
             <?php else : ?>
+            <div class="gf-table-wrap">
             <table class="gf-table">
                 <thead>
                     <tr>
@@ -151,6 +152,7 @@
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            </div>
             <?php endif; ?>
         </div>
     </div>
