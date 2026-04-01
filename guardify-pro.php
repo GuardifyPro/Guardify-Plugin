@@ -3,7 +3,7 @@
  * Plugin Name:       Guardify Pro
  * Plugin URI:        https://guardify.pro
  * Description:       ফ্রড ডিটেকশন, কুরিয়ার ইন্টেলিজেন্স, OTP ভেরিফিকেশন ও স্মার্ট অর্ডার ফিল্টারিং — বাংলাদেশের ই-কমার্সের জন্য।
- * Version:           0.3.0
+ * Version:           0.3.1
  * Author:            Tansiq Labs
  * Author URI:        https://tansiqlabs.com.bd
  * License:           Proprietary
@@ -16,7 +16,7 @@
 
 defined('ABSPATH') || exit;
 
-define('GUARDIFY_VERSION', '0.3.0');
+define('GUARDIFY_VERSION', '0.3.1');
 define('GUARDIFY_FILE', __FILE__);
 define('GUARDIFY_PATH', plugin_dir_path(__FILE__));
 define('GUARDIFY_URL', plugin_dir_url(__FILE__));
@@ -115,6 +115,7 @@ final class Guardify_Pro {
 
         // AJAX handlers
         add_action('wp_ajax_guardify_connect', [$this, 'ajax_connect']);
+        add_action('wp_ajax_guardify_auto_fetch', [$this, 'ajax_auto_fetch']);
         add_action('wp_ajax_guardify_disconnect', [$this, 'ajax_disconnect']);
         add_action('wp_ajax_guardify_status', [$this, 'ajax_status']);
         add_action('wp_ajax_guardify_save_settings', [$this, 'ajax_save_settings']);
@@ -315,6 +316,141 @@ final class Guardify_Pro {
         $api->clear_credentials();
         $error = isset($result['error']) ? $result['error'] : 'API কী যাচাই ব্যর্থ হয়েছে।';
         wp_send_json_error($error);
+    }
+
+    /**
+     * Auto-fetch: Login to portal, list/create API keys, auto-connect.
+     */
+    public function ajax_auto_fetch() {
+        check_ajax_referer('guardify_nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $email    = isset($_POST['email']) ? sanitize_email(wp_unslash($_POST['email'])) : '';
+        $password = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
+
+        if (empty($email) || empty($password)) {
+            wp_send_json_error('ইমেইল ও পাসওয়ার্ড আবশ্যক।');
+        }
+
+        $engine_url = GUARDIFY_ENGINE_URL;
+
+        // Step 1: Login to portal
+        $login_response = wp_remote_post($engine_url . '/api/v1/portal/auth/login', [
+            'timeout' => 15,
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Accept'       => 'application/json',
+            ],
+            'body'    => wp_json_encode([
+                'email'    => $email,
+                'password' => $password,
+            ]),
+        ]);
+
+        if (is_wp_error($login_response)) {
+            wp_send_json_error('সার্ভারে সংযোগ করা যায়নি: ' . $login_response->get_error_message());
+        }
+
+        $login_body = json_decode(wp_remote_retrieve_body($login_response), true);
+        $login_code = wp_remote_retrieve_response_code($login_response);
+
+        if ($login_code !== 200 || empty($login_body['success'])) {
+            $err_msg = 'লগইন ব্যর্থ।';
+            if (!empty($login_body['error']['message'])) {
+                $err_msg = $login_body['error']['message'];
+            }
+            wp_send_json_error($err_msg);
+        }
+
+        $access_token = isset($login_body['data']['access_token']) ? $login_body['data']['access_token'] : '';
+        if (empty($access_token)) {
+            wp_send_json_error('অ্যাক্সেস টোকেন পাওয়া যায়নি।');
+        }
+
+        // Step 2: List existing API keys
+        $keys_response = wp_remote_get($engine_url . '/api/v1/portal/keys', [
+            'timeout' => 15,
+            'headers' => [
+                'Authorization' => 'Bearer ' . $access_token,
+                'Accept'        => 'application/json',
+            ],
+        ]);
+
+        if (is_wp_error($keys_response)) {
+            wp_send_json_error('API কী লোড করা যায়নি।');
+        }
+
+        $keys_body = json_decode(wp_remote_retrieve_body($keys_response), true);
+        $keys_list = [];
+        if (!empty($keys_body['data']) && is_array($keys_body['data'])) {
+            $keys_list = $keys_body['data'];
+        }
+
+        // Find first active key, or create a new one
+        $api_key_value = '';
+        foreach ($keys_list as $k) {
+            if (!empty($k['key']) && (isset($k['status']) && $k['status'] === 'active')) {
+                $api_key_value = $k['key'];
+                break;
+            }
+        }
+
+        // Step 3: Create a new key if none found
+        if (empty($api_key_value)) {
+            $domain = wp_parse_url(site_url(), PHP_URL_HOST);
+            $create_response = wp_remote_post($engine_url . '/api/v1/portal/keys?domain=' . rawurlencode($domain), [
+                'timeout' => 15,
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $access_token,
+                    'Content-Type'  => 'application/json',
+                    'Accept'        => 'application/json',
+                ],
+            ]);
+
+            if (is_wp_error($create_response)) {
+                wp_send_json_error('API কী তৈরি করা যায়নি।');
+            }
+
+            $create_body = json_decode(wp_remote_retrieve_body($create_response), true);
+            if (!empty($create_body['data']['key'])) {
+                $api_key_value = $create_body['data']['key'];
+            } else {
+                wp_send_json_error('API কী তৈরি ব্যর্থ হয়েছে।');
+            }
+        }
+
+        // Step 4: Save and verify the key (same as manual connect)
+        $api = new Guardify_API();
+        $api->save_credentials($api_key_value);
+
+        $result = $api->check_key();
+        if (empty($result['success']) || $result['success'] !== true) {
+            $api->clear_credentials();
+            wp_send_json_error('কী যাচাই ব্যর্থ হয়েছে।');
+        }
+
+        // Report domain
+        $api->get('/api/v1/auth/domain-update', ['domain' => site_url()]);
+
+        // Fetch subscription
+        $sub_result = $api->get('/api/v1/subscription/status');
+        $sub_data = [];
+        if (!empty($sub_result['success']) && !empty($sub_result['data'])) {
+            $sub_data = $sub_result['data'];
+        } elseif (!empty($sub_result['plan'])) {
+            $sub_data = $sub_result;
+        }
+
+        wp_send_json_success([
+            'plan'        => isset($sub_data['plan']) ? $sub_data['plan'] : 'free',
+            'sms_balance' => isset($sub_data['sms_balance']) ? (int) $sub_data['sms_balance'] : 0,
+            'expires_at'  => isset($sub_data['expires_at']) ? $sub_data['expires_at'] : null,
+            'domain'      => site_url(),
+            'api_key'     => $api_key_value,
+        ]);
     }
 
     public function ajax_disconnect() {

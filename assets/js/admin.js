@@ -252,6 +252,71 @@
         });
     });
 
+    /* ── Connection Method Tabs ───────────────────────────────────────── */
+
+    $(document).on('click', '.gf-connect-tab', function () {
+        var method = $(this).data('method');
+        $('.gf-connect-tab').removeClass('active').css({ 'border-bottom-color': 'transparent', 'color': 'var(--gf-text-muted, #6b7280)' });
+        $(this).addClass('active').css({ 'border-bottom-color': 'var(--gf-primary, #3b82f6)', 'color': 'var(--gf-primary, #3b82f6)' });
+        $('#gf-method-auto, #gf-method-manual').hide();
+        $('#gf-method-' + method).show();
+        hideMsg();
+    });
+
+    // Style active tab on load
+    $('.gf-connect-tab.active').css({ 'border-bottom-color': 'var(--gf-primary, #3b82f6)', 'color': 'var(--gf-primary, #3b82f6)' });
+
+    /* ── Auto-Fetch (Login & Connect) ─────────────────────────────────── */
+
+    $(document).on('submit', '#gf-auto-fetch-form', function (e) {
+        e.preventDefault();
+
+        var email    = $('#gf-login-email').val().trim();
+        var password = $('#gf-login-password').val();
+
+        if (!email || !password) {
+            showMsg('error', 'ইমেইল ও পাসওয়ার্ড দিন।');
+            return;
+        }
+
+        var $btn = $('#gf-auto-fetch-btn');
+        $btn.prop('disabled', true).text('লগইন হচ্ছে...');
+        hideMsg();
+
+        $.post(data.ajaxUrl, {
+            action:   'guardify_auto_fetch',
+            _wpnonce: data.nonce,
+            email:    email,
+            password: password
+        })
+        .done(function (res) {
+            if (res.success) {
+                var d = res.data || {};
+                var planMap = { free: 'Free', starter: 'Starter', business: 'Business' };
+                var planName = planMap[d.plan] || d.plan || 'Free';
+                var sms = d.sms_balance !== undefined ? d.sms_balance : 0;
+                var info = '✅ সফলভাবে সংযুক্ত হয়েছে!\n\n';
+                info += '📦 প্ল্যান: ' + planName + '\n';
+                info += '💬 SMS ব্যালেন্স: ' + sms + '\n';
+                if (d.expires_at) {
+                    var exp = new Date(d.expires_at);
+                    var now = new Date();
+                    var days = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
+                    info += '📅 মেয়াদ: ' + (days > 0 ? days + ' দিন বাকি' : 'মেয়াদ শেষ');
+                }
+                showMsg('success', info.replace(/\n/g, '<br>'));
+                setTimeout(function () { location.reload(); }, 2000);
+            } else {
+                showMsg('error', res.data || 'সংযোগ ব্যর্থ হয়েছে।');
+                $btn.prop('disabled', false).text('লগইন ও কানেক্ট');
+            }
+        })
+        .fail(function () {
+            showMsg('error', 'সার্ভারে সংযোগ করা যায়নি।');
+            $btn.prop('disabled', false).text('লগইন ও কানেক্ট');
+        });
+    });
+
     /* ── Helpers ───────────────────────────────────────────────────────── */
 
     function showMsg(type, text) {

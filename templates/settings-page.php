@@ -99,18 +99,55 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
             <h2 class="gf-card-title">প্লাগইন সংযুক্ত করুন</h2>
         </div>
         <div class="gf-card-body">
-            <p class="gf-text-muted" style="margin-bottom: 0.5rem;">
-                <a href="https://guardify.pro/api-keys" target="_blank" rel="noopener">guardify.pro &rarr; API Keys</a> পেজ থেকে নতুন কী তৈরি করে কপি করুন, তারপর নিচে পেস্ট করুন।
-            </p>
-            <form id="gf-connect-form" class="gf-form">
-                <div class="gf-form-group" style="margin-bottom: 1rem;">
-                    <label class="gf-label">API Key</label>
-                    <input type="text" id="gf-connection-key" class="gf-input" placeholder="gp_xxxx" autocomplete="off" required style="font-family: monospace;" />
-                </div>
-                <button type="submit" class="gf-btn gf-btn-primary" id="gf-connect-btn">
-                    সংযুক্ত করুন
+            <!-- Connection method tabs -->
+            <div style="display: flex; gap: 0; margin-bottom: 1.25rem; border-bottom: 2px solid var(--gf-border, #e5e7eb);">
+                <button type="button" class="gf-connect-tab active" data-method="auto" style="padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; color: var(--gf-text-muted, #6b7280); transition: all 0.15s;">
+                    🔑 অটো কানেক্ট
                 </button>
-            </form>
+                <button type="button" class="gf-connect-tab" data-method="manual" style="padding: 0.625rem 1.25rem; font-size: 0.875rem; font-weight: 500; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; color: var(--gf-text-muted, #6b7280); transition: all 0.15s;">
+                    📋 ম্যানুয়াল কী
+                </button>
+            </div>
+
+            <!-- Auto-fetch method (default) -->
+            <div id="gf-method-auto">
+                <p class="gf-text-muted" style="margin-bottom: 0.75rem;">
+                    আপনার <a href="https://guardify.pro" target="_blank" rel="noopener">guardify.pro</a> অ্যাকাউন্ট দিয়ে লগইন করুন — API কী স্বয়ংক্রিয়ভাবে সেটআপ হবে।
+                </p>
+                <form id="gf-auto-fetch-form" class="gf-form">
+                    <div class="gf-form-group" style="margin-bottom: 0.75rem;">
+                        <label class="gf-label">ইমেইল</label>
+                        <input type="email" id="gf-login-email" class="gf-input" placeholder="your@email.com" autocomplete="email" required />
+                    </div>
+                    <div class="gf-form-group" style="margin-bottom: 1rem;">
+                        <label class="gf-label">পাসওয়ার্ড</label>
+                        <input type="password" id="gf-login-password" class="gf-input" placeholder="••••••••" autocomplete="current-password" required />
+                    </div>
+                    <button type="submit" class="gf-btn gf-btn-primary" id="gf-auto-fetch-btn">
+                        লগইন ও কানেক্ট
+                    </button>
+                    <p class="gf-text-muted" style="margin-top: 0.5rem; font-size: 0.75rem;">
+                        অ্যাকাউন্ট নেই? <a href="https://guardify.pro/register" target="_blank" rel="noopener">রেজিস্টার করুন</a>
+                    </p>
+                </form>
+            </div>
+
+            <!-- Manual key method (hidden by default) -->
+            <div id="gf-method-manual" style="display: none;">
+                <p class="gf-text-muted" style="margin-bottom: 0.5rem;">
+                    <a href="https://guardify.pro/api-keys" target="_blank" rel="noopener">guardify.pro &rarr; API Keys</a> পেজ থেকে নতুন কী তৈরি করে কপি করুন, তারপর নিচে পেস্ট করুন।
+                </p>
+                <form id="gf-connect-form" class="gf-form">
+                    <div class="gf-form-group" style="margin-bottom: 1rem;">
+                        <label class="gf-label">API Key</label>
+                        <input type="text" id="gf-connection-key" class="gf-input" placeholder="gp_xxxx" autocomplete="off" required style="font-family: monospace;" />
+                    </div>
+                    <button type="submit" class="gf-btn gf-btn-primary" id="gf-connect-btn">
+                        সংযুক্ত করুন
+                    </button>
+                </form>
+            </div>
+
             <div id="gf-connect-msg" style="display:none; margin-top: 1rem;"></div>
         </div>
     </div>
