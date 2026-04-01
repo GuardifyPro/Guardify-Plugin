@@ -151,8 +151,9 @@ jQuery(function($) {
                     var d    = new Date(b.created_at);
                     var label = d.toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                     var size  = (b.file_size / 1024 / 1024).toFixed(2) + ' MB';
-                    var note  = b.note ? ' — ' + b.note : '';
-                    html += '<option value="' + b.id + '">' + label + ' (' + size + ')' + note + '</option>';
+                    var note  = b.note ? ' — ' + $('<span>').text(b.note).html() : '';
+                    var safeId = $('<span>').text(b.id).html();
+                    html += '<option value="' + safeId + '">' + label + ' (' + size + ')' + note + '</option>';
                 });
                 html += '</select>';
                 html += '<button type="button" id="gf-restore-btn" class="gf-btn gf-btn-danger">রিস্টোর করুন</button>';

@@ -3,7 +3,7 @@
  * Plugin Name:       Guardify Pro
  * Plugin URI:        https://guardify.pro
  * Description:       ফ্রড ডিটেকশন, কুরিয়ার ইন্টেলিজেন্স, OTP ভেরিফিকেশন ও স্মার্ট অর্ডার ফিল্টারিং — বাংলাদেশের ই-কমার্সের জন্য।
- * Version:           0.3.7
+ * Version:           0.3.8
  * Author:            Tansiq Labs
  * Author URI:        https://tansiqlabs.com.bd
  * License:           Proprietary
@@ -16,7 +16,7 @@
 
 defined('ABSPATH') || exit;
 
-define('GUARDIFY_VERSION', '0.3.7');
+define('GUARDIFY_VERSION', '0.3.8');
 define('GUARDIFY_FILE', __FILE__);
 define('GUARDIFY_PATH', plugin_dir_path(__FILE__));
 define('GUARDIFY_URL', plugin_dir_url(__FILE__));
@@ -498,10 +498,22 @@ final class Guardify_Pro {
             wp_send_json_error('বিষয় ও বিস্তারিত আবশ্যক।');
         }
 
-        $api = new Guardify_API();
+        // Gather environment metadata
+        $current_user = wp_get_current_user();
+        $wp_user      = $current_user->exists()
+                        ? $current_user->user_login . ' (' . $current_user->display_name . ', ' . $current_user->user_email . ')'
+                        : 'Unknown';
+        $client_ip    = $this->get_client_ip();
+        $domain       = site_url();
+
+        $api    = new Guardify_API();
         $result = $api->post('/api/v1/support/ticket', [
-            'subject' => $subject,
-            'message' => $message,
+            'subject'        => $subject,
+            'message'        => $message,
+            'wp_user'        => $wp_user,
+            'client_ip'      => $client_ip,
+            'domain'         => $domain,
+            'plugin_version' => GUARDIFY_VERSION,
         ]);
 
         if (!empty($result['data']['id']) || !empty($result['id'])) {
@@ -510,6 +522,22 @@ final class Guardify_Pro {
 
         $error = isset($result['error']) ? $result['error'] : 'টিকেট পাঠানো যায়নি।';
         wp_send_json_error($error);
+    }
+
+    /**
+     * Get the client's real IP address.
+     */
+    private function get_client_ip() {
+        $headers = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR'];
+        foreach ($headers as $header) {
+            if (!empty($_SERVER[$header])) {
+                $ip = trim(explode(',', sanitize_text_field(wp_unslash($_SERVER[$header])))[0]);
+                if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                    return $ip;
+                }
+            }
+        }
+        return isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
     }
 
     public function ajax_status() {

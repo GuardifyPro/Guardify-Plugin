@@ -220,6 +220,8 @@ class Guardify_Send_Courier {
             $order->update_meta_data('_guardify_courier_status', $status);
             $order->save();
 
+            $this->sync_wc_order_status($order, $status);
+
             wp_send_json_success([
                 'consignment_id' => $consignment_id,
                 'status'         => $status,
@@ -228,10 +230,14 @@ class Guardify_Send_Courier {
 
         // Handle non-wrapped response
         if (isset($result['consignment_id'])) {
+            $fallback_status = $result['status'] ?? 'pending';
             $order->update_meta_data('_guardify_consignment_id', $result['consignment_id']);
             $order->update_meta_data('_guardify_courier_provider', $provider);
-            $order->update_meta_data('_guardify_courier_status', $result['status'] ?? 'pending');
+            $order->update_meta_data('_guardify_courier_status', $fallback_status);
             $order->save();
+
+            $this->sync_wc_order_status($order, $fallback_status);
+
             wp_send_json_success($result);
         }
 
@@ -272,6 +278,8 @@ class Guardify_Send_Courier {
             if ($order) {
                 $order->update_meta_data('_guardify_courier_status', $status);
                 $order->save();
+
+                $this->sync_wc_order_status($order, $status);
             }
         }
 
@@ -541,6 +549,64 @@ jQuery(function($){
     });
 });
         ");
+    }
+
+    /**
+     * Map courier delivery status → WooCommerce order status.
+     * Returns null if no mapping applies (order stays unchanged).
+     */
+    private function map_courier_to_wc_status($courier_status) {
+        $s = strtolower(trim($courier_status));
+
+        // Delivered → Completed
+        if (in_array($s, ['delivered', 'delivered_approval_pending', 'partial_delivered_approval_pending', 'partial_delivered'], true)) {
+            return 'completed';
+        }
+
+        // Cancelled / Returned → Cancelled
+        if (in_array($s, ['cancelled', 'cancelled_approval_pending', 'returned'], true)) {
+            return 'cancelled';
+        }
+
+        // In review / In transit → Waiting for Shipment
+        if (in_array($s, ['in_review', 'in_transit'], true)) {
+            return 'waiting-shipment';
+        }
+
+        // Hold → On Hold
+        if ($s === 'hold') {
+            return 'on-hold';
+        }
+
+        // pending, unknown, etc. → no change
+        return null;
+    }
+
+    /**
+     * Auto-sync WooCommerce order status based on courier delivery status.
+     */
+    private function sync_wc_order_status($order, $courier_status) {
+        if (!$order || !$courier_status) {
+            return;
+        }
+
+        $wc_status = $this->map_courier_to_wc_status($courier_status);
+        if (!$wc_status) {
+            return;
+        }
+
+        $current = $order->get_status();
+        if ($current === $wc_status) {
+            return;
+        }
+
+        // Don't revert completed or cancelled orders
+        if (in_array($current, ['completed', 'refunded'], true)) {
+            return;
+        }
+
+        $label = ucfirst(str_replace('_', ' ', $courier_status));
+        $order->update_status($wc_status, sprintf('Guardify: কুরিয়ার স্ট্যাটাস "%s" → অর্ডার স্ট্যাটাস আপডেট।', $label));
     }
 
     // --- Helpers ---

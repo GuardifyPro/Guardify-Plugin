@@ -24,7 +24,7 @@ class Guardify_Custom_Status {
     }
 
     /**
-     * Register the custom post status.
+     * Register the custom post statuses.
      */
     public function register_status() {
         register_post_status('wc-otp-pending', [
@@ -36,6 +36,19 @@ class Guardify_Custom_Status {
             'label_count'               => _n_noop(
                 'OTP Pending <span class="count">(%s)</span>',
                 'OTP Pending <span class="count">(%s)</span>',
+                'guardify-pro'
+            ),
+        ]);
+
+        register_post_status('wc-waiting-shipment', [
+            'label'                     => 'Waiting for Shipment',
+            'public'                    => true,
+            'exclude_from_search'       => false,
+            'show_in_admin_all_list'    => true,
+            'show_in_admin_status_list' => true,
+            'label_count'               => _n_noop(
+                'Waiting for Shipment <span class="count">(%s)</span>',
+                'Waiting for Shipment <span class="count">(%s)</span>',
                 'guardify-pro'
             ),
         ]);
@@ -51,6 +64,9 @@ class Guardify_Custom_Status {
             if ($key === 'wc-pending') {
                 $new['wc-otp-pending'] = 'OTP Pending';
             }
+            if ($key === 'wc-processing') {
+                $new['wc-waiting-shipment'] = 'Waiting for Shipment';
+            }
         }
         return $new;
     }
@@ -60,6 +76,7 @@ class Guardify_Custom_Status {
      */
     public function add_to_reports($statuses) {
         $statuses[] = 'otp-pending';
+        $statuses[] = 'waiting-shipment';
         return $statuses;
     }
 
@@ -81,6 +98,16 @@ class Guardify_Custom_Status {
             .widefat .column-order_status mark.otp-pending { background: #f59e0b; color: #fff; }
             .widefat .column-order_status mark.otp-pending::after {
                 content: "OTP Pending"; font-size: 11px; font-weight: 500;
+            }
+            .order-status.status-waiting-shipment,
+            .woocommerce-order-status.status-waiting-shipment {
+                background: #3b82f6; color: #fff; border-radius: 4px;
+                padding: 2px 8px; font-size: 11px; font-weight: 600;
+                text-transform: uppercase; letter-spacing: 0.3px;
+            }
+            .widefat .column-order_status mark.waiting-shipment { background: #3b82f6; color: #fff; }
+            .widefat .column-order_status mark.waiting-shipment::after {
+                content: "Waiting Shipment"; font-size: 11px; font-weight: 500;
             }
         </style>';
     }
