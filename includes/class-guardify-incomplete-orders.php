@@ -47,6 +47,13 @@ class Guardify_Incomplete_Orders {
         add_action('wp_ajax_guardify_convert_incomplete', [$this, 'ajax_convert']);
         add_action('wp_ajax_guardify_bulk_convert_incomplete', [$this, 'ajax_bulk_convert']);
         add_action('wp_ajax_guardify_export_incomplete', [$this, 'ajax_export']);
+        add_action('wp_ajax_guardify_fetch_report_data', [$this, 'ajax_fetch_report_data']);
+
+        // Settings save
+        add_action('admin_init', [$this, 'save_settings']);
+
+        // Report column inline CSS/JS on incomplete orders page
+        add_action('admin_head', [$this, 'add_report_column_script_to_admin_head']);
 
         // Daily cleanup
         if (!wp_next_scheduled('guardify_cleanup_incomplete')) {
@@ -400,6 +407,14 @@ class Guardify_Incomplete_Orders {
         );
 
         $this->set_cooldown_cookie($phone);
+
+        // Also set cookie via JavaScript as a fallback (like OrderGuard)
+        $phone_hash = md5($phone);
+        $minutes    = max(5, (int) get_option('guardify_incomplete_cooldown', 30));
+        add_action('wp_footer', function () use ($phone_hash, $minutes) {
+            $expiry_ms = $minutes * 60 * 1000;
+            echo '<script>document.cookie="gf_completed_' . esc_js($phone_hash) . '=1;max-age=' . intval($minutes * 60) . ';path=/";</script>';
+        });
     }
 
     public function handle_status_change($order_id, $old_status, $new_status) {
@@ -773,5 +788,357 @@ class Guardify_Incomplete_Orders {
             "DELETE FROM {$this->table_name} WHERE status = 'pending' AND created_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
             $days
         ));
+    }
+
+    /* --- Settings Save --------------------------------------------- */
+
+    public function save_settings() {
+        if (!isset($_POST['guardify_save_incomplete_settings'])) return;
+        if (!check_admin_referer('guardify_incomplete_settings')) return;
+        if (!current_user_can('manage_woocommerce')) return;
+
+        $enabled = isset($_POST['guardify_incomplete_orders_enabled']) ? 'yes' : 'no';
+        update_option('guardify_incomplete_orders_enabled', $enabled);
+
+        if (isset($_POST['guardify_incomplete_retention'])) {
+            update_option('guardify_incomplete_retention', sanitize_text_field($_POST['guardify_incomplete_retention']));
+        }
+
+        $cooldown_enabled = isset($_POST['guardify_incomplete_cooldown_enabled']) ? 'yes' : 'no';
+        update_option('guardify_incomplete_cooldown_enabled', $cooldown_enabled);
+
+        if (isset($_POST['guardify_incomplete_cooldown'])) {
+            $cooldown = max(5, min(43200, intval($_POST['guardify_incomplete_cooldown'])));
+            update_option('guardify_incomplete_cooldown', $cooldown);
+        }
+    }
+
+    /* --- Report Column: Customer Order History ---------------------- */
+
+    /**
+     * Get report data HTML for a phone number — shows WooCommerce order history.
+     */
+    public function get_report_data($phone) {
+        if (empty($phone)) {
+            return '<span class="gf-badge gf-badge-muted">ডেটা নেই</span>';
+        }
+
+        $normalized = $this->normalize_phone($phone);
+        if (!$this->validate_phone($normalized)) {
+            return '<span class="gf-badge gf-badge-warning">অবৈধ নম্বর</span>';
+        }
+
+        $customer_orders = wc_get_orders([
+            'billing_phone' => $phone,
+            'limit'         => -1,
+        ]);
+
+        $order_count = count($customer_orders);
+        $unique_id   = 'report-' . md5($phone);
+
+        if ($order_count > 0) {
+            $badge_class = 'gf-badge-success';
+            $badge_text  = $order_count . ' টি অর্ডার';
+        } else {
+            $badge_class = 'gf-badge-info';
+            $badge_text  = 'নতুন গ্রাহক';
+        }
+
+        $html  = '<div class="gf-customer-report">';
+        $html .= '<span class="gf-badge ' . $badge_class . '">' . esc_html($badge_text) . '</span> ';
+        $html .= '<button type="button" class="gf-btn-link gf-view-report" data-phone="' . esc_attr($phone) . '" title="রিপোর্ট দেখুন">📊</button>';
+        $html .= $this->get_report_popup_html($phone, $customer_orders);
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    /**
+     * Generate the report popup HTML for a phone number.
+     */
+    private function get_report_popup_html($phone, $customer_orders) {
+        $unique_id   = 'gf-report-popup-' . md5($phone);
+        $order_count = count($customer_orders);
+
+        $total_spent    = 0;
+        $last_order_date = '';
+
+        if ($order_count > 0) {
+            foreach ($customer_orders as $o) {
+                if (!in_array($o->get_status(), ['cancelled', 'refunded'], true)) {
+                    $total_spent += $o->get_total();
+                }
+            }
+            $latest = reset($customer_orders);
+            $dc     = $latest->get_date_created();
+            $last_order_date = $dc ? $dc->date_i18n(get_option('date_format') . ' ' . get_option('time_format')) : 'অজানা';
+        }
+
+        $html = '<div class="gf-report-popup" id="' . $unique_id . '" style="display:none;">
+            <div class="gf-report-popup-content">
+                <div class="gf-report-popup-header">
+                    <h3>' . esc_html($phone) . ' — গ্রাহক রিপোর্ট</h3>
+                    <button type="button" class="gf-report-popup-close">&times;</button>
+                </div>
+                <div class="gf-report-popup-body">';
+
+        if ($order_count > 0) {
+            $html .= '<div class="gf-report-stats">
+                <div class="gf-report-stat"><strong>মোট অর্ডার:</strong> ' . number_format_i18n($order_count) . '</div>
+                <div class="gf-report-stat"><strong>লাইফটাইম ভ্যালু:</strong> ' . wc_price($total_spent) . '</div>
+                <div class="gf-report-stat"><strong>সর্বশেষ অর্ডার:</strong> ' . esc_html($last_order_date) . '</div>
+            </div>';
+
+            $html .= '<table class="gf-report-orders-table">
+                <thead><tr>
+                    <th>অর্ডার</th><th>তারিখ</th><th>স্ট্যাটাস</th><th>মোট</th><th>ঠিকানা</th><th>পণ্য</th><th></th>
+                </tr></thead><tbody>';
+
+            $counter = 0;
+            foreach ($customer_orders as $o) {
+                if ($counter++ >= 10) break;
+
+                $status_name = wc_get_order_status_name($o->get_status());
+                $address_parts = array_filter([
+                    $o->get_billing_address_1(),
+                    $o->get_billing_city(),
+                    $o->get_billing_state(),
+                ]);
+                $address = !empty($address_parts) ? implode(', ', $address_parts) : 'ঠিকানা নেই';
+
+                $items  = $o->get_items();
+                $prods  = [];
+                foreach ($items as $it) {
+                    $prods[] = $it->get_quantity() . ' × ' . $it->get_name();
+                }
+                $prod_html = implode('<br>', array_slice($prods, 0, 2));
+                if (count($prods) > 2) $prod_html .= '<br>+' . (count($prods) - 2) . ' আরও';
+
+                $html .= '<tr>
+                    <td><a href="' . esc_url(get_edit_post_link($o->get_id())) . '">#' . $o->get_id() . '</a></td>
+                    <td>' . ($o->get_date_created() ? $o->get_date_created()->date_i18n(get_option('date_format')) : '') . '</td>
+                    <td><span class="gf-order-status status-' . esc_attr($o->get_status()) . '">' . esc_html($status_name) . '</span></td>
+                    <td>' . $o->get_formatted_order_total() . '</td>
+                    <td>' . esc_html($address) . '</td>
+                    <td>' . $prod_html . '</td>
+                    <td><a href="' . esc_url(get_edit_post_link($o->get_id())) . '" target="_blank">↗</a></td>
+                </tr>';
+            }
+
+            $html .= '</tbody></table>';
+        } else {
+            $html .= '<p style="text-align:center;padding:1.5rem;color:#666;">এই গ্রাহকের কোনো অর্ডার নেই।</p>';
+        }
+
+        // Delivery report section (loaded via AJAX)
+        $html .= '<div class="gf-delivery-report-section">
+            <h4>ডেলিভারি রিপোর্ট</h4>
+            <div class="gf-delivery-report-container" id="gf-delivery-report-' . md5($phone) . '">
+                <p style="text-align:center;padding:1rem;color:#999;">লোড হচ্ছে...</p>
+            </div>
+        </div>';
+
+        $html .= '</div></div></div>';
+        return $html;
+    }
+
+    /**
+     * AJAX handler: Fetch report data (delivery details) for a phone number.
+     */
+    public function ajax_fetch_report_data() {
+        check_ajax_referer('guardify_report_nonce', 'nonce');
+
+        $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
+        if (empty($phone)) {
+            wp_send_json_error('ফোন নম্বর আবশ্যক');
+        }
+
+        $normalized = $this->normalize_phone($phone);
+        if (!$this->validate_phone($normalized)) {
+            wp_send_json_error('অবৈধ ফোন নম্বর');
+        }
+
+        // Try to get delivery data from Guardify Engine API
+        $api = new Guardify_API();
+        if (!$api->is_connected()) {
+            wp_send_json_success('<p style="text-align:center;color:#999;">API সংযুক্ত নয়</p>');
+            return;
+        }
+
+        $result = $api->get('/api/v1/courier/summary?phone=' . urlencode($phone));
+
+        if (empty($result) || isset($result['error'])) {
+            wp_send_json_success('<p style="text-align:center;color:#999;">কোনো ডেলিভারি ডেটা পাওয়া যায়নি</p>');
+            return;
+        }
+
+        // Render delivery summary
+        $html = $this->render_delivery_data($result);
+        wp_send_json_success($html);
+    }
+
+    /**
+     * Render delivery data as HTML table.
+     */
+    private function render_delivery_data($details) {
+        if (empty($details['Summaries'])) {
+            return '<p style="text-align:center;color:#999;">কোনো ডেলিভারি রেকর্ড নেই</p>';
+        }
+
+        $totalParcels = $totalDelivered = $totalReturned = 0;
+        foreach ($details['Summaries'] as $summary) {
+            $totalParcels   += intval($summary['Total Parcels'] ?? $summary['Total Delivery'] ?? 0);
+            $totalDelivered += intval($summary['Delivered Parcels'] ?? $summary['Successful Delivery'] ?? 0);
+            $totalReturned  += intval($summary['Canceled Parcels'] ?? $summary['Canceled Delivery'] ?? 0);
+        }
+
+        $success_rate = $totalParcels > 0 ? round(($totalDelivered / $totalParcels) * 100, 1) : 0;
+
+        $html = '<table class="gf-report-orders-table"><thead><tr>
+            <th>কুরিয়ার</th><th>মোট</th><th>ডেলিভারড</th><th>রিটার্ন</th><th>সাফল্য</th>
+        </tr></thead><tbody>';
+
+        foreach ($details['Summaries'] as $service => $summary) {
+            $total     = intval($summary['Total Parcels'] ?? $summary['Total Delivery'] ?? 0);
+            $delivered = intval($summary['Delivered Parcels'] ?? $summary['Successful Delivery'] ?? 0);
+            $returned  = intval($summary['Canceled Parcels'] ?? $summary['Canceled Delivery'] ?? 0);
+            $ratio     = $total > 0 ? round(($delivered / $total) * 100, 1) : 0;
+
+            $html .= '<tr>
+                <td>' . esc_html(ucfirst($service)) . '</td>
+                <td>' . $total . '</td>
+                <td style="color:#16a34a;">' . $delivered . '</td>
+                <td style="color:#dc2626;">' . $returned . '</td>
+                <td>' . $ratio . '%</td>
+            </tr>';
+        }
+
+        $html .= '<tr style="font-weight:600;border-top:2px solid #e5e7eb;">
+            <td>মোট</td><td>' . $totalParcels . '</td>
+            <td style="color:#16a34a;">' . $totalDelivered . '</td>
+            <td style="color:#dc2626;">' . $totalReturned . '</td>
+            <td>' . $success_rate . '%</td>
+        </tr></tbody></table>';
+
+        $html .= '<div style="margin-top:0.75rem;background:#f1f5f9;border-radius:6px;height:8px;overflow:hidden;">
+            <div style="height:100%;background:#16a34a;width:' . $success_rate . '%;transition:width 0.3s;"></div>
+        </div>';
+
+        return $html;
+    }
+
+    /* --- Report Column: Admin Head CSS/JS -------------------------- */
+
+    public function add_report_column_script_to_admin_head() {
+        if (!isset($_GET['page']) || $_GET['page'] !== 'guardify-incomplete') {
+            return;
+        }
+
+        echo '<script>
+        jQuery(document).ready(function($) {
+            window.gf_report = {
+                nonce: "' . wp_create_nonce('guardify_report_nonce') . '",
+                ajaxurl: "' . admin_url('admin-ajax.php') . '"
+            };
+
+            // Open report popup
+            $(document).on("click", ".gf-view-report", function(e) {
+                e.preventDefault();
+                var phone = $(this).data("phone");
+                var popupId = "#gf-report-popup-" + CryptoJS_MD5(phone);
+                // Fallback: find popup next to button
+                var $popup = $(this).siblings(".gf-report-popup");
+                if ($popup.length) {
+                    $popup.css({display: "flex"});
+                    // Load delivery data if not already loaded
+                    var $container = $popup.find(".gf-delivery-report-container");
+                    if ($container.length && !$container.data("loaded")) {
+                        $container.data("loaded", true);
+                        $.post(gf_report.ajaxurl, {
+                            action: "guardify_fetch_report_data",
+                            nonce: gf_report.nonce,
+                            phone: phone
+                        }, function(r) {
+                            $container.html(r.success ? r.data : "<p style=\'text-align:center;color:#999;\'>ডেটা লোড করা যায়নি</p>");
+                        });
+                    }
+                }
+            });
+
+            // Close report popup
+            $(document).on("click", ".gf-report-popup-close", function() {
+                $(this).closest(".gf-report-popup").hide();
+            });
+            $(document).on("click", ".gf-report-popup", function(e) {
+                if (e.target === this) $(this).hide();
+            });
+
+            // Simple MD5 for matching popup IDs
+            function CryptoJS_MD5(s) {
+                // Generate a simple hash (not crypto-secure, just for ID matching)
+                var hash = 0;
+                for (var i = 0; i < s.length; i++) {
+                    hash = ((hash << 5) - hash) + s.charCodeAt(i);
+                    hash |= 0;
+                }
+                return Math.abs(hash).toString(16);
+            }
+        });
+        </script>';
+    }
+
+    /* --- Statistics ------------------------------------------------- */
+
+    public static function get_detailed_stats() {
+        global $wpdb;
+        $table = $wpdb->prefix . 'guardify_incomplete_orders';
+
+        $stats = new stdClass();
+        $stats->total     = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table}");
+        $stats->pending   = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'pending'");
+        $stats->recovered = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$table} WHERE status = 'recovered'");
+        $stats->recovery_rate = $stats->total > 0 ? round(($stats->recovered / $stats->total) * 100, 1) : 0;
+
+        // Revenue recovered
+        $stats->revenue_recovered = (float) $wpdb->get_var(
+            "SELECT COALESCE(SUM(cart_total), 0) FROM {$table} WHERE status = 'recovered' AND cart_total > 0"
+        );
+
+        // Today
+        $today = current_time('Y-m-d');
+        $stats->today_new       = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE DATE(created_at) = %s AND status = 'pending'", $today));
+        $stats->today_converted = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE DATE(created_at) = %s AND status = 'recovered'", $today));
+
+        // Yesterday
+        $yesterday = gmdate('Y-m-d', strtotime('-1 day', strtotime($today)));
+        $stats->yesterday_new       = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE DATE(created_at) = %s AND status = 'pending'", $yesterday));
+        $stats->yesterday_converted = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE DATE(created_at) = %s AND status = 'recovered'", $yesterday));
+
+        // This week
+        $week_start = gmdate('Y-m-d', strtotime('monday this week', strtotime($today)));
+        $stats->week_new       = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE created_at >= %s AND status = 'pending'", $week_start));
+        $stats->week_converted = (int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$table} WHERE created_at >= %s AND status = 'recovered'", $week_start));
+
+        // Top abandoned products
+        $cart_rows = $wpdb->get_col("SELECT cart_data FROM {$table} WHERE status = 'pending' AND cart_data IS NOT NULL AND cart_data != '' ORDER BY created_at DESC LIMIT 100");
+        $product_counts = [];
+        foreach ($cart_rows as $json) {
+            $items = json_decode($json, true);
+            if (!is_array($items)) continue;
+            foreach ($items as $item) {
+                $name = $item['name'] ?? '';
+                if (!$name && !empty($item['product_id'])) {
+                    $p = wc_get_product((int) $item['product_id']);
+                    $name = $p ? $p->get_name() : '#' . $item['product_id'];
+                }
+                if ($name) {
+                    $product_counts[$name] = ($product_counts[$name] ?? 0) + ($item['quantity'] ?? 1);
+                }
+            }
+        }
+        arsort($product_counts);
+        $stats->top_products = array_slice($product_counts, 0, 5, true);
+
+        return $stats;
     }
 }
