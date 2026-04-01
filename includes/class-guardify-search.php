@@ -138,6 +138,14 @@ class Guardify_Search {
         jQuery(function($) {
             var nonce = '<?php echo esc_js($nonce); ?>';
 
+            // Auto-search when 11 digits entered
+            $('#gf-search-phone').on('input', function() {
+                var phone = $(this).val().replace(/\D/g, '');
+                if (/^01\d{9}$/.test(phone)) {
+                    $('#gf-search-form').trigger('submit');
+                }
+            });
+
             $('#gf-search-form').on('submit', function(e) {
                 e.preventDefault();
                 var phone = $('#gf-search-phone').val().trim();
