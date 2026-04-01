@@ -2,8 +2,9 @@
 defined('ABSPATH') || exit;
 
 /**
- * Guardify Report Column — Shows a quick delivery summary report
- * in the WC orders list with block/unblock capability.
+ * Guardify Report Column — Shows a compact delivery summary (DP ratio,
+ * risk level, parcel stats) in the WC orders list. Auto-loads via AJAX
+ * after page render — no click needed.
  */
 class Guardify_Report_Column {
 
@@ -32,66 +33,61 @@ class Guardify_Report_Column {
         // AJAX
         add_action('wp_ajax_guardify_fetch_report', [$this, 'ajax_fetch_report']);
 
-        // Admin scripts
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
+        // Admin scripts + styles
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
     }
 
     /**
-     * Add column after billing address.
+     * Add column after order_total.
      */
     public function add_column($columns) {
         $new = [];
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
-            if ($key === 'billing_address' || $key === 'order_total') {
-                $new['gf_report'] = 'Guardify Report';
+            if ($key === 'order_total') {
+                $new['gf_report'] = 'Guardify';
             }
         }
-        // Fallback if target column not found
         if (!isset($new['gf_report'])) {
-            $new['gf_report'] = 'Guardify Report';
+            $new['gf_report'] = 'Guardify';
         }
         return $new;
     }
 
-    /**
-     * CPT column render.
-     */
+    /** CPT column render. */
     public function render_column($column, $post_id) {
-        if ($column !== 'gf_report') {
-            return;
-        }
+        if ($column !== 'gf_report') return;
         $this->output_container($post_id);
     }
 
-    /**
-     * HPOS column render.
-     */
+    /** HPOS column render. */
     public function render_column_hpos($column, $order) {
-        if ($column !== 'gf_report') {
-            return;
-        }
+        if ($column !== 'gf_report') return;
         $this->output_container($order->get_id());
     }
 
     /**
-     * Output a check-report button container.
+     * Render a skeleton placeholder — JS will auto-load real data.
      */
     private function output_container($order_id) {
         $order = wc_get_order($order_id);
         if (!$order || empty($order->get_billing_phone())) {
-            echo '<span style="color:#9ca3af">No phone</span>';
+            echo '<span class="gf-rc-muted">—</span>';
             return;
         }
 
-        echo '<div class="gf-report-wrap">';
-        echo '<button type="button" class="button button-small gf-report-btn" data-order-id="' . esc_attr($order_id) . '">View Report</button>';
-        echo '<div class="gf-report-result" id="gf-report-' . esc_attr($order_id) . '"></div>';
+        echo '<div class="gf-rc-wrap" data-order-id="' . esc_attr($order_id) . '">';
+        // Skeleton loader (replaced by AJAX response)
+        echo '<div class="gf-rc-skeleton">';
+        echo '<span class="gf-rc-skel-bar" style="width:60%"></span>';
+        echo '<span class="gf-rc-skel-bar" style="width:90%"></span>';
+        echo '<span class="gf-rc-skel-bar" style="width:40%"></span>';
+        echo '</div>';
         echo '</div>';
     }
 
     /**
-     * AJAX: Fetch full delivery report for an order.
+     * AJAX: Fetch delivery report for an order.
      */
     public function ajax_fetch_report() {
         check_ajax_referer('guardify_nonce');
@@ -111,55 +107,63 @@ class Guardify_Report_Column {
         $phone = preg_replace('/^\+?88/', '', $phone);
 
         if (empty($phone) || !preg_match('/^01[3-9]\d{8}$/', $phone)) {
-            wp_send_json_error('No valid phone');
+            wp_send_json_error('Invalid phone');
         }
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error('API not connected');
+            wp_send_json_error('Not connected');
         }
 
         $result = $api->get('/api/v1/courier/summary', ['phone' => $phone]);
 
         if (!isset($result['dp_ratio']) && !isset($result['data']['dp_ratio'])) {
-            wp_send_json_error('Data not found');
+            // No courier data — return a "new customer" indicator
+            wp_send_json_success(['html' => '<span class="gf-rc-new">নতুন</span>']);
         }
 
-        // Normalize response
-        $data = isset($result['data']) ? $result['data'] : $result;
-        $dp       = (float) ($data['dp_ratio'] ?? 0);
-        $total    = (int) ($data['total_parcels'] ?? 0);
+        $data      = isset($result['data']) ? $result['data'] : $result;
+        $dp        = (float) ($data['dp_ratio'] ?? 0);
+        $total     = (int) ($data['total_parcels'] ?? 0);
         $delivered = (int) ($data['total_delivered'] ?? 0);
-        $failed   = (int) (($data['total_cancelled'] ?? 0) + ($data['total_returned'] ?? 0));
-        $risk     = $data['risk_level'] ?? 'unknown';
+        $failed    = (int) (($data['total_cancelled'] ?? 0) + ($data['total_returned'] ?? 0));
+        $risk      = $data['risk_level'] ?? 'unknown';
 
-        $dp_color = $dp >= 80 ? '#16a34a' : ($dp >= 50 ? '#d97706' : '#dc2626');
+        // Determine variant
+        $variant = $dp >= 80 ? 'success' : ($dp >= 50 ? 'warning' : 'danger');
         $risk_label = $risk === 'low' ? 'Low' : ($risk === 'medium' ? 'Medium' : 'High');
 
-        // Build compact HTML report
-        $html = '<div class="gf-mini-report" style="font-size:12px;line-height:1.6;">';
-        $html .= '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">';
-        $html .= '<span style="font-size:18px;font-weight:700;color:' . $dp_color . ';">' . number_format($dp, 1) . '%</span>';
-        $html .= '<span style="color:#6b7280;">DP</span>';
+        $html  = '<div class="gf-rc-card gf-rc-' . $variant . '">';
+
+        // DP + Risk badge row
+        $html .= '<div class="gf-rc-top">';
+        $html .= '<span class="gf-rc-dp">' . number_format($dp, 0) . '%</span>';
+        $html .= '<span class="gf-rc-risk gf-rc-risk-' . esc_attr($risk) . '">' . esc_html($risk_label) . '</span>';
         $html .= '</div>';
 
         // Progress bar
-        $html .= '<div style="background:#e5e7eb;border-radius:4px;height:6px;width:100%;margin-bottom:6px;">';
-        $html .= '<div style="background:' . $dp_color . ';height:6px;border-radius:4px;width:' . min($dp, 100) . '%;"></div>';
+        $html .= '<div class="gf-rc-bar"><div class="gf-rc-bar-fill gf-rc-fill-' . $variant . '" style="width:' . min($dp, 100) . '%"></div></div>';
+
+        // Stats row
+        $html .= '<div class="gf-rc-stats">';
+        $html .= '<span title="Total">' . $total . '</span>';
+        $html .= '<span class="gf-rc-sep">·</span>';
+        $html .= '<span class="gf-rc-stat-ok" title="Delivered">✓' . $delivered . '</span>';
+        if ($failed > 0) {
+            $html .= '<span class="gf-rc-sep">·</span>';
+            $html .= '<span class="gf-rc-stat-fail" title="Failed">✗' . $failed . '</span>';
+        }
         $html .= '</div>';
 
-        $html .= '<div style="color:#374151;">📦 ' . $total . ' Total &bull; ✅ ' . $delivered . ' Delivered &bull; ❌ ' . $failed . ' Failed</div>';
-        $html .= '<div style="color:#6b7280;">Risk: <strong style="color:' . $dp_color . ';">' . esc_html($risk_label) . '</strong></div>';
-
-        // Provider breakdown if available
+        // Provider breakdown (compact)
         if (!empty($data['providers'])) {
-            $html .= '<div style="margin-top:4px;border-top:1px solid #e5e7eb;padding-top:4px;">';
+            $html .= '<div class="gf-rc-providers">';
             foreach ($data['providers'] as $p) {
-                $pName = esc_html(ucfirst($p['provider'] ?? ''));
+                $pName  = ucfirst($p['provider'] ?? '');
                 $pTotal = (int) ($p['total_parcels'] ?? 0);
                 $pDel   = (int) ($p['total_delivered'] ?? 0);
                 $pRate  = (float) ($p['success_ratio'] ?? 0);
-                $html .= '<div>' . $pName . ': ' . $pDel . '/' . $pTotal . ' (' . number_format($pRate, 0) . '%)</div>';
+                $html  .= '<span class="gf-rc-prov">' . esc_html($pName) . ' ' . $pDel . '/' . $pTotal . '</span>';
             }
             $html .= '</div>';
         }
@@ -170,9 +174,9 @@ class Guardify_Report_Column {
     }
 
     /**
-     * Enqueue admin scripts.
+     * Enqueue scripts + inline CSS on orders page.
      */
-    public function enqueue_scripts($hook) {
+    public function enqueue_assets($hook) {
         if ('edit.php' !== $hook && 'woocommerce_page_wc-orders' !== $hook) {
             return;
         }
@@ -180,17 +184,130 @@ class Guardify_Report_Column {
             return;
         }
 
+        $nonce = wp_create_nonce('guardify_nonce');
+
+        // CSS for the column
+        wp_add_inline_style('woocommerce_admin_styles', $this->get_column_css());
+
+        // Auto-load JS — queues all visible orders and fetches sequentially
         wp_add_inline_script('jquery', "
-            jQuery(function($){
-                $(document).on('click','.gf-report-btn',function(){
-                    var btn=$(this), id=btn.data('order-id'), res=$('#gf-report-'+id);
-                    btn.hide(); res.html('<em>Loading...</em>');
-                    $.post(ajaxurl,{action:'guardify_fetch_report',order_id:id,_ajax_nonce:'" . wp_create_nonce('guardify_nonce') . "'},function(r){
-                        if(r.success) res.html(r.data.html);
-                        else { res.html('<span style=\"color:#dc2626\">'+r.data+'</span>'); btn.show(); }
-                    }).fail(function(){ res.html('<span style=\\\"color:#dc2626\\\">Error</span>'); btn.show(); });
-                });
-            });
+jQuery(function($){
+    var queue = [], running = 0, MAX_CONCURRENT = 3, nonce = '{$nonce}';
+
+    function processQueue() {
+        while (running < MAX_CONCURRENT && queue.length > 0) {
+            var el = queue.shift();
+            fetchReport(el);
+        }
+    }
+
+    function fetchReport(el) {
+        var id = el.data('order-id');
+        running++;
+        $.post(ajaxurl, {
+            action: 'guardify_fetch_report',
+            order_id: id,
+            _ajax_nonce: nonce
+        }, function(r) {
+            if (r.success) {
+                el.html(r.data.html);
+            } else {
+                el.html('<span class=\"gf-rc-err\">' + (r.data || 'Error') + '</span>');
+            }
+        }).fail(function() {
+            el.html('<span class=\"gf-rc-err\">Error</span>');
+        }).always(function() {
+            running--;
+            processQueue();
+        });
+    }
+
+    // Collect all report containers
+    $('.gf-rc-wrap').each(function() {
+        queue.push($(this));
+    });
+    processQueue();
+});
         ");
+    }
+
+    /**
+     * Inline CSS for the report column.
+     */
+    private function get_column_css() {
+        return "
+/* ─── Guardify Report Column ───────────────────────────────── */
+.column-gf_report { width: 140px; }
+
+.gf-rc-muted { color: #9ca3af; font-size: 12px; }
+
+/* Skeleton */
+.gf-rc-skeleton { display: flex; flex-direction: column; gap: 5px; }
+.gf-rc-skel-bar {
+    display: block; height: 10px; border-radius: 4px;
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: gf-rc-shimmer 1.5s infinite;
+}
+@keyframes gf-rc-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Card */
+.gf-rc-card {
+    font-size: 11px; line-height: 1.4;
+    padding: 6px 8px; border-radius: 6px;
+    border-left: 3px solid transparent;
+    background: #f9fafb;
+}
+.gf-rc-success { border-left-color: #16a34a; }
+.gf-rc-warning { border-left-color: #d97706; }
+.gf-rc-danger  { border-left-color: #dc2626; }
+
+/* Top row */
+.gf-rc-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.gf-rc-dp { font-size: 16px; font-weight: 700; line-height: 1; }
+.gf-rc-success .gf-rc-dp { color: #16a34a; }
+.gf-rc-warning .gf-rc-dp { color: #d97706; }
+.gf-rc-danger  .gf-rc-dp { color: #dc2626; }
+
+/* Risk badge */
+.gf-rc-risk {
+    font-size: 9px; font-weight: 600; text-transform: uppercase;
+    padding: 1px 6px; border-radius: 9px; letter-spacing: 0.5px;
+}
+.gf-rc-risk-low    { background: #dcfce7; color: #15803d; }
+.gf-rc-risk-medium { background: #fef3c7; color: #92400e; }
+.gf-rc-risk-high   { background: #fee2e2; color: #991b1b; }
+.gf-rc-risk-unknown { background: #f3f4f6; color: #6b7280; }
+
+/* Progress bar */
+.gf-rc-bar { height: 4px; border-radius: 2px; background: #e5e7eb; margin-bottom: 4px; }
+.gf-rc-bar-fill { height: 4px; border-radius: 2px; transition: width 0.4s ease; }
+.gf-rc-fill-success { background: #16a34a; }
+.gf-rc-fill-warning { background: #d97706; }
+.gf-rc-fill-danger  { background: #dc2626; }
+
+/* Stats */
+.gf-rc-stats { color: #374151; font-size: 11px; display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.gf-rc-sep { color: #d1d5db; }
+.gf-rc-stat-ok { color: #16a34a; }
+.gf-rc-stat-fail { color: #dc2626; }
+
+/* Providers */
+.gf-rc-providers { margin-top: 3px; padding-top: 3px; border-top: 1px solid #e5e7eb; display: flex; flex-wrap: wrap; gap: 4px; }
+.gf-rc-prov { font-size: 10px; color: #6b7280; background: #f3f4f6; padding: 0 4px; border-radius: 3px; }
+
+/* New customer tag */
+.gf-rc-new {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    color: #6366f1; background: #eef2ff; padding: 2px 8px;
+    border-radius: 9px;
+}
+
+/* Error */
+.gf-rc-err { font-size: 11px; color: #dc2626; }
+";
     }
 }

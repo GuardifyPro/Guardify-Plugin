@@ -21,19 +21,8 @@ class Guardify_Phone_History {
             return;
         }
 
-        // Legacy orders list (CPT)
-        add_filter('manage_edit-shop_order_columns', [$this, 'add_column']);
-        add_action('manage_shop_order_posts_custom_column', [$this, 'render_column'], 20, 2);
-
-        // HPOS orders list
-        add_filter('woocommerce_shop_order_list_table_columns', [$this, 'add_column']);
-        add_action('woocommerce_shop_order_list_table_custom_column', [$this, 'render_column_hpos'], 20, 2);
-
-        // AJAX for lazy-loading DP data
+        // AJAX for lazy-loading DP data (used by Quick View and other modules)
         add_action('wp_ajax_guardify_phone_history', [$this, 'ajax_phone_history']);
-
-        // Admin assets
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts']);
     }
 
     /**

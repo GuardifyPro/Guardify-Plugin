@@ -31,11 +31,14 @@ class Guardify_Send_Courier {
         add_filter('handle_bulk_actions-edit-shop_order', [$this, 'handle_bulk_action'], 10, 3);
         add_filter('handle_bulk_actions-woocommerce_page_wc-orders', [$this, 'handle_bulk_action'], 10, 3);
 
-        // Order list column
+        // Order list column (CPT + HPOS)
         add_filter('manage_edit-shop_order_columns', [$this, 'add_column']);
-        add_filter('manage_woocommerce_page_wc-orders_columns', [$this, 'add_column']);
-        add_action('manage_shop_order_posts_custom_column', [$this, 'render_column'], 10, 2);
-        add_action('manage_woocommerce_page_wc-orders_custom_column', [$this, 'render_column'], 10, 2);
+        add_filter('woocommerce_shop_order_list_table_columns', [$this, 'add_column']);
+        add_action('manage_shop_order_posts_custom_column', [$this, 'render_column_cpt'], 10, 2);
+        add_action('woocommerce_shop_order_list_table_custom_column', [$this, 'render_column_hpos'], 10, 2);
+
+        // Enqueue scripts on orders page
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_order_list_scripts']);
     }
 
     public function add_meta_box() {
@@ -196,13 +199,14 @@ class Guardify_Send_Courier {
         }
 
         $api = new Guardify_API();
+        $actual_cod = $cod > 0 ? $cod : (float) $order->get_total();
         $result = $api->post('/api/v1/courier/send', [
             'provider'          => $provider,
             'order_id'          => (string) $order_id,
             'recipient_name'    => trim($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()),
             'recipient_phone'   => $order->get_billing_phone(),
             'recipient_address' => $order->get_billing_address_1() . ', ' . $order->get_billing_city(),
-            'cod_amount'        => $cod,
+            'cod_amount'        => $actual_cod,
             'note'              => $note,
         ]);
 
@@ -375,16 +379,29 @@ class Guardify_Send_Courier {
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
             if ($key === 'order_status') {
-                $new['guardify_courier'] = 'Courier';
+                $new['guardify_courier'] = 'Send Courier';
             }
         }
         return $new;
     }
 
-    public function render_column($column, $post_id_or_order) {
+    /** CPT column render. */
+    public function render_column_cpt($column, $post_id) {
         if ($column !== 'guardify_courier') return;
+        $this->output_courier_cell($post_id);
+    }
 
-        $order = $this->get_order_from($post_id_or_order);
+    /** HPOS column render. */
+    public function render_column_hpos($column, $order) {
+        if ($column !== 'guardify_courier') return;
+        $this->output_courier_cell($order->get_id());
+    }
+
+    /**
+     * Output the courier cell with send button or status.
+     */
+    private function output_courier_cell($order_id) {
+        $order = wc_get_order($order_id);
         if (!$order) {
             echo '—';
             return;
@@ -394,23 +411,127 @@ class Guardify_Send_Courier {
         $provider    = $order->get_meta('_guardify_courier_provider');
         $status      = $order->get_meta('_guardify_courier_status');
 
-        if (!$consignment) {
-            echo '<span style="color:#9ca3af; font-size:12px;">Not sent</span>';
+        if ($consignment) {
+            // Already sent — show status
+            $variant = 'muted';
+            $sl = strtolower($status ?: '');
+            if (in_array($sl, ['delivered'])) $variant = 'success';
+            if (in_array($sl, ['returned', 'cancelled', 'partial_delivered'])) $variant = 'danger';
+            if (in_array($sl, ['in_review', 'pending', 'in_transit'])) $variant = 'warning';
+
+            echo '<div class="gf-sc-cell gf-sc-sent">';
+            echo '<span class="gf-sc-provider">' . esc_html(ucfirst($provider)) . '</span>';
+            echo '<span class="gf-sc-cn">' . esc_html($consignment) . '</span>';
+            echo '<span class="gf-sc-status gf-sc-status-' . esc_attr($variant) . '">' . esc_html(ucfirst(str_replace('_', ' ', $status ?: 'pending'))) . '</span>';
+            echo '<button type="button" class="gf-sc-refresh" data-order-id="' . esc_attr($order_id) . '" data-cn="' . esc_attr($consignment) . '" data-provider="' . esc_attr($provider) . '" title="Refresh">↻</button>';
+            echo '</div>';
             return;
         }
 
-        $color = '#6b7280';
-        if (in_array($status, ['delivered', 'Delivered'])) $color = '#16a34a';
-        if (in_array($status, ['returned', 'Returned', 'cancelled', 'Cancelled'])) $color = '#dc2626';
-        if (in_array($status, ['in_review', 'pending', 'Pending'])) $color = '#d97706';
+        // Not sent — show send button
+        $default = get_option('guardify_default_courier', 'steadfast');
+        echo '<div class="gf-sc-cell" id="gf-sc-' . esc_attr($order_id) . '">';
+        echo '<button type="button" class="gf-sc-send" data-order-id="' . esc_attr($order_id) . '" data-provider="' . esc_attr($default) . '">Send</button>';
+        echo '</div>';
+    }
 
-        printf(
-            '<div style="font-size:12px;"><strong>%s</strong><br><span style="font-family:monospace; font-size:11px;">%s</span><br><span style="color:%s; font-weight:600;">%s</span></div>',
-            esc_html(ucfirst($provider)),
-            esc_html(substr($consignment, 0, 16)),
-            esc_attr($color),
-            esc_html($status ?: 'pending')
-        );
+    /**
+     * Enqueue column scripts + styles on orders page.
+     */
+    public function enqueue_order_list_scripts($hook) {
+        if ('edit.php' !== $hook && 'woocommerce_page_wc-orders' !== $hook) {
+            return;
+        }
+        if ('edit.php' === $hook && (!isset($_GET['post_type']) || $_GET['post_type'] !== 'shop_order')) {
+            return;
+        }
+
+        $nonce = wp_create_nonce('guardify_courier_nonce');
+
+        // CSS
+        wp_add_inline_style('woocommerce_admin_styles', "
+.column-guardify_courier { width: 120px; }
+.gf-sc-cell { font-size: 11px; line-height: 1.5; }
+.gf-sc-send {
+    display: inline-block; padding: 4px 14px; border: none; border-radius: 4px;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    background: #16a34a; color: #fff; transition: opacity .15s;
+}
+.gf-sc-send:hover { opacity: .85; }
+.gf-sc-send:disabled { opacity: .5; cursor: not-allowed; }
+.gf-sc-send.gf-sc-done {
+    background: #e5e7eb; color: #374151; cursor: default;
+}
+.gf-sc-provider { display: block; font-weight: 600; color: #374151; font-size: 12px; }
+.gf-sc-cn { display: block; font-family: monospace; font-size: 10px; color: #6b7280; word-break: break-all; }
+.gf-sc-status { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 9px; margin-top: 2px; }
+.gf-sc-status-success { background: #dcfce7; color: #15803d; }
+.gf-sc-status-warning { background: #fef3c7; color: #92400e; }
+.gf-sc-status-danger  { background: #fee2e2; color: #991b1b; }
+.gf-sc-status-muted   { background: #f3f4f6; color: #6b7280; }
+.gf-sc-refresh {
+    border: none; background: none; font-size: 14px; cursor: pointer; color: #6b7280;
+    padding: 0 4px; margin-left: 2px; vertical-align: middle;
+}
+.gf-sc-refresh:hover { color: #374151; }
+.gf-sc-err { color: #dc2626; font-size: 11px; display: block; margin-top: 2px; }
+        ");
+
+        // JS
+        wp_add_inline_script('jquery', "
+jQuery(function($){
+    var nonce = '{$nonce}';
+
+    // Send button click
+    $(document).on('click', '.gf-sc-send', function(){
+        var btn = $(this), id = btn.data('order-id'), provider = btn.data('provider');
+        btn.prop('disabled', true).text('Sending...');
+        $.post(ajaxurl, {
+            action: 'guardify_send_to_courier',
+            _wpnonce: nonce,
+            order_id: id,
+            provider: provider,
+            cod_amount: 0,
+            note: ''
+        }, function(r){
+            if (r.success) {
+                var d = r.data;
+                var cell = $('#gf-sc-' + id);
+                cell.html(
+                    '<span class=\"gf-sc-provider\">' + provider.charAt(0).toUpperCase() + provider.slice(1) + '</span>' +
+                    '<span class=\"gf-sc-cn\">' + (d.consignment_id || '') + '</span>' +
+                    '<span class=\"gf-sc-status gf-sc-status-warning\">' + (d.status || 'Pending') + '</span>'
+                );
+            } else {
+                btn.prop('disabled', false).text('Send');
+                var wrap = btn.parent();
+                wrap.find('.gf-sc-err').remove();
+                wrap.append('<span class=\"gf-sc-err\">' + (r.data || 'Failed') + '</span>');
+            }
+        }).fail(function(){
+            btn.prop('disabled', false).text('Send');
+        });
+    });
+
+    // Refresh status click
+    $(document).on('click', '.gf-sc-refresh', function(){
+        var btn = $(this), cn = btn.data('cn'), provider = btn.data('provider'), id = btn.data('order-id');
+        btn.text('⏳');
+        $.post(ajaxurl, {
+            action: 'guardify_check_courier_status',
+            _wpnonce: nonce,
+            order_id: id,
+            consignment_id: cn,
+            provider: provider
+        }, function(r){
+            btn.text('↻');
+            if (r.success && r.data.status) {
+                btn.siblings('.gf-sc-status').text(r.data.status.charAt(0).toUpperCase() + r.data.status.slice(1).replace(/_/g,' '));
+            }
+        }).fail(function(){ btn.text('↻'); });
+    });
+});
+        ");
     }
 
     // --- Helpers ---

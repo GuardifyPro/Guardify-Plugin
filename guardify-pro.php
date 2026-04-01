@@ -3,7 +3,7 @@
  * Plugin Name:       Guardify Pro
  * Plugin URI:        https://guardify.pro
  * Description:       ফ্রড ডিটেকশন, কুরিয়ার ইন্টেলিজেন্স, OTP ভেরিফিকেশন ও স্মার্ট অর্ডার ফিল্টারিং — বাংলাদেশের ই-কমার্সের জন্য।
- * Version:           0.3.1
+ * Version:           0.3.3
  * Author:            Tansiq Labs
  * Author URI:        https://tansiqlabs.com.bd
  * License:           Proprietary
@@ -16,7 +16,7 @@
 
 defined('ABSPATH') || exit;
 
-define('GUARDIFY_VERSION', '0.3.1');
+define('GUARDIFY_VERSION', '0.3.3');
 define('GUARDIFY_FILE', __FILE__);
 define('GUARDIFY_PATH', plugin_dir_path(__FILE__));
 define('GUARDIFY_URL', plugin_dir_url(__FILE__));
@@ -250,6 +250,7 @@ final class Guardify_Pro {
         wp_localize_script('guardify-admin', 'guardifyData', [
             'ajaxUrl'  => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('guardify_nonce'),
+            'courierNonce' => wp_create_nonce('guardify_courier_nonce'),
             'checkoutNonce' => wp_create_nonce('guardify_checkout_nonce'),
             'connected' => !empty(get_option('guardify_api_key', '')),
         ]);

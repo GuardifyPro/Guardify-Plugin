@@ -114,6 +114,30 @@
         .fail(function () {
             $('#gf-status-text').text('সংযোগ ত্রুটি');
         });
+
+        /* ── Auto-fetch Steadfast balance ─────────────────────────────── */
+        if ($('#gf-steadfast-balance').length) {
+            $.post(data.ajaxUrl, {
+                action:   'guardify_courier_balance',
+                provider: 'steadfast',
+                _wpnonce: data.courierNonce
+            })
+            .done(function (res) {
+                if (res.success && res.data) {
+                    var bal = res.data.current_balance !== undefined ? res.data.current_balance : res.data.balance;
+                    if (bal !== undefined) {
+                        $('#gf-steadfast-balance').text('৳' + Number(bal).toLocaleString('bn-BD'));
+                    } else {
+                        $('#gf-steadfast-balance').text('—');
+                    }
+                } else {
+                    $('#gf-steadfast-balance').text('ত্রুটি');
+                }
+            })
+            .fail(function () {
+                $('#gf-steadfast-balance').text('—');
+            });
+        }
     }
 
     /* ── Tab Navigation ───────────────────────────────────────────────── */
