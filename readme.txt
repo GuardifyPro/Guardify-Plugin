@@ -4,7 +4,7 @@ Tags: fraud detection, woocommerce, delivery, otp, courier
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.3.5
+Stable tag: 0.3.6
 License: Proprietary
 License URI: https://guardify.pro/license
 
@@ -49,6 +49,22 @@ No. WooCommerce 7.0+ is required.
 Updates are delivered via GitHub Releases. When a new version is published, your WordPress dashboard will show the update notification automatically. You can also manually check for updates under **Guardify Pro → Settings → আপডেট**.
 
 == Changelog ==
+
+= 0.3.6 =
+* ইনকমপ্লিট অর্ডার সম্পূর্ণ রিবিল্ড (OrderGuard প্যাটার্ন অনুসরণ)
+* সার্ভার-সাইড ক্যাপচার (checkout_update_order_review হুক)
+* beforeunload + sendBeacon দিয়ে পেজ বন্ধের আগে ডেটা ক্যাপচার
+* কনফিগারেবল কুলডাউন (কুকি + ডিবি চেক, ফোন ভ্যারিয়েশন ম্যাচিং)
+* বাল্ক SMS, বাল্ক কনভার্ট, বাল্ক ডিলিট
+* CSV এক্সপোর্ট (বাংলা BOM সাপোর্ট)
+* SMS মডাল — এডিটেবল টেমপ্লেট + প্লেসহোল্ডার ({customer_name}, {product_name}, {order_total}, {siteurl})
+* কনভার্ট মডাল — স্ট্যাটাস সিলেক্টর (Pending/Processing/On Hold/Completed)
+* প্রোডাক্ট ভ্যারিয়েশন সাপোর্ট (variation_id + attributes)
+* COD পেমেন্ট + shipping address সেট
+* সার্চ ফিল্টার (ফোন/নাম দিয়ে)
+* রিকভারি স্ট্যাটিস্টিক্স (পেন্ডিং, রিকভার্ড, রেট)
+* কনফিগারেবল রিটেনশন পিরিয়ড (0 = কখনো মুছবে না)
+* DB স্কিমা আপগ্রেড: email, state, country, postcode কলাম যোগ
 
 = 0.3.5 =
 * UI/UX ওভারহল — ইনকমপ্লিট অর্ডার ও SMS লগস পেজ সম্পূর্ণ রিডিজাইন

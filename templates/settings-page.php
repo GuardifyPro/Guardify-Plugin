@@ -60,6 +60,9 @@ $settings = [
     'notification_statuses'       => get_option('guardify_notification_statuses', []),
     'notification_templates'      => get_option('guardify_notification_templates', []),
     'incomplete_orders_enabled'   => get_option('guardify_incomplete_orders_enabled', 'no'),
+    'incomplete_retention'        => get_option('guardify_incomplete_retention', 30),
+    'incomplete_cooldown_enabled' => get_option('guardify_incomplete_cooldown_enabled', 'yes'),
+    'incomplete_cooldown'         => get_option('guardify_incomplete_cooldown', 30),
     'phone_history_enabled'       => get_option('guardify_phone_history_enabled', 'yes'),
     'report_column_enabled'       => get_option('guardify_report_column_enabled', 'yes'),
 ];
@@ -285,7 +288,33 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
                 </div>
 
                 <div style="margin-top:1.5rem; border-top:1px solid var(--gf-border, #e5e7eb); padding-top:1.5rem;">
-                    <h3 style="font-size:0.9375rem; font-weight:600; margin-bottom:0.75rem; color:var(--gf-text);">🚚 কুরিয়ার সেটিংস</h3>
+                    <h3 style="font-size:0.9375rem; font-weight:600; margin-bottom:0.75rem; color:var(--gf-text);">� ইনকমপ্লিট অর্ডার সেটিংস</h3>
+                    <div class="gf-form-row">
+                        <div class="gf-form-group">
+                            <label class="gf-label">রিটেনশন পিরিয়ড (দিন)</label>
+                            <input type="number" name="guardify_incomplete_retention" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['incomplete_retention']); ?>" min="0" max="365" step="1" style="max-width:120px;" />
+                            <span class="gf-text-muted" style="font-size:0.8125rem;">0 = কখনো মুছবে না। পুরাতন পেন্ডিং রেকর্ড এই দিন পর অটো-ডিলিট হবে।</span>
+                        </div>
+                    </div>
+                    <label class="gf-toggle-row" style="margin-top:0.75rem;">
+                        <div class="gf-toggle-info">
+                            <span class="gf-toggle-label">কুলডাউন সক্রিয়</span>
+                            <span class="gf-toggle-desc">অর্ডার সম্পন্ন হলে নির্দিষ্ট সময় পর্যন্ত একই ফোনে পুনরায় ক্যাপচার করবে না</span>
+                        </div>
+                        <div class="gf-switch">
+                            <input type="checkbox" name="guardify_incomplete_cooldown_enabled" value="yes" <?php checked($settings['incomplete_cooldown_enabled'], 'yes'); ?> class="gf-setting-toggle" />
+                            <span class="gf-switch-slider"></span>
+                        </div>
+                    </label>
+                    <div class="gf-form-group" style="margin-top:0.75rem;">
+                        <label class="gf-label">কুলডাউন সময় (মিনিট)</label>
+                        <input type="number" name="guardify_incomplete_cooldown" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['incomplete_cooldown']); ?>" min="5" max="43200" step="1" style="max-width:150px;" />
+                        <span class="gf-text-muted" style="font-size:0.8125rem;">৫ থেকে ৪৩২০০ মিনিট (৩০ দিন)। ডিফল্ট: ৩০ মিনিট।</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:1.5rem; border-top:1px solid var(--gf-border, #e5e7eb); padding-top:1.5rem;">
+                    <h3 style="font-size:0.9375rem; font-weight:600; margin-bottom:0.75rem; color:var(--gf-text);">�🚚 কুরিয়ার সেটিংস</h3>
                     <div class="gf-form-group">
                         <label class="gf-label">ডিফল্ট কুরিয়ার</label>
                         <select name="guardify_default_courier" class="gf-input gf-setting-input" style="max-width:250px;">

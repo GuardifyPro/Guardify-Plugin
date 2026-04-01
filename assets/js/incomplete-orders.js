@@ -1,51 +1,103 @@
 /**
- * Guardify Incomplete Orders — Captures checkout form data periodically.
+ * Guardify Incomplete Orders — Frontend checkout capture.
+ * Monitors form fields with debounce, captures via AJAX,
+ * and uses sendBeacon on page exit for reliable data capture.
  */
 (function ($) {
     'use strict';
 
     if (typeof guardifyIncomplete === 'undefined') return;
+    if (!$('body').hasClass('woocommerce-checkout')) return;
 
-    var lastData = '';
+    var phoneStored = false;
+    var formSubmitted = false;
     var debounceTimer = null;
+    var minFields = 3;
 
-    // Capture on phone field change (debounced)
-    $(document).on('change blur', '#billing_phone', function () {
-        scheduleCapture();
+    // Mark form as submitted to prevent capture
+    $(document.body).on('checkout_place_order', function () {
+        formSubmitted = true;
+        return true;
+    });
+    $('form.woocommerce-checkout').on('submit', function () {
+        formSubmitted = true;
+        return true;
     });
 
-    // Also capture when address fields change
-    $(document).on('change', '#billing_first_name, #billing_last_name, #billing_address_1, #billing_city', function () {
-        scheduleCapture();
-    });
-
-    function scheduleCapture() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(captureData, 2000);
+    function collectFormData() {
+        return {
+            phone: $('#billing_phone').val() || '',
+            name: (($('#billing_first_name').val() || '') + ' ' + ($('#billing_last_name').val() || '')).trim(),
+            email: $('#billing_email').val() || '',
+            address: $('#billing_address_1').val() || '',
+            city: $('#billing_city').val() || '',
+            state: $('#billing_state').val() || '',
+            country: $('#billing_country').val() || '',
+            postcode: $('#billing_postcode').val() || ''
+        };
     }
 
-    function captureData() {
-        var phone = $('#billing_phone').val();
-        if (!phone || phone.length < 10) return;
+    function shouldStore(data) {
+        if (formSubmitted || phoneStored) return false;
+        if (!data.phone || data.phone.length < 10) return false;
 
-        var firstName = $('#billing_first_name').val() || '';
-        var lastName = $('#billing_last_name').val() || '';
-        var address = $('#billing_address_1').val() || '';
-        var city = $('#billing_city').val() || '';
+        var filled = 0;
+        $.each(data, function (k, v) {
+            if (v && v.trim() !== '') filled++;
+        });
+        return filled >= minFields;
+    }
 
-        // Deduplicate based on all fields, not just phone
-        var dataKey = phone + '|' + firstName + '|' + lastName + '|' + address + '|' + city;
-        if (dataKey === lastData) return;
-        lastData = dataKey;
+    // Monitor checkout form changes (2s debounce)
+    $('form.checkout').on('change input', 'input, select, textarea', function () {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function () {
+            if (formSubmitted) return;
+            var data = collectFormData();
+            if (shouldStore(data)) storeIncomplete(data);
+        }, 2000);
+    });
 
-        $.post(guardifyIncomplete.ajaxUrl, {
-            action: 'guardify_store_incomplete',
-            nonce: guardifyIncomplete.nonce,
-            phone: phone,
-            name: (firstName + ' ' + lastName).trim(),
-            address: address,
-            city: city
+    function storeIncomplete(data) {
+        if (formSubmitted) return;
+
+        data.action = 'guardify_store_incomplete';
+        data.nonce = guardifyIncomplete.nonce;
+
+        $.ajax({
+            url: guardifyIncomplete.ajaxUrl,
+            type: 'POST',
+            data: data,
+            success: function (res) {
+                if (res.success) {
+                    phoneStored = true;
+                }
+            }
         });
     }
 
+    // Capture on page exit via sendBeacon
+    $(window).on('beforeunload', function () {
+        if (formSubmitted || phoneStored) return;
+
+        var data = collectFormData();
+        if (!shouldStore(data)) return;
+
+        if (navigator.sendBeacon) {
+            var fd = new FormData();
+            fd.append('action', 'guardify_store_incomplete');
+            fd.append('nonce', guardifyIncomplete.nonce);
+            $.each(data, function (k, v) { fd.append(k, v); });
+            navigator.sendBeacon(guardifyIncomplete.ajaxUrl, fd);
+        } else {
+            data.action = 'guardify_store_incomplete';
+            data.nonce = guardifyIncomplete.nonce;
+            $.ajax({
+                url: guardifyIncomplete.ajaxUrl,
+                type: 'POST',
+                async: false,
+                data: data
+            });
+        }
+    });
 })(jQuery);
