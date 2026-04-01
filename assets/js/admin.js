@@ -94,7 +94,7 @@
             if (res.success && res.data) {
                 $('#gf-status-text').text(res.data.active ? 'সক্রিয়' : 'নিষ্ক্রিয়');
                 if (res.data.plan) {
-                    var planMap = { free: 'Free', starter: 'Starter', business: 'Business' };
+                    var planMap = { none: 'কোনো প্ল্যান নেই', trial: 'Trial', starter: 'Starter', business: 'Business' };
                     $('#gf-plan-text').text(planMap[res.data.plan] || res.data.plan);
                 }
                 if (res.data.sms_balance !== undefined) {
@@ -104,8 +104,25 @@
                     var exp = new Date(res.data.expires_at);
                     var now = new Date();
                     var days = Math.ceil((exp - now) / (1000 * 60 * 60 * 24));
-                    var daysText = days > 0 ? days + ' দিন বাকি' : 'মেয়াদ শেষ';
-                    $('#gf-plan-text').append(' <small style="opacity:0.7">(' + daysText + ')</small>');
+                    if (days > 0) {
+                        $('#gf-expiry-text').text(days + ' দিন বাকি').css('color', days <= 7 ? '#ef4444' : '');
+                    } else {
+                        $('#gf-expiry-text').text('মেয়াদ শেষ').css('color', '#ef4444');
+                    }
+                } else {
+                    $('#gf-expiry-text').text('কোনো মেয়াদ নেই');
+                }
+
+                // Show upgrade/renew link for trial or expired plans
+                var plan = res.data.plan || 'none';
+                var isExpired = res.data.expires_at && new Date(res.data.expires_at) < new Date();
+                if (plan === 'trial' || plan === 'none' || isExpired) {
+                    var linkText = isExpired ? '🔄 রিনিউ করুন' : (plan === 'trial' ? '⬆️ আপগ্রেড করুন' : '🚀 সাবস্ক্রিপশন নিন');
+                    $('#gf-plan-text').append(
+                        ' <a href="https://guardify.pro/subscription" target="_blank" ' +
+                        'style="font-size:0.75rem;color:#3b82f6;text-decoration:underline;margin-left:4px;">' +
+                        linkText + '</a>'
+                    );
                 }
             } else {
                 $('#gf-status-text').text('যাচাই ব্যর্থ');
