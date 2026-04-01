@@ -24,8 +24,19 @@ class Guardify_Backup {
         // WP Cron hook
         add_action('guardify_scheduled_backup', [$this, 'run_scheduled_backup']);
 
+        // Pending backup check cron
+        add_action('guardify_check_pending_backup', [$this, 'process_pending_requests']);
+
         // Custom cron schedule
         add_filter('cron_schedules', [$this, 'add_cron_schedules']);
+
+        // Schedule pending check if not scheduled
+        if (!wp_next_scheduled('guardify_check_pending_backup')) {
+            wp_schedule_event(time(), 'guardify_every_5min', 'guardify_check_pending_backup');
+        }
+
+        // Also check on admin init (throttled)
+        add_action('admin_init', [$this, 'maybe_check_pending']);
 
         // AJAX handlers
         add_action('wp_ajax_guardify_backup_now', [$this, 'ajax_backup_now']);
@@ -38,6 +49,10 @@ class Guardify_Backup {
      * Register custom cron schedules.
      */
     public function add_cron_schedules($schedules) {
+        $schedules['guardify_every_5min'] = [
+            'interval' => 5 * MINUTE_IN_SECONDS,
+            'display'  => 'প্রতি ৫ মিনিটে',
+        ];
         $schedules['guardify_every_6h'] = [
             'interval' => 6 * HOUR_IN_SECONDS,
             'display'  => 'প্রতি ৬ ঘণ্টায়',
@@ -110,6 +125,59 @@ class Guardify_Backup {
 
         if (is_wp_error($result)) {
             error_log('Guardify Backup Error: ' . $result->get_error_message());
+        }
+    }
+
+    /**
+     * Check for pending backup requests on admin page load (throttled to once per 5 min).
+     */
+    public function maybe_check_pending() {
+        if (get_transient('guardify_pending_checked')) {
+            return;
+        }
+        set_transient('guardify_pending_checked', true, 5 * MINUTE_IN_SECONDS);
+        $this->process_pending_requests();
+    }
+
+    /**
+     * Poll the engine for pending backup requests and process them.
+     */
+    public function process_pending_requests() {
+        $api = new Guardify_API();
+        if (!$api->is_connected()) {
+            return;
+        }
+
+        $result = $api->get('/api/v1/backup/pending');
+        if (empty($result['data']['pending'])) {
+            return;
+        }
+
+        $pending = $result['data']['pending'];
+        foreach ($pending as $request) {
+            $request_id = isset($request['id']) ? sanitize_text_field($request['id']) : '';
+            $note       = isset($request['note']) ? sanitize_text_field($request['note']) : 'রিমোট ব্যাকআপ';
+
+            if (empty($request_id)) {
+                continue;
+            }
+
+            // Prevent overlapping
+            if (get_transient('guardify_backup_running')) {
+                break;
+            }
+            set_transient('guardify_backup_running', true, 10 * MINUTE_IN_SECONDS);
+
+            $backup_result = $this->create_backup($note);
+
+            delete_transient('guardify_backup_running');
+
+            // Acknowledge the request regardless of result
+            $api->post('/api/v1/backup/ack', ['id' => $request_id]);
+
+            if (is_wp_error($backup_result)) {
+                error_log('Guardify Remote Backup Error: ' . $backup_result->get_error_message());
+            }
         }
     }
 
