@@ -114,10 +114,20 @@ class Guardify_Phone_History {
         // Normalize wrapped API response
         $d = isset($result['data']) ? $result['data'] : $result;
 
+        // Check for API error
+        if (isset($result['success']) && $result['success'] === false) {
+            $err_msg = isset($result['error']) ? $result['error'] : 'API ত্রুটি';
+            wp_send_json_error($err_msg);
+        }
+
         if (isset($d['dp_ratio'])) {
             $dp    = (float) $d['dp_ratio'];
             $total = isset($d['total']) ? (int) $d['total'] : (isset($d['total_parcels']) ? (int) $d['total_parcels'] : 0);
             $risk  = isset($d['risk_level']) ? $d['risk_level'] : 'unknown';
+
+            if ($total === 0) {
+                wp_send_json_success(['html' => '<span style="color:#6b7280;font-size:12px;">কোনো কুরিয়ার ডেটা নেই</span>']);
+            }
 
             $color = $dp >= 80 ? '#16a34a' : ($dp >= 50 ? '#d97706' : '#dc2626');
 
