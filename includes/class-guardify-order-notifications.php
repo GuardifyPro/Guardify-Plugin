@@ -22,13 +22,10 @@ class Guardify_Order_Notifications {
     }
 
     private function __construct() {
-        if (get_option('guardify_sms_notifications_enabled', 'no') !== 'yes') {
-            return;
-        }
-
         $this->load_settings();
 
-        // Hook into order status changes
+        // Always hook into order status changes for Discord notifications.
+        // SMS notifications are checked inside handle_status_change().
         add_action('woocommerce_order_status_changed', [$this, 'handle_status_change'], 10, 3);
     }
 
@@ -46,33 +43,51 @@ class Guardify_Order_Notifications {
     }
 
     /**
-     * Handle WC order status change — send SMS if status is enabled.
+     * Handle WC order status change — send SMS if status is enabled, also send Discord notification.
      */
     public function handle_status_change($order_id, $old_status, $new_status) {
-        $wc_status = 'wc-' . $new_status;
-
-        if (!in_array($wc_status, $this->enabled_statuses, true)) {
-            return;
-        }
-
         $order = wc_get_order($order_id);
         if (!$order) {
             return;
         }
 
+        $api = new Guardify_API();
+        if (!$api->is_connected()) {
+            return;
+        }
+
+        // Gather order data used for both SMS and Discord
         $phone = $order->get_billing_phone();
+        $products = [];
+        foreach ($order->get_items() as $item) {
+            $products[] = $item->get_name();
+        }
+
+        // Discord notification (fire-and-forget, all status changes)
+        $api->post_async('/api/v1/notify/order', [
+            'order_id'      => (string) $order_id,
+            'order_number'  => $order->get_order_number(),
+            'old_status'    => $old_status,
+            'new_status'    => $new_status,
+            'customer_name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
+            'phone'         => $phone ?: '',
+            'total'         => $order->get_total(),
+            'products'      => implode(', ', $products),
+            'domain'        => wp_parse_url(get_site_url(), PHP_URL_HOST),
+        ]);
+
+        // SMS notification (only for enabled statuses)
+        $wc_status = 'wc-' . $new_status;
+        if (!in_array($wc_status, $this->enabled_statuses, true)) {
+            return;
+        }
+
         if (empty($phone)) {
             return;
         }
 
         $message = $this->build_message($wc_status, $order);
         if (empty($message)) {
-            return;
-        }
-
-        // Send via Engine
-        $api = new Guardify_API();
-        if (!$api->is_connected()) {
             return;
         }
 
