@@ -468,8 +468,8 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
         </div>
     </div>
 
-    <!-- Save button (for all tabs) -->
-    <div style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+    <!-- Save button (only for settings tabs) -->
+    <div id="gf-save-wrap" style="margin-top: 1.5rem; display: flex; align-items: center; gap: 1rem;">
         <button id="gf-save-settings" class="gf-btn gf-btn-primary">সেটিংস সংরক্ষণ করুন</button>
         <span id="gf-save-msg" style="display: none;" class="gf-text-muted"></span>
     </div>

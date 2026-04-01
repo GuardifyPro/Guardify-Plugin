@@ -4,7 +4,7 @@ Tags: fraud detection, woocommerce, delivery, otp, courier
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.3.4
+Stable tag: 0.3.5
 License: Proprietary
 License URI: https://guardify.pro/license
 
@@ -49,6 +49,13 @@ No. WooCommerce 7.0+ is required.
 Updates are delivered via GitHub Releases. When a new version is published, your WordPress dashboard will show the update notification automatically. You can also manually check for updates under **Guardify Pro → Settings → আপডেট**.
 
 == Changelog ==
+
+= 0.3.5 =
+* UI/UX ওভারহল — ইনকমপ্লিট অর্ডার ও SMS লগস পেজ সম্পূর্ণ রিডিজাইন
+* ইনকমপ্লিট অর্ডার: gf-table, SVG আইকন বাটন, কার্ড র‍্যাপার, স্টাইলড পেজিনেশন
+* SMS লগস: gf-table, gf-modal প্যাটার্ন, ইনলাইন স্টাইল ব্লক মুছে ফেলা
+* সেটিংস: সেভ বাটন শুধু প্রাসঙ্গিক ট্যাবে দেখায় (Features, Smart Filter, Notifications)
+* CSS: নতুন ইউটিলিটি ক্লাস (gf-table, gf-modal, gf-icon-btn, gf-pagination, gf-count-pill)
 
 = 0.3.0 =
 * API কী সিম্পলিফাই — ছোট ও সহজ কানেকশন কী

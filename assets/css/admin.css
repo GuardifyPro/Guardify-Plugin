@@ -642,3 +642,217 @@
     height: 16px;
     accent-color: var(--gf-primary);
 }
+
+/* ─── Tables ───────────────────────────────────────────────────────── */
+
+.gf-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.gf-table th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--gf-muted-fg);
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid var(--gf-border);
+    background: var(--gf-muted);
+    font-size: 0.8125rem;
+    white-space: nowrap;
+}
+
+.gf-table td {
+    padding: 0.625rem 0.875rem;
+    vertical-align: middle;
+    border-bottom: 1px solid color-mix(in oklch, var(--gf-border), transparent 50%);
+    color: var(--gf-fg);
+}
+
+.gf-table tr:last-child td { border-bottom: none; }
+.gf-table tr:hover td { background: color-mix(in oklch, var(--gf-muted), transparent 50%); }
+
+.gf-table .gf-col-narrow { width: 60px; }
+.gf-table .gf-col-action { width: auto; white-space: nowrap; }
+
+/* ─── Modal ────────────────────────────────────────────────────────── */
+
+.gf-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100000;
+    background: rgba(0,0,0,0.45);
+    align-items: center;
+    justify-content: center;
+}
+
+.gf-modal-overlay.gf-modal-open { display: flex; }
+
+.gf-modal {
+    background: var(--gf-card);
+    border-radius: 12px;
+    max-width: 520px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+
+.gf-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--gf-border);
+}
+
+.gf-modal-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gf-fg);
+}
+
+.gf-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--gf-muted-fg);
+    line-height: 1;
+    padding: 0;
+    transition: color 0.15s;
+}
+
+.gf-modal-close:hover { color: var(--gf-fg); }
+
+.gf-modal-body {
+    padding: 1.25rem;
+}
+
+.gf-modal-footer {
+    padding: 0.75rem 1.25rem;
+    border-top: 1px solid var(--gf-border);
+    text-align: right;
+    background: var(--gf-muted);
+    border-radius: 0 0 12px 12px;
+}
+
+/* ─── Action icon buttons ──────────────────────────────────────────── */
+
+.gf-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.375rem 0.625rem;
+    border: 1px solid var(--gf-border);
+    border-radius: var(--gf-radius);
+    background: var(--gf-card);
+    color: var(--gf-muted-fg);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--gf-font);
+    line-height: 1;
+}
+
+.gf-icon-btn:hover { background: var(--gf-muted); color: var(--gf-fg); border-color: color-mix(in oklch, var(--gf-border), var(--gf-fg) 15%); }
+.gf-icon-btn.gf-icon-btn-danger:hover { color: var(--gf-destructive); border-color: color-mix(in oklch, var(--gf-destructive), transparent 60%); background: color-mix(in oklch, var(--gf-destructive), transparent 92%); }
+.gf-icon-btn.gf-icon-btn-success:hover { color: var(--gf-success); border-color: color-mix(in oklch, var(--gf-success), transparent 60%); background: color-mix(in oklch, var(--gf-success), transparent 92%); }
+
+/* ─── Badge variants (missing ones) ────────────────────────────────── */
+
+.gf-badge-muted {
+    background: var(--gf-muted);
+    color: var(--gf-muted-fg);
+}
+
+.gf-badge-secondary {
+    background: var(--gf-secondary);
+    color: var(--gf-muted-fg);
+}
+
+/* ─── Pagination ───────────────────────────────────────────────────── */
+
+.gf-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0.875rem;
+    border-top: 1px solid var(--gf-border);
+    font-size: 0.8125rem;
+    color: var(--gf-muted-fg);
+}
+
+.gf-pagination .page-numbers {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border: 1px solid var(--gf-border);
+    border-radius: 6px;
+    background: var(--gf-card);
+    color: var(--gf-muted-fg);
+    font-size: 0.8125rem;
+    text-decoration: none;
+    transition: all 0.15s;
+    margin: 0 2px;
+}
+
+.gf-pagination .page-numbers:hover { background: var(--gf-muted); color: var(--gf-fg); }
+.gf-pagination .page-numbers.current { background: var(--gf-primary); color: var(--gf-primary-fg); border-color: var(--gf-primary); }
+
+/* ─── SMS preview ──────────────────────────────────────────────────── */
+
+.gf-sms-preview {
+    display: inline-block;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.gf-sms-view-btn {
+    background: none;
+    border: none;
+    color: var(--gf-primary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 0.375rem;
+    text-decoration: underline;
+    font-family: var(--gf-font);
+}
+
+.gf-sms-view-btn:hover { opacity: 0.8; }
+
+/* ─── Count pill ───────────────────────────────────────────────────── */
+
+.gf-count-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 11px;
+    background: var(--gf-primary);
+    color: var(--gf-primary-fg);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* ─── Subtitle ─────────────────────────────────────────────────────── */
+
+.gf-subtitle {
+    color: var(--gf-muted-fg);
+    font-size: 0.875rem;
+    margin: -0.5rem 0 1.5rem;
+}

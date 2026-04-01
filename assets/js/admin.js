@@ -148,6 +148,13 @@
         $(this).addClass('active');
         $('.gf-tab-content').hide();
         $('#gf-tab-' + tab).show();
+
+        // Only show save button on settings tabs
+        var saveTabs = ['features', 'smart-filter', 'notifications'];
+        var $save = $('#gf-save-wrap');
+        if ($save.length) {
+            $save.toggle(saveTabs.indexOf(tab) !== -1);
+        }
     });
 
     /* ── Save Settings ────────────────────────────────────────────────── */

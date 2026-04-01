@@ -22,52 +22,60 @@ if ($result['success']) {
 ?>
 
 <div class="wrap gf-wrap">
-    <h1 class="gf-page-title">SMS লগস</h1>
-    <p class="gf-subtitle">পাঠানো সকল SMS-এর বিস্তারিত তালিকা ও খরচ।</p>
+    <div class="gf-header">
+        <div class="gf-header-left">
+            <div class="gf-logo">💬</div>
+            <div>
+                <h1 class="gf-page-title">SMS লগস</h1>
+                <p class="gf-text-muted" style="margin:0.25rem 0 0;font-size:0.8125rem;">পাঠানো সকল SMS-এর বিস্তারিত তালিকা ও খরচ।</p>
+            </div>
+        </div>
+    </div>
 
     <?php if ($error) : ?>
-        <div class="notice notice-error" style="margin: 16px 0;">
+        <div class="notice notice-error" style="margin:16px 0;">
             <p><strong>ত্রুটি:</strong> <?php echo esc_html($error); ?></p>
         </div>
     <?php endif; ?>
 
-    <div class="gf-card" style="margin-top: 16px;">
-        <div class="gf-card-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-            <h2 class="gf-card-title" style="display: flex; align-items: center; gap: 8px;">
+    <div class="gf-card">
+        <div class="gf-card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+            <h2 class="gf-card-title" style="display:flex;align-items:center;gap:0.5rem;">
                 SMS লগস
                 <?php if ($total > 0) : ?>
-                    <span class="gf-sms-count"><?php echo esc_html($total); ?></span>
+                    <span class="gf-count-pill"><?php echo esc_html($total); ?></span>
                 <?php endif; ?>
             </h2>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <input type="text" id="gf-sms-search" class="gf-input" placeholder="ফোন বা মেসেজ সার্চ করুন..." style="width: 240px; height: 34px; font-size: 0.8125rem;" />
-                <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-sms-logs')); ?>" class="gf-btn gf-btn-secondary" style="height: 34px; display: inline-flex; align-items: center; gap: 4px; font-size: 0.8125rem; padding: 0 12px;">
-                    🔄 রিফ্রেশ
+            <div style="display:flex;gap:0.5rem;align-items:center;">
+                <input type="text" id="gf-sms-search" class="gf-input" placeholder="ফোন বা মেসেজ সার্চ করুন..." style="width:240px;height:34px;font-size:0.8125rem;" />
+                <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-sms-logs')); ?>" class="gf-btn gf-btn-secondary" style="height:34px;display:inline-flex;align-items:center;gap:4px;font-size:0.8125rem;padding:0 12px;">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                    রিফ্রেশ
                 </a>
             </div>
         </div>
-        <div class="gf-card-body" style="padding: 0;">
+        <div class="gf-card-body" style="padding:0;">
             <?php if (empty($logs) && empty($error)) : ?>
-                <div class="gf-empty-state" style="padding: 3rem 1rem; text-align: center;">
-                    <p style="font-size: 2.5rem; margin: 0;">📩</p>
-                    <p style="font-weight: 500; color: var(--gf-text, #1f2937); margin: 0.75rem 0 0.25rem;">কোনো SMS লগ পাওয়া যায়নি</p>
-                    <p class="gf-text-muted" style="font-size: 0.8125rem;">এখনো কোনো SMS পাঠানো হয়নি, অথবা API থেকে ডেটা আনতে সমস্যা হচ্ছে।</p>
+                <div style="padding:3rem 1rem;text-align:center;">
+                    <p style="font-size:2.5rem;margin:0;">📩</p>
+                    <p style="font-weight:500;color:var(--gf-fg);margin:0.75rem 0 0.25rem;">কোনো SMS লগ পাওয়া যায়নি</p>
+                    <p class="gf-text-muted" style="font-size:0.8125rem;">এখনো কোনো SMS পাঠানো হয়নি, অথবা API থেকে ডেটা আনতে সমস্যা হচ্ছে।</p>
                 </div>
             <?php else : ?>
-                <div id="gf-sms-no-results" style="display: none; padding: 2rem 1rem; text-align: center;">
-                    <p style="font-weight: 500; color: var(--gf-text, #1f2937);">কোনো ফলাফল পাওয়া যায়নি</p>
-                    <p class="gf-text-muted" style="font-size: 0.8125rem;">আপনার সার্চ মানদণ্ডের সাথে কোনো SMS মেলেনি।</p>
+                <div id="gf-sms-no-results" style="display:none;padding:2rem 1rem;text-align:center;">
+                    <p style="font-weight:500;color:var(--gf-fg);">কোনো ফলাফল পাওয়া যায়নি</p>
+                    <p class="gf-text-muted" style="font-size:0.8125rem;">আপনার সার্চ মানদণ্ডের সাথে কোনো SMS মেলেনি।</p>
                 </div>
-                <table class="wp-list-table widefat fixed striped gf-sms-table" id="gf-sms-table">
+                <table class="gf-table" id="gf-sms-table">
                     <thead>
                         <tr>
-                            <th style="width: 60px;">#</th>
-                            <th style="width: 140px;">ফোন</th>
+                            <th style="width:60px;">#</th>
+                            <th style="width:140px;">ফোন</th>
                             <th>মেসেজ</th>
-                            <th style="width: 90px;">স্ট্যাটাস</th>
-                            <th style="width: 170px;">সময়</th>
-                            <th style="width: 60px; text-align: center;">পার্টস</th>
-                            <th style="width: 80px; text-align: right;">খরচ</th>
+                            <th style="width:90px;">স্ট্যাটাস</th>
+                            <th style="width:170px;">সময়</th>
+                            <th style="width:60px;text-align:center;">পার্টস</th>
+                            <th style="width:80px;text-align:right;">খরচ</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -106,7 +114,7 @@ if ($result['success']) {
                                         $badge_cls = 'gf-badge-warning';
                                     }
                                     ?>
-                                    <span class="gf-badge <?php echo esc_attr($badge_cls); ?>" style="font-size: 0.75rem;"><?php echo esc_html(ucfirst($status)); ?></span>
+                                    <span class="gf-badge <?php echo esc_attr($badge_cls); ?>"><?php echo esc_html(ucfirst($status)); ?></span>
                                 </td>
                                 <td>
                                     <?php
@@ -118,10 +126,10 @@ if ($result['success']) {
                                     }
                                     ?>
                                 </td>
-                                <td style="text-align: center;">
-                                    <span class="gf-badge gf-badge-muted" style="font-size: 0.75rem;"><?php echo esc_html($log['sms_parts'] ?? '1'); ?></span>
+                                <td style="text-align:center;">
+                                    <span class="gf-badge gf-badge-secondary"><?php echo esc_html($log['sms_parts'] ?? '1'); ?></span>
                                 </td>
-                                <td style="text-align: right; font-weight: 500;">
+                                <td style="text-align:right;font-weight:500;">
                                     ৳<?php echo esc_html($log['cost'] ?? '0'); ?>
                                 </td>
                             </tr>
@@ -133,9 +141,9 @@ if ($result['success']) {
     </div>
 
     <?php if ($total_pages > 1) : ?>
-    <div class="tablenav bottom" style="margin-top: 12px;">
-        <div class="tablenav-pages">
-            <span class="displaying-num"><?php echo esc_html($total); ?> টি রেকর্ড</span>
+    <div class="gf-pagination">
+        <span><?php echo esc_html($total); ?> টি রেকর্ড</span>
+        <div>
             <?php
             $page_links = paginate_links([
                 'base'      => admin_url('admin.php?page=guardify-sms-logs') . '%_%',
@@ -155,54 +163,23 @@ if ($result['success']) {
 </div>
 
 <!-- Full Message Modal -->
-<div id="gf-sms-modal" style="display:none; position:fixed; inset:0; z-index:100000; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
-    <div style="background:#fff; border-radius:12px; max-width:520px; width:90%; max-height:80vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,0.2);">
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #e5e7eb;">
-            <h3 style="margin:0; font-size:1rem; font-weight:600;">📱 সম্পূর্ণ SMS</h3>
-            <button type="button" id="gf-sms-modal-close" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:#6b7280; line-height:1;">&times;</button>
+<div id="gf-sms-modal" class="gf-modal-overlay" style="display:none;">
+    <div class="gf-modal" style="max-width:520px;">
+        <div class="gf-modal-header">
+            <h3 style="margin:0;font-size:1rem;font-weight:600;">💬 সম্পূর্ণ SMS</h3>
+            <button type="button" id="gf-sms-modal-close" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--gf-muted-fg);line-height:1;">&times;</button>
         </div>
-        <div style="padding:20px;">
-            <pre id="gf-sms-modal-body" style="white-space:pre-wrap; word-wrap:break-word; font-size:0.875rem; line-height:1.6; margin:0; font-family:inherit; color:#374151;"></pre>
+        <div class="gf-modal-body">
+            <pre id="gf-sms-modal-body" style="white-space:pre-wrap;word-wrap:break-word;font-size:0.875rem;line-height:1.6;margin:0;font-family:inherit;color:var(--gf-fg);"></pre>
         </div>
-        <div style="padding:12px 20px; border-top:1px solid #e5e7eb; text-align:right; background:#f9fafb; border-radius:0 0 12px 12px;">
+        <div class="gf-modal-footer">
             <button type="button" class="gf-btn gf-btn-secondary gf-sms-modal-close-btn" style="font-size:0.8125rem;">বন্ধ করুন</button>
         </div>
     </div>
 </div>
 
-<style>
-.gf-sms-count {
-    display: inline-flex; align-items: center; justify-content: center;
-    min-width: 24px; height: 22px; padding: 0 8px;
-    border-radius: 11px; background: var(--gf-primary, #3b82f6); color: #fff;
-    font-size: 0.75rem; font-weight: 500;
-}
-.gf-sms-table th {
-    font-size: 0.8125rem; font-weight: 500; color: #6b7280;
-    padding: 10px 14px; border-bottom: 1px solid #e5e7eb; background: #f9fafb;
-}
-.gf-sms-table td {
-    padding: 10px 14px; font-size: 0.8125rem; vertical-align: middle;
-    border-bottom: 1px solid #f3f4f6; color: #374151;
-}
-.gf-sms-table tr:hover td { background: #f9fafb; }
-.gf-sms-preview {
-    display: inline-block; max-width: 220px; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap; vertical-align: middle;
-}
-.gf-sms-view-btn {
-    background: none; border: none; color: var(--gf-primary, #3b82f6);
-    font-size: 0.75rem; font-weight: 500; cursor: pointer; padding: 0; margin-left: 6px;
-    text-decoration: underline;
-}
-.gf-sms-view-btn:hover { color: #2563eb; }
-.gf-badge-muted { background: #f3f4f6; color: #6b7280; }
-.gf-badge-warning { background: #fef3c7; color: #92400e; }
-</style>
-
 <script>
 jQuery(function($){
-    // Search filter
     $('#gf-sms-search').on('input', function(){
         var q = $(this).val().toLowerCase();
         var visible = 0;
@@ -215,7 +192,6 @@ jQuery(function($){
         $('#gf-sms-no-results').toggle(visible === 0 && q.length > 0);
     });
 
-    // View full message modal
     $(document).on('click', '.gf-sms-view-btn', function(){
         var msg = $(this).data('msg') || '';
         var clean = $('<div/>').html(msg).text();
