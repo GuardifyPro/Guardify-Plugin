@@ -186,6 +186,7 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
         <button class="gf-tab active" data-tab="features">ফিচার সমূহ</button>
         <button class="gf-tab" data-tab="smart-filter">স্মার্ট ফিল্টার</button>
         <button class="gf-tab" data-tab="notifications">SMS নোটিফিকেশন</button>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-sms-logs')); ?>" class="gf-tab" style="text-decoration: none;">SMS লগস ↗</a>
         <button class="gf-tab" data-tab="connection">সংযোগ</button>
         <button class="gf-tab" data-tab="support">সাপোর্ট</button>
         <button class="gf-tab" data-tab="update">আপডেট</button>

@@ -39,6 +39,7 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-order-notifications.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-incomplete-orders.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-fraud-detection.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-send-courier.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-sms-logs.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
 require_once GUARDIFY_PATH . 'plugin-update-checker/plugin-update-checker.php';
@@ -169,6 +170,15 @@ final class Guardify_Pro {
             'guardify-incomplete',
             [$this, 'render_incomplete_page']
         );
+
+        add_submenu_page(
+            'guardify-pro',
+            'SMS লগস',
+            'SMS লগস',
+            'manage_woocommerce',
+            'guardify-sms-logs',
+            [$this, 'render_sms_logs_page']
+        );
     }
 
     public function render_settings_page() {
@@ -192,8 +202,15 @@ final class Guardify_Pro {
         include GUARDIFY_PATH . 'templates/incomplete-orders-page.php';
     }
 
+    public function render_sms_logs_page() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(esc_html__('Unauthorized', 'guardify-pro'));
+        }
+        include GUARDIFY_PATH . 'templates/sms-logs-page.php';
+    }
+
     public function enqueue_admin_assets($hook) {
-        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud'];
+        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs'];
         $is_guardify = false;
         foreach ($guardify_pages as $page) {
             if (strpos($hook, $page) !== false) {
