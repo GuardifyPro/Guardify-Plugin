@@ -438,4 +438,59 @@
         return div.innerHTML;
     }
 
+    /* ── Phone Sync Status & Manual Trigger ───────────────────────────── */
+
+    function loadSyncStatus() {
+        $.post(data.ajaxUrl, {
+            action: 'guardify_sync_status',
+            _wpnonce: data.nonce
+        }).done(function (res) {
+            if (res.success && res.data) {
+                var d = res.data;
+                $('#gf-sync-total').text(d.total_orders ? d.total_orders.toLocaleString() : '—');
+                $('#gf-sync-scanned').text(d.orders_scanned ? d.orders_scanned.toLocaleString() : '0');
+                $('#gf-sync-sent').text(d.phones_sent ? d.phones_sent.toLocaleString() : '0');
+                var pct = d.is_complete ? 100 : (d.total_orders > 0 ? Math.min(99, Math.round((d.orders_scanned / d.total_orders) * 100)) : 0);
+                $('#gf-sync-progress').css('width', pct + '%');
+                $('#gf-sync-badge').removeClass('gf-badge-muted gf-badge-success gf-badge-warning')
+                    .addClass(d.is_complete ? 'gf-badge-success' : 'gf-badge-warning')
+                    .text(d.is_complete ? '✓ সম্পন্ন' : '⟳ চলমান — ' + pct + '%');
+            }
+        });
+    }
+
+    // Load sync status on page load (only on settings page)
+    if ($('#gf-sync-badge').length) {
+        loadSyncStatus();
+    }
+
+    // Manual sync button
+    $(document).on('click', '#gf-manual-sync-btn', function () {
+        var $btn = $(this);
+        $btn.prop('disabled', true).text('⏳ সিংক হচ্ছে...');
+        $('#gf-sync-msg').text('');
+
+        $.post(data.ajaxUrl, {
+            action: 'guardify_manual_sync',
+            _wpnonce: data.nonce,
+            force: 'false'
+        }).done(function (res) {
+            if (res.success && res.data) {
+                var d = res.data;
+                var msg = d.batches_processed + ' ব্যাচ প্রসেস হয়েছে';
+                if (d.is_complete) {
+                    msg += ' — সিংক সম্পন্ন ✓';
+                }
+                $('#gf-sync-msg').text(msg);
+                loadSyncStatus();
+            } else {
+                $('#gf-sync-msg').text('❌ ' + (res.data && res.data.message ? res.data.message : 'সিংক ব্যর্থ'));
+            }
+        }).fail(function () {
+            $('#gf-sync-msg').text('❌ সার্ভারে সমস্যা হয়েছে');
+        }).always(function () {
+            $btn.prop('disabled', false).text('⚡ এখনই সিংক করুন');
+        });
+    });
+
 })(jQuery);

@@ -507,6 +507,43 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
 
     <!-- Tab: Connection -->
     <div class="gf-tab-content" id="gf-tab-connection" style="display: none;">
+        <!-- Phone Sync Status -->
+        <div class="gf-card" style="margin-bottom: 1.25rem;">
+            <div class="gf-card-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <h2 class="gf-card-title">📞 ফোন ডেটা সিংক</h2>
+                <span id="gf-sync-badge" class="gf-badge gf-badge-muted" style="font-size: 0.75rem;">লোড হচ্ছে...</span>
+            </div>
+            <div class="gf-card-body">
+                <p class="gf-text-muted" style="margin-bottom: 1rem;">
+                    আপনার সব অর্ডারের ফোন নম্বর Guardify Engine-এ সিংক হয় — কুরিয়ার ডেলিভারি ডেটা দিয়ে DP রেশিও তৈরি করতে।
+                </p>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <div style="flex: 1; min-width: 120px; background: var(--gf-bg-subtle, #f9fafb); border-radius: 8px; padding: 0.75rem 1rem;">
+                        <p class="gf-text-muted" style="margin: 0; font-size: 0.75rem;">মোট অর্ডার</p>
+                        <p style="margin: 0.25rem 0 0; font-weight: 600; font-size: 1.125rem;" id="gf-sync-total">—</p>
+                    </div>
+                    <div style="flex: 1; min-width: 120px; background: var(--gf-bg-subtle, #f9fafb); border-radius: 8px; padding: 0.75rem 1rem;">
+                        <p class="gf-text-muted" style="margin: 0; font-size: 0.75rem;">স্ক্যান হয়েছে</p>
+                        <p style="margin: 0.25rem 0 0; font-weight: 600; font-size: 1.125rem;" id="gf-sync-scanned">—</p>
+                    </div>
+                    <div style="flex: 1; min-width: 120px; background: var(--gf-bg-subtle, #f9fafb); border-radius: 8px; padding: 0.75rem 1rem;">
+                        <p class="gf-text-muted" style="margin: 0; font-size: 0.75rem;">ফোন পাঠানো</p>
+                        <p style="margin: 0.25rem 0 0; font-weight: 600; font-size: 1.125rem;" id="gf-sync-sent">—</p>
+                    </div>
+                </div>
+                <!-- Progress bar -->
+                <div style="background: var(--gf-border, #e5e7eb); border-radius: 6px; height: 8px; overflow: hidden; margin-bottom: 1rem;">
+                    <div id="gf-sync-progress" style="height: 100%; background: var(--gf-primary, #6366f1); border-radius: 6px; transition: width 0.5s; width: 0%;"></div>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <button id="gf-manual-sync-btn" class="gf-btn gf-btn-primary" style="font-size: 0.8125rem;">
+                        ⚡ এখনই সিংক করুন
+                    </button>
+                    <span id="gf-sync-msg" class="gf-text-muted" style="font-size: 0.8125rem;"></span>
+                </div>
+            </div>
+        </div>
+
         <div class="gf-card">
             <div class="gf-card-header">
                 <h2 class="gf-card-title">সংযোগ ব্যবস্থাপনা</h2>
