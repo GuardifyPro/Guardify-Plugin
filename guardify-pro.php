@@ -3,7 +3,7 @@
  * Plugin Name:       Guardify Pro
  * Plugin URI:        https://guardify.pro
  * Description:       ফ্রড ডিটেকশন, কুরিয়ার ইন্টেলিজেন্স, OTP ভেরিফিকেশন ও স্মার্ট অর্ডার ফিল্টারিং — বাংলাদেশের ই-কমার্সের জন্য।
- * Version:           0.3.8
+ * Version:           0.4.0
  * Author:            Tansiq Labs
  * Author URI:        https://tansiqlabs.com.bd
  * License:           Proprietary
@@ -16,7 +16,7 @@
 
 defined('ABSPATH') || exit;
 
-define('GUARDIFY_VERSION', '0.3.8');
+define('GUARDIFY_VERSION', '0.4.0');
 define('GUARDIFY_FILE', __FILE__);
 define('GUARDIFY_PATH', plugin_dir_path(__FILE__));
 define('GUARDIFY_URL', plugin_dir_url(__FILE__));
@@ -491,8 +491,10 @@ final class Guardify_Pro {
             wp_send_json_error('Unauthorized');
         }
 
-        $subject = isset($_POST['subject']) ? sanitize_text_field(wp_unslash($_POST['subject'])) : '';
-        $message = isset($_POST['message']) ? sanitize_textarea_field(wp_unslash($_POST['message'])) : '';
+        $subject     = isset($_POST['subject']) ? sanitize_text_field(wp_unslash($_POST['subject'])) : '';
+        $message     = isset($_POST['message']) ? sanitize_textarea_field(wp_unslash($_POST['message'])) : '';
+        $whatsapp    = isset($_POST['whatsapp']) ? sanitize_text_field(wp_unslash($_POST['whatsapp'])) : '';
+        $ticket_type = isset($_POST['ticket_type']) ? sanitize_text_field(wp_unslash($_POST['ticket_type'])) : '';
 
         if (empty($subject) || empty($message)) {
             wp_send_json_error('বিষয় ও বিস্তারিত আবশ্যক।');
@@ -514,10 +516,16 @@ final class Guardify_Pro {
             'client_ip'      => $client_ip,
             'domain'         => $domain,
             'plugin_version' => GUARDIFY_VERSION,
+            'whatsapp'       => $whatsapp,
+            'ticket_type'    => $ticket_type,
         ]);
 
-        if (!empty($result['data']['id']) || !empty($result['id'])) {
-            wp_send_json_success(['message' => 'টিকেট সফলভাবে পাঠানো হয়েছে।']);
+        $ticket_id = !empty($result['data']['id']) ? $result['data']['id'] : (!empty($result['id']) ? $result['id'] : '');
+        if (!empty($ticket_id)) {
+            wp_send_json_success([
+                'message'   => 'টিকেট সফলভাবে পাঠানো হয়েছে।',
+                'ticket_id' => $ticket_id,
+            ]);
         }
 
         $error = isset($result['error']) ? $result['error'] : 'টিকেট পাঠানো যায়নি।';

@@ -229,31 +229,87 @@
 
     /* ── Support Ticket ──────────────────────────────────────────────── */
 
-    $(document).on('click', '#gf-support-submit', function () {
-        var subject = $('#gf-support-subject').val().trim();
-        var message = $('#gf-support-message').val().trim();
-        var $msg    = $('#gf-support-msg');
+    // Dynamic ticket type fields
+    $(document).on('change', '#gf-support-type', function () {
+        var map = {
+            'সমস্যা রিপোর্ট':  '.gf-field-problem',
+            'ফিচার রিকোয়েস্ট': '.gf-field-feature',
+            'তথ্য প্রয়োজন':   '.gf-field-info',
+            'সাধারণ প্রশ্ন':    '.gf-field-general',
+            'বিলিং':            '.gf-field-billing'
+        };
+        $('.gf-ticket-field').hide();
+        var sel = map[$(this).val()];
+        if (sel) $(sel).show();
+    });
 
-        if (!subject || !message) {
-            $msg.text('বিষয় ও বিস্তারিত আবশ্যক').css('color', 'var(--gf-destructive)').show();
+    // Copy ticket ID
+    $(document).on('click', '#gf-ticket-id-box', function () {
+        var id = $('#gf-ticket-id-val').text();
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(id);
+        } else {
+            var tmp = $('<input>').appendTo('body').val(id).select();
+            document.execCommand('copy');
+            tmp.remove();
+        }
+        var $hint = $('<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;z-index:100000;">টিকেট ID কপি হয়েছে!</div>').appendTo('body');
+        setTimeout(function(){ $hint.fadeOut(300, function(){ $hint.remove(); }); }, 1500);
+    });
+
+    $(document).on('click', '#gf-support-submit', function () {
+        var ticketType = $('#gf-support-type').val();
+        var whatsapp   = $('#gf-support-whatsapp').val().trim();
+        var $msg       = $('#gf-support-msg');
+
+        // Get active textarea
+        var message = '';
+        var fieldMap = {
+            'সমস্যা রিপোর্ট':  '#gf-support-problem',
+            'ফিচার রিকোয়েস্ট': '#gf-support-feature',
+            'তথ্য প্রয়োজন':   '#gf-support-info',
+            'সাধারণ প্রশ্ন':    '#gf-support-general',
+            'বিলিং':            '#gf-support-billing'
+        };
+        var activeField = fieldMap[ticketType];
+        if (activeField) message = $(activeField).val().trim();
+
+        if (!whatsapp) {
+            $msg.text('WhatsApp নম্বর আবশ্যক').css('color', 'var(--gf-destructive)').show();
+            return;
+        }
+        if (!message) {
+            $msg.text('বিস্তারিত লিখুন').css('color', 'var(--gf-destructive)').show();
             return;
         }
 
         var $btn = $(this);
-        $btn.prop('disabled', true).text('পাঠানো হচ্ছে...');
+        $btn.prop('disabled', true).html('<span class="dashicons dashicons-update" style="font-size:16px;width:16px;height:16px;animation:spin 1s linear infinite;"></span> পাঠানো হচ্ছে...');
         $msg.hide();
 
         $.post(data.ajaxUrl, {
-            action:   'guardify_support_ticket',
-            _wpnonce: data.nonce,
-            subject:  subject,
-            message:  message
+            action:      'guardify_support_ticket',
+            _wpnonce:    data.nonce,
+            subject:     ticketType,
+            message:     message,
+            whatsapp:    whatsapp,
+            ticket_type: ticketType
         })
         .done(function (res) {
             if (res.success) {
-                $msg.text('✓ টিকেট পাঠানো হয়েছে').css('color', 'var(--gf-success)').show();
-                $('#gf-support-subject').val('');
-                $('#gf-support-message').val('');
+                // Show success popup
+                var $popup = $('#gf-ticket-popup');
+                if (res.data && res.data.ticket_id) {
+                    $('#gf-ticket-id-val').text(res.data.ticket_id);
+                    $('#gf-ticket-id-box').show();
+                } else {
+                    $('#gf-ticket-id-box').hide();
+                }
+                $popup.css('display', 'flex');
+
+                // Clear form
+                $('#gf-support-whatsapp').val('');
+                $('.gf-ticket-field textarea').val('');
             } else {
                 $msg.text('✕ ' + (res.data || 'টিকেট পাঠানো যায়নি')).css('color', 'var(--gf-destructive)').show();
             }
@@ -262,7 +318,7 @@
             $msg.text('✕ সার্ভারে সংযোগ ত্রুটি').css('color', 'var(--gf-destructive)').show();
         })
         .always(function () {
-            $btn.prop('disabled', false).text('টিকেট পাঠান');
+            $btn.prop('disabled', false).html('<span class="dashicons dashicons-email" style="font-size:16px;width:16px;height:16px;"></span> মেসেজ পাঠান');
             setTimeout(function () { $msg.fadeOut(); }, 5000);
         });
     });

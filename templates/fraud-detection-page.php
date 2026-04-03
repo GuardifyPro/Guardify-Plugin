@@ -29,7 +29,7 @@ $total_pages   = max(1, (int) ceil($total_blocked / $per_page));
 <div class="gf-wrap">
     <div class="gf-header">
         <div class="gf-header-left">
-            <div class="gf-logo">G</div>
+            <div class="gf-logo">🛡️</div>
             <div>
                 <h1 class="gf-page-title">ফ্রড ম্যানেজমেন্ট</h1>
                 <p class="gf-page-desc">ব্লক করা ব্যবহারকারী, ব্লক রুল ও ফ্রড ট্র্যাকিং পরিচালনা।</p>
@@ -70,8 +70,8 @@ $total_pages   = max(1, (int) ceil($total_blocked / $per_page));
 
     <!-- Tabs -->
     <div class="gf-tabs">
-        <button class="gf-tab <?php echo $tab === 'blocked' ? 'active' : ''; ?>" data-tab="blocked">ব্লক করা ব্যবহারকারী</button>
-        <button class="gf-tab <?php echo $tab === 'rules' ? 'active' : ''; ?>" data-tab="rules">ব্লক রুল</button>
+        <button class="gf-tab <?php echo $tab === 'blocked' ? 'active' : ''; ?>" data-tab="blocked">ব্লক করা ব্যবহারকারী <span class="gf-count-pill" style="margin-left:6px;font-size:0.6875rem;"><?php echo esc_html($total_blocked); ?></span></button>
+        <button class="gf-tab <?php echo $tab === 'rules' ? 'active' : ''; ?>" data-tab="rules">ব্লক রুল <span class="gf-count-pill gf-count-pill-muted" style="margin-left:6px;font-size:0.6875rem;"><?php echo esc_html(count($block_rules)); ?></span></button>
         <button class="gf-tab <?php echo $tab === 'export' ? 'active' : ''; ?>" data-tab="export">এক্সপোর্ট / ইম্পোর্ট</button>
     </div>
 
@@ -91,7 +91,11 @@ $total_pages   = max(1, (int) ceil($total_blocked / $per_page));
             </div>
             <div class="gf-card-body" style="padding: 0;">
                 <?php if (empty($blocked_users)) : ?>
-                <div class="gf-empty-state"><p>কোনো ব্লক করা ব্যবহারকারী নেই।</p></div>
+                <div class="gf-empty-state">
+                    <div class="gf-empty-state-icon">🎉</div>
+                    <p class="gf-empty-state-title">কোনো ব্লক করা ব্যবহারকারী নেই</p>
+                    <p class="gf-empty-state-desc">সব গ্রাহক বর্তমানে অনুমোদিত।</p>
+                </div>
                 <?php else : ?>
                 <div class="gf-table-wrap">
                 <table class="gf-table">
@@ -132,24 +136,31 @@ $total_pages   = max(1, (int) ceil($total_blocked / $per_page));
         </div>
 
         <?php if ($total_pages > 1) : ?>
-        <div class="tablenav bottom" style="margin-top: 12px;">
-            <div class="tablenav-pages">
-                <span class="displaying-num"><?php echo esc_html($total_blocked); ?> টি ব্লক</span>
-                <?php
-                $base_url = admin_url('admin.php?page=guardify-fraud');
-                $page_links = paginate_links([
-                    'base'      => $base_url . '%_%',
-                    'format'    => '&gf_page=%#%',
-                    'current'   => $current_page,
-                    'total'     => $total_pages,
-                    'prev_text' => '&laquo;',
-                    'next_text' => '&raquo;',
-                ]);
-                if ($page_links) {
-                    echo wp_kses_post($page_links);
-                }
-                ?>
-            </div>
+        <div class="gf-pagination" style="margin-top: 1rem;">
+            <?php
+            $base_url = admin_url('admin.php?page=guardify-fraud');
+            if ($current_page > 1) :
+                echo '<a href="' . esc_url($base_url . '&gf_page=' . ($current_page - 1)) . '">&laquo;</a>';
+            else :
+                echo '<span class="gf-page-disabled">&laquo;</span>';
+            endif;
+
+            for ($i = 1; $i <= $total_pages; $i++) :
+                if ($i === $current_page) :
+                    echo '<span class="gf-page-current">' . esc_html($i) . '</span>';
+                elseif ($i <= 2 || $i > $total_pages - 2 || abs($i - $current_page) <= 1) :
+                    echo '<a href="' . esc_url($base_url . '&gf_page=' . $i) . '">' . esc_html($i) . '</a>';
+                elseif ($i === 3 || $i === $total_pages - 2) :
+                    echo '<span class="gf-page-dots">…</span>';
+                endif;
+            endfor;
+
+            if ($current_page < $total_pages) :
+                echo '<a href="' . esc_url($base_url . '&gf_page=' . ($current_page + 1)) . '">&raquo;</a>';
+            else :
+                echo '<span class="gf-page-disabled">&raquo;</span>';
+            endif;
+            ?>
         </div>
         <?php endif; ?>
     </div>

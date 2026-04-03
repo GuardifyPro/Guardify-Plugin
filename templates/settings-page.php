@@ -95,12 +95,17 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
             <div class="gf-logo">G</div>
             <div>
                 <h1 class="gf-page-title">Guardify Pro</h1>
-                <p class="gf-page-desc">ফ্রড ডিটেকশন ও কুরিয়ার ইন্টেলিজেন্স</p>
+                <p class="gf-page-desc">ফ্রড ডিটেকশন ও কুরিয়ার ইন্টেলিজেন্স — আপনার ই-কমার্সের নিরাপত্তা</p>
             </div>
         </div>
-        <span class="gf-badge <?php echo $connected ? 'gf-badge-success' : 'gf-badge-danger'; ?>">
-            <?php echo $connected ? 'সংযুক্ত' : 'সংযুক্ত নয়'; ?>
-        </span>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+            <span class="gf-badge <?php echo $connected ? 'gf-badge-success' : 'gf-badge-danger'; ?>" style="font-size:0.8125rem;padding:0.375rem 1rem;">
+                <?php echo $connected ? '● সংযুক্ত' : '○ সংযুক্ত নয়'; ?>
+            </span>
+            <?php if ($connected) : ?>
+            <span class="gf-badge gf-badge-muted" style="font-size:0.75rem;">v<?php echo esc_html(GUARDIFY_VERSION); ?></span>
+            <?php endif; ?>
+        </div>
     </div>
 
     <?php if (!$connected) : ?>
@@ -517,27 +522,97 @@ $wc_statuses = function_exists('wc_get_order_statuses') ? wc_get_order_statuses(
 
     <!-- Tab: Support -->
     <div class="gf-tab-content" id="gf-tab-support" style="display: none;">
-        <div class="gf-card">
-            <div class="gf-card-header">
-                <h2 class="gf-card-title">সাপোর্ট টিকেট পাঠান</h2>
+        <div class="gf-card" style="max-width: 720px;">
+            <div class="gf-card-header" style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: oklch(0.95 0.04 280); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <span class="dashicons dashicons-email" style="font-size: 24px; color: var(--gf-primary);"></span>
+                </div>
+                <div>
+                    <h2 class="gf-card-title" style="margin: 0;">সাপোর্ট টিকেট পাঠান</h2>
+                    <p class="gf-text-muted" style="margin: 4px 0 0; font-size: 0.875rem;">সমস্যা বা প্রশ্ন থাকলে আমাদের জানান। আমরা শীঘ্রই যোগাযোগ করব।</p>
+                </div>
             </div>
             <div class="gf-card-body">
-                <p class="gf-text-muted" style="margin-bottom: 1rem;">সমস্যা বা প্রশ্ন থাকলে আমাদের জানান। আমরা শীঘ্রই উত্তর দেব।</p>
-                <div class="gf-form">
-                    <div class="gf-form-group" style="margin-bottom: 1rem;">
+                <!-- Success popup (hidden by default) -->
+                <div id="gf-ticket-popup" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+                    <div style="background:#fff; border-radius:12px; padding:40px; text-align:center; max-width:460px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.15); animation: gfSlideUp 0.3s ease;">
+                        <div id="gf-ticket-popup-icon" style="margin-bottom:16px;">
+                            <svg viewBox="0 0 24 24" width="64" height="64"><path fill="none" stroke="#22c55e" stroke-width="2" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path fill="none" stroke="#22c55e" stroke-width="2" d="M8 12l3 3 5-5"/></svg>
+                        </div>
+                        <h3 id="gf-ticket-popup-title" style="margin:0 0 12px; font-size:22px; font-weight:700; color:#22c55e;">টিকেট পাঠানো হয়েছে!</h3>
+                        <p id="gf-ticket-popup-text" style="margin:0 0 8px; font-size:14px; color:#6b7280; line-height:1.6;">আপনার মেসেজ আমরা পেয়েছি। আমাদের টিম শীঘ্রই যোগাযোগ করবে।</p>
+                        <div id="gf-ticket-id-box" style="display:none; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:10px 16px; margin:16px 0; cursor:pointer; transition:0.2s;">
+                            <span style="font-weight:600; color:#0369a1; margin-right:6px;">টিকেট ID:</span>
+                            <span id="gf-ticket-id-val" style="font-family:monospace; font-size:15px; font-weight:700; color:#0c4a6e; letter-spacing:0.5px;"></span>
+                            <span style="margin-left:auto; color:#0284c7; font-size:12px;">📋 কপি</span>
+                        </div>
+                        <button type="button" onclick="document.getElementById('gf-ticket-popup').style.display='none';" style="background:#22c55e; color:#fff; border:none; padding:10px 28px; border-radius:6px; font-size:15px; font-weight:600; cursor:pointer; margin-top:12px; transition:0.2s;">ঠিক আছে</button>
+                    </div>
+                </div>
+
+                <div class="gf-form" style="max-width: 580px;">
+                    <div class="gf-form-group" style="margin-bottom: 1.25rem;">
+                        <label class="gf-label">আপনার ওয়েবসাইট</label>
+                        <input type="text" id="gf-support-domain" class="gf-input" value="<?php echo esc_attr(site_url()); ?>" readonly style="background: var(--gf-muted); cursor: not-allowed;" />
+                    </div>
+
+                    <div class="gf-form-group" style="margin-bottom: 1.25rem;">
+                        <label class="gf-label">WhatsApp নম্বর *</label>
+                        <input type="text" id="gf-support-whatsapp" class="gf-input" placeholder="আমরা এই নম্বরে যোগাযোগ করব" />
+                    </div>
+
+                    <div class="gf-form-group" style="margin-bottom: 1.25rem;">
                         <label class="gf-label">বিষয় *</label>
-                        <input type="text" id="gf-support-subject" class="gf-input" placeholder="আপনার সমস্যার বিষয়" />
+                        <select id="gf-support-type" class="gf-input" style="cursor: pointer;">
+                            <option value="সমস্যা রিপোর্ট">আমার একটি সমস্যা হচ্ছে</option>
+                            <option value="ফিচার রিকোয়েস্ট">আমার একটি ফিচার সাজেশন আছে</option>
+                            <option value="তথ্য প্রয়োজন">আমার তথ্য দরকার</option>
+                            <option value="সাধারণ প্রশ্ন">আমার একটি প্রশ্ন আছে</option>
+                            <option value="বিলিং">বিলিং সম্পর্কিত</option>
+                        </select>
                     </div>
-                    <div class="gf-form-group" style="margin-bottom: 1rem;">
-                        <label class="gf-label">বিস্তারিত *</label>
-                        <textarea id="gf-support-message" class="gf-input" rows="4" placeholder="আপনার সমস্যা বিস্তারিত লিখুন..."></textarea>
+
+                    <div class="gf-form-group gf-ticket-field gf-field-problem" style="margin-bottom: 1.25rem;">
+                        <label class="gf-label">সমস্যার বিবরণ *</label>
+                        <textarea id="gf-support-problem" class="gf-input" rows="5" placeholder="কী সমস্যা হচ্ছে? কখন শুরু হয়েছে? কোনো এরর মেসেজ আসছে?"></textarea>
                     </div>
-                    <button type="button" id="gf-support-submit" class="gf-btn gf-btn-primary">টিকেট পাঠান</button>
-                    <span id="gf-support-msg" style="display: none; margin-left: 1rem;" class="gf-text-muted"></span>
+
+                    <div class="gf-form-group gf-ticket-field gf-field-feature" style="margin-bottom: 1.25rem; display: none;">
+                        <label class="gf-label">ফিচারের বিবরণ *</label>
+                        <textarea id="gf-support-feature" class="gf-input" rows="5" placeholder="কোন ফিচার চাইছেন? এটা কীভাবে সাহায্য করবে?"></textarea>
+                    </div>
+
+                    <div class="gf-form-group gf-ticket-field gf-field-info" style="margin-bottom: 1.25rem; display: none;">
+                        <label class="gf-label">কী তথ্য দরকার? *</label>
+                        <textarea id="gf-support-info" class="gf-input" rows="5" placeholder="আপনার কোন তথ্য প্রয়োজন?"></textarea>
+                    </div>
+
+                    <div class="gf-form-group gf-ticket-field gf-field-general" style="margin-bottom: 1.25rem; display: none;">
+                        <label class="gf-label">আপনার প্রশ্ন *</label>
+                        <textarea id="gf-support-general" class="gf-input" rows="5" placeholder="আপনি কী জানতে চান?"></textarea>
+                    </div>
+
+                    <div class="gf-form-group gf-ticket-field gf-field-billing" style="margin-bottom: 1.25rem; display: none;">
+                        <label class="gf-label">বিলিং বিবরণ *</label>
+                        <textarea id="gf-support-billing" class="gf-input" rows="5" placeholder="বিলিং সম্পর্কে বিস্তারিত লিখুন..."></textarea>
+                    </div>
+
+                    <div style="display: flex; align-items: center; gap: 12px; margin-top: 0.5rem;">
+                        <button type="button" id="gf-support-submit" class="gf-btn gf-btn-primary" style="display: inline-flex; align-items: center; gap: 8px;">
+                            <span class="dashicons dashicons-email" style="font-size: 16px; width: 16px; height: 16px;"></span>
+                            মেসেজ পাঠান
+                        </button>
+                        <span id="gf-support-msg" style="display: none;" class="gf-text-muted"></span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <style>
+    @keyframes gfSlideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+    #gf-ticket-id-box:hover { background: #e0f2fe; border-color: #7dd3fc; }
+    </style>
 
     <!-- Tab: Update -->
     <div class="gf-tab-content" id="gf-tab-update" style="display: none;">

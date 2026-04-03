@@ -33,9 +33,7 @@ if ($result['success']) {
     </div>
 
     <?php if ($error) : ?>
-        <div class="notice notice-error" style="margin:16px 0;">
-            <p><strong>ত্রুটি:</strong> <?php echo esc_html($error); ?></p>
-        </div>
+        <div class="gf-alert gf-alert-error" style="margin-bottom:1rem;"><?php echo esc_html($error); ?></div>
     <?php endif; ?>
 
     <div class="gf-card">
@@ -56,10 +54,10 @@ if ($result['success']) {
         </div>
         <div class="gf-card-body" style="padding:0;">
             <?php if (empty($logs) && empty($error)) : ?>
-                <div style="padding:3rem 1rem;text-align:center;">
-                    <p style="font-size:2.5rem;margin:0;">📩</p>
-                    <p style="font-weight:500;color:var(--gf-fg);margin:0.75rem 0 0.25rem;">কোনো SMS লগ পাওয়া যায়নি</p>
-                    <p class="gf-text-muted" style="font-size:0.8125rem;">এখনো কোনো SMS পাঠানো হয়নি, অথবা API থেকে ডেটা আনতে সমস্যা হচ্ছে।</p>
+                <div class="gf-empty-state">
+                    <div class="gf-empty-state-icon">📩</div>
+                    <p class="gf-empty-state-title">কোনো SMS লগ পাওয়া যায়নি</p>
+                    <p class="gf-empty-state-desc">এখনো কোনো SMS পাঠানো হয়নি, অথবা API থেকে ডেটা আনতে সমস্যা হচ্ছে।</p>
                 </div>
             <?php else : ?>
                 <div id="gf-sms-no-results" style="display:none;padding:2rem 1rem;text-align:center;">
@@ -144,22 +142,28 @@ if ($result['success']) {
 
     <?php if ($total_pages > 1) : ?>
     <div class="gf-pagination">
-        <span><?php echo esc_html($total); ?> টি রেকর্ড</span>
-        <div>
-            <?php
-            $page_links = paginate_links([
-                'base'      => admin_url('admin.php?page=guardify-sms-logs') . '%_%',
-                'format'    => '&gf_page=%#%',
-                'current'   => $current_page,
-                'total'     => $total_pages,
-                'prev_text' => '&laquo;',
-                'next_text' => '&raquo;',
-            ]);
-            if ($page_links) {
-                echo wp_kses_post($page_links);
-            }
-            ?>
-        </div>
+        <?php
+        $sms_base = admin_url('admin.php?page=guardify-sms-logs');
+        if ($current_page > 1) :
+            echo '<a href="' . esc_url($sms_base . '&gf_page=' . ($current_page - 1)) . '">&laquo;</a>';
+        else :
+            echo '<span class="gf-page-disabled">&laquo;</span>';
+        endif;
+        for ($i = 1; $i <= $total_pages; $i++) :
+            if ($i === $current_page) :
+                echo '<span class="gf-page-current">' . esc_html($i) . '</span>';
+            elseif ($i <= 2 || $i > $total_pages - 2 || abs($i - $current_page) <= 1) :
+                echo '<a href="' . esc_url($sms_base . '&gf_page=' . $i) . '">' . esc_html($i) . '</a>';
+            elseif ($i === 3 || $i === $total_pages - 2) :
+                echo '<span class="gf-page-dots">…</span>';
+            endif;
+        endfor;
+        if ($current_page < $total_pages) :
+            echo '<a href="' . esc_url($sms_base . '&gf_page=' . ($current_page + 1)) . '">&raquo;</a>';
+        else :
+            echo '<span class="gf-page-disabled">&raquo;</span>';
+        endif;
+        ?>
     </div>
     <?php endif; ?>
 </div>

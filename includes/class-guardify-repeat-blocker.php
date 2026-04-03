@@ -6,7 +6,7 @@ defined('ABSPATH') || exit;
  * within a configurable time window.
  *
  * Uses throw Exception for strong server-side blocking, plus aggressive JS
- * form-submission prevention and popup. Mirrors OrderGuard behaviour.
+ * form-submission prevention and popup.
  */
 class Guardify_Repeat_Blocker {
 
@@ -30,6 +30,11 @@ class Guardify_Repeat_Blocker {
         // AJAX real-time phone check
         add_action('wp_ajax_guardify_check_repeat', [$this, 'ajax_check_repeat']);
         add_action('wp_ajax_nopriv_guardify_check_repeat', [$this, 'ajax_check_repeat']);
+
+        // Admin debug AJAX (always available for admins)
+        if (current_user_can('manage_options')) {
+            add_action('wp_ajax_guardify_debug_repeat', [$this, 'ajax_debug_time_check']);
+        }
 
         // Frontend scripts + aggressive form prevention
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
@@ -237,6 +242,33 @@ class Guardify_Repeat_Blocker {
                 }
             });
 
+            // Intercept flexible checkout submission
+            $(document).off('guardify_flexible_checkout_submit.guardifyRepeat').on('guardify_flexible_checkout_submit.guardifyRepeat', function(e) {
+                if (window.guardifyPhoneBlocked === true) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return gfPreventSubmission('Phone blocked by repeat blocker');
+                }
+            });
+
+            // Intercept smart filter submission
+            $(document).off('guardify_smart_filter_submit.guardifyRepeat').on('guardify_smart_filter_submit.guardifyRepeat', function(e) {
+                if (window.guardifyPhoneBlocked === true) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return gfPreventSubmission('Phone blocked by repeat blocker');
+                }
+            });
+
+            // Intercept OTP verification submission
+            $(document).off('guardify_otp_submit.guardifyRepeat').on('guardify_otp_submit.guardifyRepeat', function(e) {
+                if (window.guardifyPhoneBlocked === true) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return gfPreventSubmission('Phone blocked by repeat blocker');
+                }
+            });
+
             // Override jQuery .submit() and .trigger('submit')
             var origSubmit = $.fn.submit;
             $.fn.submit = function() {
@@ -251,6 +283,139 @@ class Guardify_Repeat_Blocker {
         });
         </script>
         <?php
+    }
+
+    /* ───── admin utilities ───── */
+
+    /**
+     * Admin: Check if a phone number is currently blocked.
+     * Useful for API calls or manual testing.
+     */
+    public function admin_check_phone_number($phone) {
+        $phone  = $this->normalize_phone($phone);
+        $result = [
+            'blocked'         => false,
+            'message'         => '',
+            'time_limit'      => $this->get_time_limit(),
+            'hours_remaining' => 0,
+        ];
+
+        if (!$this->is_enabled()) {
+            $result['message'] = 'রিপিট অর্ডার ব্লকার নিষ্ক্রিয়';
+            return $result;
+        }
+
+        if ($this->has_recent_order($phone)) {
+            $result['blocked']         = true;
+            $result['message']         = $this->get_error_message();
+            $result['hours_remaining'] = $this->calculate_hours_remaining($phone);
+        } else {
+            $result['message'] = 'এই ফোন নম্বরে সাম্প্রতিক কোনো অর্ডার নেই';
+        }
+
+        return $result;
+    }
+
+    /**
+     * Calculate remaining hours before the phone can order again.
+     */
+    public function calculate_hours_remaining($phone) {
+        $phone = $this->normalize_phone($phone);
+
+        $phone_variants = [$phone];
+        if (strpos($phone, '88') !== 0) {
+            $phone_variants[] = '88' . $phone;
+        }
+        $phone_variants[] = '+88' . ltrim($phone, '0');
+
+        $time_limit = $this->get_time_limit();
+        $current_ts = current_time('timestamp');
+
+        foreach ($phone_variants as $p) {
+            $orders = wc_get_orders([
+                'billing_phone' => $p,
+                'limit'         => 1,
+                'orderby'       => 'date',
+                'order'         => 'DESC',
+            ]);
+
+            if (empty($orders)) {
+                continue;
+            }
+
+            $order       = reset($orders);
+            $order_ts    = $order->get_date_created()->getTimestamp();
+            $order_ts_wp = $order_ts + (get_option('gmt_offset') * 3600);
+            $hours_passed = ($current_ts - $order_ts_wp) / 3600;
+
+            if ($hours_passed < $time_limit) {
+                return max(0, (int) ceil($time_limit - $hours_passed));
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Debug: Return detailed time-check info for a phone (admin only).
+     */
+    public function debug_time_check($phone) {
+        if (!current_user_can('manage_options')) {
+            return ['error' => 'Access denied'];
+        }
+
+        $phone      = $this->normalize_phone($phone);
+        $time_limit = $this->get_time_limit();
+        $current_ts = current_time('timestamp');
+
+        $debug = [
+            'enabled'        => $this->is_enabled(),
+            'time_limit_hrs' => $time_limit,
+            'current_wp_time'=> gmdate('Y-m-d H:i:s', $current_ts),
+            'timezone'       => get_option('timezone_string') ?: 'UTC',
+            'phone'          => $phone,
+            'has_recent'     => false,
+        ];
+
+        $orders = wc_get_orders([
+            'billing_phone' => $phone,
+            'limit'         => 1,
+            'orderby'       => 'date',
+            'order'         => 'DESC',
+        ]);
+
+        if (!empty($orders)) {
+            $order       = reset($orders);
+            $order_ts    = $order->get_date_created()->getTimestamp();
+            $order_ts_wp = $order_ts + (get_option('gmt_offset') * 3600);
+            $hours_passed = ($current_ts - $order_ts_wp) / 3600;
+
+            $debug['has_recent']       = true;
+            $debug['order_id']         = $order->get_id();
+            $debug['order_status']     = $order->get_status();
+            $debug['last_order_time']  = gmdate('Y-m-d H:i:s', $order_ts_wp);
+            $debug['hours_since']      = round($hours_passed, 2);
+            $debug['should_block']     = $hours_passed < $time_limit;
+            $debug['hours_remaining']  = max(0, round($time_limit - $hours_passed, 2));
+        }
+
+        return $debug;
+    }
+
+    /**
+     * AJAX: Debug time check (admin only).
+     */
+    public function ajax_debug_time_check() {
+        if (!check_ajax_referer('guardify_debug_nonce', 'nonce', false) || !current_user_can('manage_options')) {
+            wp_send_json_error('Access denied');
+        }
+
+        $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
+        if (empty($phone)) {
+            wp_send_json_error('ফোন নম্বর প্রয়োজন');
+        }
+
+        wp_send_json_success($this->debug_time_check($phone));
     }
 
     /* ───── utilities ───── */

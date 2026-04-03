@@ -93,10 +93,10 @@
 
         <div class="gf-card-body" style="padding:0;">
             <?php if (empty($orders)) : ?>
-            <div style="padding:3rem 1rem;text-align:center;">
-                <p style="font-size:2.5rem;margin:0;">✅</p>
-                <p style="font-weight:500;color:var(--gf-fg);margin:0.75rem 0 0.25rem;">কোনো ইনকমপ্লিট অর্ডার নেই</p>
-                <p class="gf-text-muted" style="font-size:0.8125rem;">
+            <div class="gf-empty-state">
+                <div class="gf-empty-state-icon">✅</div>
+                <p class="gf-empty-state-title">কোনো ইনকমপ্লিট অর্ডার নেই</p>
+                <p class="gf-empty-state-desc">
                     <?php echo $search ? 'সার্চের সাথে কোনো ফলাফল মেলেনি।' : 'সব ভালো! এই মুহূর্তে কোনো অসম্পন্ন অর্ডার নেই।'; ?>
                 </p>
             </div>
@@ -174,22 +174,32 @@
 
     <?php if ($total_pages > 1) : ?>
     <div class="gf-pagination">
-        <span><?php echo esc_html($total_count); ?> টি রেকর্ড</span>
-        <div>
-            <?php
-            $base_url = admin_url('admin.php?page=guardify-incomplete');
-            if ($search) $base_url .= '&s=' . urlencode($search);
-            $page_links = paginate_links([
-                'base'      => $base_url . '%_%',
-                'format'    => '&gf_page=%#%',
-                'current'   => $current_page,
-                'total'     => $total_pages,
-                'prev_text' => '&laquo;',
-                'next_text' => '&raquo;',
-            ]);
-            if ($page_links) echo wp_kses_post($page_links);
-            ?>
-        </div>
+        <?php
+        $base_url = admin_url('admin.php?page=guardify-incomplete');
+        if ($search) $base_url .= '&s=' . urlencode($search);
+
+        if ($current_page > 1) :
+            echo '<a href="' . esc_url($base_url . '&gf_page=' . ($current_page - 1)) . '">&laquo;</a>';
+        else :
+            echo '<span class="gf-page-disabled">&laquo;</span>';
+        endif;
+
+        for ($i = 1; $i <= $total_pages; $i++) :
+            if ($i === $current_page) :
+                echo '<span class="gf-page-current">' . esc_html($i) . '</span>';
+            elseif ($i <= 2 || $i > $total_pages - 2 || abs($i - $current_page) <= 1) :
+                echo '<a href="' . esc_url($base_url . '&gf_page=' . $i) . '">' . esc_html($i) . '</a>';
+            elseif ($i === 3 || $i === $total_pages - 2) :
+                echo '<span class="gf-page-dots">…</span>';
+            endif;
+        endfor;
+
+        if ($current_page < $total_pages) :
+            echo '<a href="' . esc_url($base_url . '&gf_page=' . ($current_page + 1)) . '">&raquo;</a>';
+        else :
+            echo '<span class="gf-page-disabled">&raquo;</span>';
+        endif;
+        ?>
     </div>
     <?php endif; ?>
 </div>

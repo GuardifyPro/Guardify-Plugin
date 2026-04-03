@@ -4,7 +4,7 @@ Tags: fraud detection, woocommerce, delivery, otp, courier
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 0.3.8
+Stable tag: 0.4.0
 License: Proprietary
 License URI: https://guardify.pro/license
 
@@ -49,6 +49,14 @@ No. WooCommerce 7.0+ is required.
 Updates are delivered via GitHub Releases. When a new version is published, your WordPress dashboard will show the update notification automatically. You can also manually check for updates under **Guardify Pro → Settings → আপডেট**.
 
 == Changelog ==
+
+= 0.4.0 =
+* অ্যাডমিন ফাইনান্স ড্যাশবোর্ড — রেভিনিউ KPI, MRR, চার্ট, প্ল্যান/মাধ্যম ব্রেকডাউন
+* অ্যাডমিন ফোন সিঙ্ক ড্যাশবোর্ড — সিঙ্ক স্ট্যাটাস, ঝুঁকি বিতরণ, ফোর্স সিঙ্ক
+* লাইসেন্স তৈরি UX উন্নতি — ৩-স্টেপ উইজার্ড (ইউজার সার্চ → API কী → প্ল্যান)
+* নাইটলি বাল্ক এনরিচমেন্ট (রাত ৩-৫টা BST) — বড় ব্যাচ, stale ডেটা রি-ফেচ
+* ফোর্স সিঙ্ক অল — নতুন কুরিয়ার যোগে সব ফোনে অটো আপডেট
+* পোর্টাল সাইডবারে ফাইনান্স ও ফোন সিঙ্ক লিংক
 
 = 0.3.8 =
 * কুরিয়ার স্ট্যাটাস → WooCommerce অর্ডার স্ট্যাটাস অটো-সিঙ্ক

@@ -32,7 +32,7 @@ class Guardify_Search {
         <div class="gf-wrap">
             <div class="gf-header">
                 <div class="gf-header-left">
-                    <div class="gf-logo">G</div>
+                    <div class="gf-logo">🔍</div>
                     <div>
                         <h1 class="gf-page-title">ফোন সার্চ</h1>
                         <p class="gf-page-desc">কাস্টমারের ডেলিভারি হিস্ট্রি ও ঝুঁকি বিশ্লেষণ</p>
@@ -41,14 +41,15 @@ class Guardify_Search {
             </div>
 
             <!-- Search Form -->
-            <div class="gf-card" style="margin-bottom:1.5rem;">
+            <div class="gf-card gf-card-highlight" style="margin-bottom:1.5rem;">
                 <div class="gf-card-body">
                     <form id="gf-search-form" style="display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap;">
                         <div class="gf-form-group" style="flex:1; min-width:0;">
                             <label class="gf-label">ফোন নম্বর</label>
-                            <input type="tel" id="gf-search-phone" class="gf-input" placeholder="01XXXXXXXXX" maxlength="11" required />
+                            <input type="tel" id="gf-search-phone" class="gf-input" placeholder="01XXXXXXXXX বা +880..." maxlength="20" required style="font-size:1.0625rem; height:46px;" />
                         </div>
-                        <button type="submit" class="gf-btn gf-btn-primary" id="gf-search-btn" style="height:44px; white-space:nowrap;">
+                        <button type="submit" class="gf-btn gf-btn-primary" id="gf-search-btn" style="height:46px; white-space:nowrap; padding:0 1.5rem;">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
                             সার্চ করুন
                         </button>
                     </form>
@@ -140,24 +141,31 @@ class Guardify_Search {
         jQuery(function($) {
             var nonce = '<?php echo esc_js($nonce); ?>';
 
-            // Auto-search when 11 digits entered
+            // Normalize BD phone: strip spaces, hyphens, parens, +880/880 prefix
+            function normalizeBDPhone(raw) {
+                var p = raw.replace(/[\s\-\(\)\.]/g, '');
+                p = p.replace(/^\+?880/, '');
+                return p;
+            }
+
+            // Auto-search when valid after normalization
             $('#gf-search-phone').on('input', function() {
-                var phone = $(this).val().replace(/\D/g, '');
-                if (/^01\d{9}$/.test(phone)) {
+                var phone = normalizeBDPhone($(this).val());
+                if (/^01[3-9]\d{8}$/.test(phone)) {
                     $('#gf-search-form').trigger('submit');
                 }
             });
 
             $('#gf-search-form').on('submit', function(e) {
                 e.preventDefault();
-                var phone = $('#gf-search-phone').val().trim();
-                if (!/^01[3-9]\\d{8}$/.test(phone)) {
+                var phone = normalizeBDPhone($('#gf-search-phone').val());
+                if (!/^01[3-9]\d{8}$/.test(phone)) {
                     showMsg('error', 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)');
                     return;
                 }
 
                 var $btn = $('#gf-search-btn');
-                $btn.prop('disabled', true).text('সার্চ হচ্ছে...');
+                $btn.prop('disabled', true).html('<span class="gf-spinner"></span> সার্চ হচ্ছে...');
                 $('#gf-search-msg').hide();
                 $('#gf-search-results').hide();
 
@@ -166,14 +174,14 @@ class Guardify_Search {
                     _wpnonce: nonce,
                     phone: phone
                 }, function(res) {
-                    $btn.prop('disabled', false).text('সার্চ করুন');
+                    $btn.prop('disabled', false).html('<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> সার্চ করুন');
                     if (res.success && res.data) {
                         renderResults(res.data);
                     } else {
                         showMsg('error', res.data || 'সার্চ ব্যর্থ হয়েছে।');
                     }
                 }).fail(function() {
-                    $btn.prop('disabled', false).text('সার্চ করুন');
+                    $btn.prop('disabled', false).html('<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> সার্চ করুন');
                     showMsg('error', 'সার্ভারে সংযোগ করা যায়নি।');
                 });
             });
@@ -246,7 +254,7 @@ class Guardify_Search {
                     $('#gf-r-courier-table').hide();
                 }
 
-                $('#gf-search-results').show();
+                $('#gf-search-results').css({opacity: 0, display: 'block'}).animate({opacity: 1}, 300);
             }
 
             function showMsg(type, text) {
@@ -271,6 +279,9 @@ class Guardify_Search {
         }
 
         $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
+        // Normalize: strip spaces, hyphens, parens, dots, and +880/880 prefix
+        $phone = preg_replace('/[\s\-\(\)\.]/', '', $phone);
+        $phone = preg_replace('/^\+?880/', '', $phone);
         if (empty($phone) || !preg_match('/^01[3-9]\d{8}$/', $phone)) {
             wp_send_json_error('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)');
         }

@@ -36,6 +36,9 @@ class Guardify_Phone_Validation {
             GUARDIFY_VERSION
         );
 
+        // Add animated error notice styles for WC checkout notices
+        wp_add_inline_style('guardify-phone-validation', $this->get_checkout_error_styles());
+
         wp_enqueue_script(
             'guardify-phone-validation',
             GUARDIFY_URL . 'assets/js/phone-validation.js',
@@ -45,8 +48,58 @@ class Guardify_Phone_Validation {
         );
 
         wp_localize_script('guardify-phone-validation', 'guardifyPhoneVal', [
+            'enabled' => get_option('guardify_phone_validation_enabled', '1'),
             'message' => 'সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)',
         ]);
+    }
+
+    /**
+     * Animated checkout error notice styles — gradient background, shake, pulse icon.
+     */
+    private function get_checkout_error_styles() {
+        return "
+            .woocommerce-error.gf-phone-error {
+                position: relative;
+                padding: 15px 20px 15px 45px;
+                margin: 0 0 20px;
+                border-radius: 8px;
+                background: linear-gradient(135deg, #ff6b6b 0%, #ff4444 100%);
+                color: #ffffff;
+                border: none;
+                box-shadow: 0 4px 15px rgba(255, 68, 68, 0.2);
+                animation: gf-slideInDown 0.5s ease-out, gf-errorShake 0.8s cubic-bezier(.36,.07,.19,.97) both;
+            }
+            .woocommerce-error.gf-phone-error::before {
+                content: '\\f534';
+                font-family: dashicons;
+                position: absolute;
+                top: 50%;
+                left: 15px;
+                transform: translateY(-50%);
+                font-size: 20px;
+                color: #ffffff;
+                animation: gf-pulse 2s infinite;
+            }
+            .woocommerce-error.gf-phone-error li {
+                color: #ffffff;
+                font-weight: 500;
+            }
+            @keyframes gf-slideInDown {
+                from { transform: translateY(-20px); opacity: 0; }
+                to   { transform: translateY(0); opacity: 1; }
+            }
+            @keyframes gf-errorShake {
+                10%, 90% { transform: translateX(-1px); }
+                20%, 80% { transform: translateX(2px); }
+                30%, 50%, 70% { transform: translateX(-4px); }
+                40%, 60% { transform: translateX(4px); }
+            }
+            @keyframes gf-pulse {
+                0%   { transform: translateY(-50%) scale(1); }
+                50%  { transform: translateY(-50%) scale(1.2); }
+                100% { transform: translateY(-50%) scale(1); }
+            }
+        ";
     }
 
     /**
@@ -80,8 +133,15 @@ class Guardify_Phone_Validation {
         }
 
         if (!$this->is_valid_bd_phone($phone)) {
-            wc_add_notice('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)।', 'error');
+            wc_add_notice('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)।', 'error', ['class' => 'gf-phone-error']);
         }
+    }
+
+    /**
+     * Check if phone validation is enabled.
+     */
+    public function is_validation_enabled() {
+        return get_option('guardify_phone_validation_enabled', '1') === '1';
     }
 
     /**

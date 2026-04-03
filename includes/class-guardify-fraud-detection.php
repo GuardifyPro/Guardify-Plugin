@@ -56,8 +56,18 @@ class Guardify_Fraud_Detection {
         // Admin actions
         add_action('wp_ajax_guardify_block_user', [$this, 'ajax_block_user']);
         add_action('wp_ajax_guardify_unblock_user', [$this, 'ajax_unblock_user']);
+        add_action('wp_ajax_guardify_bulk_unblock', [$this, 'ajax_bulk_unblock']);
         add_action('wp_ajax_guardify_add_block_rule', [$this, 'ajax_add_block_rule']);
         add_action('wp_ajax_guardify_remove_block_rule', [$this, 'ajax_remove_block_rule']);
+        add_action('wp_ajax_guardify_toggle_block_rule', [$this, 'ajax_toggle_block_rule']);
+
+        // Export / Import
+        add_action('wp_ajax_guardify_export_blocked_users', [$this, 'ajax_export_blocked_users']);
+        add_action('wp_ajax_guardify_import_blocked_users', [$this, 'ajax_import_blocked_users']);
+        add_action('wp_ajax_guardify_export_block_rules', [$this, 'ajax_export_block_rules']);
+        add_action('wp_ajax_guardify_import_block_rules', [$this, 'ajax_import_block_rules']);
+        add_action('wp_ajax_guardify_export_all_fraud_data', [$this, 'ajax_export_all_data']);
+        add_action('wp_ajax_guardify_import_all_fraud_data', [$this, 'ajax_import_all_data']);
     }
 
     /**
@@ -444,7 +454,7 @@ class Guardify_Fraud_Detection {
     }
 
     /**
-     * Auto-block by order count within time window — like OrderGuard.
+     * Auto-block by order count within time window.
      * If a phone has placed >= X orders in Y hours, block it.
      */
     public function auto_block_order_count($order_id) {
@@ -738,6 +748,391 @@ class Guardify_Fraud_Detection {
     }
 
     /**
+     * AJAX: Bulk unblock multiple phones (admin).
+     */
+    public function ajax_bulk_unblock() {
+        check_ajax_referer('guardify_nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $phones = isset($_POST['phones']) ? array_map('sanitize_text_field', (array) $_POST['phones']) : [];
+        if (empty($phones)) {
+            wp_send_json_error('কোনো ফোন নম্বর নির্বাচন করা হয়নি');
+        }
+
+        $count = 0;
+        foreach ($phones as $phone) {
+            $phone = preg_replace('/[\s\-]/', '', $phone);
+            $phone = preg_replace('/^\+?88/', '', $phone);
+            if (!empty($phone) && $this->unblock_phone($phone) !== false) {
+                $count++;
+            }
+        }
+
+        wp_send_json_success([
+            'message' => sprintf('%d জন ব্যবহারকারী আনব্লক করা হয়েছে', $count),
+        ]);
+    }
+
+    /**
+     * AJAX: Toggle advanced block rule active/inactive.
+     */
+    public function ajax_toggle_block_rule() {
+        check_ajax_referer('guardify_nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Unauthorized');
+        }
+
+        $id = isset($_POST['id']) ? absint($_POST['id']) : 0;
+        if (!$id) {
+            wp_send_json_error('ID প্রয়োজন');
+        }
+
+        global $wpdb;
+        $current = $wpdb->get_var($wpdb->prepare(
+            "SELECT is_active FROM {$this->blocks_table} WHERE id = %d",
+            $id
+        ));
+
+        if ($current === null) {
+            wp_send_json_error('রুল পাওয়া যায়নি');
+        }
+
+        $new_status = $current ? 0 : 1;
+        $wpdb->update($this->blocks_table, ['is_active' => $new_status], ['id' => $id], ['%d'], ['%d']);
+
+        wp_send_json_success([
+            'message'   => $new_status ? 'রুল সক্রিয় করা হয়েছে' : 'রুল নিষ্ক্রিয় করা হয়েছে',
+            'is_active' => $new_status,
+        ]);
+    }
+
+    /* ───── Export / Import ───── */
+
+    /**
+     * AJAX: Export blocked users as CSV.
+     */
+    public function ajax_export_blocked_users() {
+        check_ajax_referer('guardify_export', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die('Permission denied');
+        }
+
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            "SELECT phone, ip_address, block_reason, order_ids, created_at, last_seen
+             FROM {$this->table_name} WHERE is_blocked = 1 ORDER BY last_seen DESC",
+            ARRAY_A
+        );
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="guardify_blocked_users_' . gmdate('Y-m-d_H-i-s') . '.csv"');
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['phone', 'ip_address', 'block_reason', 'order_ids', 'created_at', 'last_seen']);
+        foreach ($rows as $r) {
+            fputcsv($out, $r);
+        }
+        fclose($out);
+        exit;
+    }
+
+    /**
+     * AJAX: Import blocked users from CSV.
+     */
+    public function ajax_import_blocked_users() {
+        check_ajax_referer('guardify_import', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Permission denied');
+        }
+
+        if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+            wp_send_json_error('ফাইল আপলোড ব্যর্থ');
+        }
+
+        $path = $_FILES['import_file']['tmp_name'];
+        if (!is_readable($path)) {
+            wp_send_json_error('ফাইল পড়া যাচ্ছে না');
+        }
+
+        $handle = fopen($path, 'r');
+        if (!$handle) {
+            wp_send_json_error('ফাইল খোলা যাচ্ছে না');
+        }
+
+        // Skip header
+        fgetcsv($handle);
+
+        $imported = 0;
+        $skipped  = 0;
+
+        while (($data = fgetcsv($handle)) !== false) {
+            if (count($data) < 1) {
+                $skipped++;
+                continue;
+            }
+
+            $phone  = sanitize_text_field($data[0]);
+            $reason = isset($data[2]) ? sanitize_textarea_field($data[2]) : 'CSV ইম্পোর্ট';
+
+            if (empty($phone)) {
+                $skipped++;
+                continue;
+            }
+
+            $phone = preg_replace('/[\s\-]/', '', $phone);
+            $phone = preg_replace('/^\+?88/', '', $phone);
+
+            $this->block_phone($phone, $reason);
+            $imported++;
+        }
+        fclose($handle);
+
+        wp_send_json_success([
+            'message' => sprintf('ইম্পোর্ট সম্পন্ন। যোগ: %d, বাদ: %d', $imported, $skipped),
+        ]);
+    }
+
+    /**
+     * AJAX: Export advanced block rules as CSV.
+     */
+    public function ajax_export_block_rules() {
+        check_ajax_referer('guardify_export', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die('Permission denied');
+        }
+
+        global $wpdb;
+        $rows = $wpdb->get_results(
+            "SELECT block_type, block_value, reason, is_active, created_at
+             FROM {$this->blocks_table} ORDER BY created_at DESC",
+            ARRAY_A
+        );
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="guardify_block_rules_' . gmdate('Y-m-d_H-i-s') . '.csv"');
+
+        $out = fopen('php://output', 'w');
+        fputcsv($out, ['block_type', 'block_value', 'reason', 'is_active', 'created_at']);
+        foreach ($rows as $r) {
+            fputcsv($out, $r);
+        }
+        fclose($out);
+        exit;
+    }
+
+    /**
+     * AJAX: Import advanced block rules from CSV.
+     */
+    public function ajax_import_block_rules() {
+        check_ajax_referer('guardify_import', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Permission denied');
+        }
+
+        if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+            wp_send_json_error('ফাইল আপলোড ব্যর্থ');
+        }
+
+        $path = $_FILES['import_file']['tmp_name'];
+        if (!is_readable($path)) {
+            wp_send_json_error('ফাইল পড়া যাচ্ছে না');
+        }
+
+        $handle = fopen($path, 'r');
+        if (!$handle) {
+            wp_send_json_error('ফাইল খোলা যাচ্ছে না');
+        }
+
+        // Skip header
+        fgetcsv($handle);
+
+        $imported = 0;
+        $skipped  = 0;
+
+        global $wpdb;
+
+        while (($data = fgetcsv($handle)) !== false) {
+            if (count($data) < 2) {
+                $skipped++;
+                continue;
+            }
+
+            $type   = sanitize_text_field($data[0]);
+            $value  = sanitize_text_field($data[1]);
+            $reason = isset($data[2]) ? sanitize_textarea_field($data[2]) : '';
+
+            if (!in_array($type, ['phone', 'ip'], true) || empty($value)) {
+                $skipped++;
+                continue;
+            }
+
+            if ($type === 'phone') {
+                $value = preg_replace('/[^0-9+]/', '', $value);
+            }
+
+            $wpdb->replace($this->blocks_table, [
+                'block_type'  => $type,
+                'block_value' => $value,
+                'reason'      => $reason,
+                'created_by'  => get_current_user_id(),
+                'is_active'   => 1,
+            ], ['%s', '%s', '%s', '%d', '%d']);
+            $imported++;
+        }
+        fclose($handle);
+
+        wp_send_json_success([
+            'message' => sprintf('ইম্পোর্ট সম্পন্ন। যোগ: %d, বাদ: %d', $imported, $skipped),
+        ]);
+    }
+
+    /**
+     * AJAX: Export all fraud data (blocked users + block rules) as CSV.
+     */
+    public function ajax_export_all_data() {
+        check_ajax_referer('guardify_export', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die('Permission denied');
+        }
+
+        global $wpdb;
+
+        $blocked_users = $wpdb->get_results(
+            "SELECT phone, ip_address, block_reason, order_ids, created_at, last_seen
+             FROM {$this->table_name} WHERE is_blocked = 1 ORDER BY last_seen DESC",
+            ARRAY_A
+        );
+
+        $block_rules = $wpdb->get_results(
+            "SELECT block_type, block_value, reason, is_active, created_at
+             FROM {$this->blocks_table} ORDER BY created_at DESC",
+            ARRAY_A
+        );
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="guardify_all_fraud_data_' . gmdate('Y-m-d_H-i-s') . '.csv"');
+
+        $out = fopen('php://output', 'w');
+
+        fputcsv($out, ['=== ব্লক রুল ===']);
+        fputcsv($out, ['block_type', 'block_value', 'reason', 'is_active', 'created_at']);
+        foreach ($block_rules as $r) {
+            fputcsv($out, $r);
+        }
+
+        fputcsv($out, ['']);
+        fputcsv($out, ['=== ব্লক করা ব্যবহারকারী ===']);
+        fputcsv($out, ['phone', 'ip_address', 'block_reason', 'order_ids', 'created_at', 'last_seen']);
+        foreach ($blocked_users as $r) {
+            fputcsv($out, $r);
+        }
+
+        fclose($out);
+        exit;
+    }
+
+    /**
+     * AJAX: Import all fraud data (blocked users + block rules) from CSV.
+     */
+    public function ajax_import_all_data() {
+        check_ajax_referer('guardify_import', 'nonce');
+
+        if (!current_user_can('manage_woocommerce')) {
+            wp_send_json_error('Permission denied');
+        }
+
+        if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+            wp_send_json_error('ফাইল আপলোড ব্যর্থ');
+        }
+
+        $path = $_FILES['import_file']['tmp_name'];
+        if (!is_readable($path)) {
+            wp_send_json_error('ফাইল পড়া যাচ্ছে না');
+        }
+
+        $handle = fopen($path, 'r');
+        if (!$handle) {
+            wp_send_json_error('ফাইল খোলা যাচ্ছে না');
+        }
+
+        $section     = '';
+        $rules_count = 0;
+        $users_count = 0;
+        $skipped     = 0;
+
+        global $wpdb;
+
+        while (($data = fgetcsv($handle)) !== false) {
+            if (empty($data) || empty(trim($data[0]))) {
+                continue;
+            }
+
+            $first = trim($data[0]);
+
+            if (strpos($first, '=== ব্লক রুল ===') !== false || strpos($first, '=== BLOCK RULES ===') !== false) {
+                $section = 'rules';
+                fgetcsv($handle); // skip header
+                continue;
+            }
+            if (strpos($first, '=== ব্লক করা ব্যবহারকারী ===') !== false || strpos($first, '=== BLOCKED USERS ===') !== false) {
+                $section = 'users';
+                fgetcsv($handle); // skip header
+                continue;
+            }
+
+            if ($section === 'rules') {
+                if (count($data) < 2) { $skipped++; continue; }
+                $type   = sanitize_text_field($data[0]);
+                $value  = sanitize_text_field($data[1]);
+                $reason = isset($data[2]) ? sanitize_textarea_field($data[2]) : '';
+
+                if (!in_array($type, ['phone', 'ip'], true) || empty($value)) {
+                    $skipped++;
+                    continue;
+                }
+
+                $wpdb->replace($this->blocks_table, [
+                    'block_type'  => $type,
+                    'block_value' => $value,
+                    'reason'      => $reason,
+                    'created_by'  => get_current_user_id(),
+                    'is_active'   => 1,
+                ], ['%s', '%s', '%s', '%d', '%d']);
+                $rules_count++;
+
+            } elseif ($section === 'users') {
+                if (count($data) < 1) { $skipped++; continue; }
+                $phone  = sanitize_text_field($data[0]);
+                $reason = isset($data[2]) ? sanitize_textarea_field($data[2]) : 'CSV ইম্পোর্ট';
+
+                if (empty($phone)) { $skipped++; continue; }
+                $phone = preg_replace('/[\s\-]/', '', $phone);
+                $phone = preg_replace('/^\+?88/', '', $phone);
+
+                $this->block_phone($phone, $reason);
+                $users_count++;
+            }
+        }
+        fclose($handle);
+
+        wp_send_json_success([
+            'message' => sprintf(
+                'ইম্পোর্ট সম্পন্ন। ব্লক রুল: %d, ব্যবহারকারী: %d, বাদ: %d',
+                $rules_count, $users_count, $skipped
+            ),
+        ]);
+    }
+
+    /**
      * Get blocked users list for admin page.
      */
     public static function get_blocked_users($limit = 50, $offset = 0) {
@@ -751,13 +1146,13 @@ class Guardify_Fraud_Detection {
     }
 
     /**
-     * Get advanced block rules.
+     * Get advanced block rules (including inactive).
      */
     public static function get_block_rules($limit = 50) {
         global $wpdb;
         $table = $wpdb->prefix . 'guardify_blocks';
         return $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$table} WHERE is_active = 1 ORDER BY created_at DESC LIMIT %d",
+            "SELECT * FROM {$table} ORDER BY created_at DESC LIMIT %d",
             $limit
         ));
     }

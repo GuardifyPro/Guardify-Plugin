@@ -6,16 +6,18 @@ $schedule_info = $backup_instance->get_schedule_info();
 $is_connected = !empty(get_option('guardify_api_key', ''));
 ?>
 <div class="wrap gf-wrap">
-    <h1 class="gf-page-title">
-        <span class="dashicons dashicons-database-export" style="margin-right: 8px;"></span>
-        ডাটাবেইজ ব্যাকআপ
-    </h1>
-    <p class="gf-page-desc">আপনার WooCommerce সাইটের ডাটাবেইজ অটোমেটিক ব্যাকআপ ও ইজি রিস্টোর।</p>
+    <div class="gf-header">
+        <div class="gf-header-left">
+            <div class="gf-logo">💾</div>
+            <div>
+                <h1 class="gf-page-title">ডাটাবেইজ ব্যাকআপ</h1>
+                <p class="gf-page-desc">আপনার WooCommerce সাইটের ডাটাবেইজ অটোমেটিক ব্যাকআপ ও ইজি রিস্টোর।</p>
+            </div>
+        </div>
+    </div>
 
     <?php if (!$is_connected) : ?>
-        <div class="gf-card" style="border-left: 4px solid #ef4444;">
-            <p style="color: #ef4444; font-weight: 600;">⚠ প্লাগইন সংযুক্ত নয়। ব্যাকআপ ব্যবহার করতে সেটিংস পেজ থেকে API কী সংযুক্ত করুন।</p>
-        </div>
+        <div class="gf-alert gf-alert-error">প্লাগইন সংযুক্ত নয়। ব্যাকআপ ব্যবহার করতে সেটিংস পেজ থেকে API কী সংযুক্ত করুন।</div>
     <?php else : ?>
 
     <!-- Schedule Settings -->
