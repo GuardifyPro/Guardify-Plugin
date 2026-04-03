@@ -35,6 +35,9 @@ class Guardify_Phone_Sync {
     // Legacy keys to clean up
     const LEGACY_OFFSET_KEY = 'guardify_phone_sync_offset';
 
+    /** WP option: timestamp when last resync check was done */
+    const RESYNC_CHECK_KEY = 'guardify_phone_sync_resync_checked';
+
     public static function get_instance() {
         if (null === self::$instance) {
             self::$instance = new self();
@@ -109,6 +112,9 @@ class Guardify_Phone_Sync {
             delete_transient('guardify_phone_sync_lock');
             return;
         }
+
+        // Check if admin requested a full resync (every 5 min max)
+        $this->check_resync_trigger($api);
 
         $start_time = time();
         $batches_done = 0;
@@ -260,6 +266,39 @@ class Guardify_Phone_Sync {
         if ($result > 0) {
             // There were new orders — update count
             $this->update_total_count();
+        }
+    }
+
+    /**
+     * Check if admin requested a full resync from the portal.
+     * Polls the engine's check-resync endpoint. If resync was requested
+     * after our last ack, reset sync progress and start over.
+     */
+    private function check_resync_trigger($api) {
+        // Only check every 5 minutes to avoid excessive API calls
+        $last_check = (int) get_option(self::RESYNC_CHECK_KEY, 0);
+        if ((time() - $last_check) < 300) {
+            return;
+        }
+        update_option(self::RESYNC_CHECK_KEY, time(), false);
+
+        $result = $api->get('/api/v1/phone-sync/check-resync');
+        if (empty($result) || empty($result['data'])) {
+            // May be wrapped in {success:true, data: {...}}
+            $data = isset($result['data']) ? $result['data'] : $result;
+        } else {
+            $data = $result['data'];
+        }
+
+        if (!empty($data['resync_requested'])) {
+            // Reset sync progress — re-sync all orders from scratch
+            delete_option(self::LAST_ORDER_KEY);
+            delete_option(self::COMPLETE_KEY);
+            delete_option(self::SCANNED_KEY);
+            delete_option(self::SENT_KEY);
+
+            // Acknowledge the resync so we don't keep resetting
+            $api->post('/api/v1/phone-sync/ack-resync', []);
         }
     }
 
