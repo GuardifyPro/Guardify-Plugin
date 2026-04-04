@@ -280,7 +280,10 @@ class Guardify_Backup {
     }
 
     /**
-     * Upload a backup file to the engine via multipart form POST.
+     * Upload a backup file to R2 via presigned URL (3-step flow).
+     * Step 1: Get presigned URL from engine.
+     * Step 2: Stream file directly to R2 via cURL PUT.
+     * Step 3: Confirm upload with engine.
      */
     private function upload_to_engine($file_path, $note = '') {
         $api_key = get_option('guardify_api_key', '');
@@ -288,50 +291,92 @@ class Guardify_Backup {
             return new WP_Error('no_key', 'API কী পাওয়া যায়নি।');
         }
 
-        $url = GUARDIFY_ENGINE_URL . '/api/v1/backup/upload';
-
-        // Use cURL for multipart file upload
-        $boundary = wp_generate_password(24, false);
-        $body     = '';
-
-        // File field
-        $body .= "--{$boundary}\r\n";
-        $body .= "Content-Disposition: form-data; name=\"file\"; filename=\"backup.sql.gz\"\r\n";
-        $body .= "Content-Type: application/gzip\r\n\r\n";
-        $body .= file_get_contents($file_path); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-        $body .= "\r\n";
-
-        // Note field
-        if (!empty($note)) {
-            $body .= "--{$boundary}\r\n";
-            $body .= "Content-Disposition: form-data; name=\"note\"\r\n\r\n";
-            $body .= $note . "\r\n";
+        $file_size = filesize($file_path);
+        if ($file_size === false || $file_size <= 0) {
+            return new WP_Error('bad_file', 'ব্যাকআপ ফাইল পড়া যায়নি।');
         }
 
-        $body .= "--{$boundary}--\r\n";
-
-        $response = wp_remote_post($url, [
-            'timeout' => 120,
+        // Step 1: Get presigned upload URL from engine
+        $presign_url = GUARDIFY_ENGINE_URL . '/api/v1/backup/presign-upload';
+        $presign_response = wp_remote_get($presign_url, [
+            'timeout' => 30,
             'headers' => [
-                'X-GF-Key'      => $api_key,
-                'Content-Type'  => 'multipart/form-data; boundary=' . $boundary,
+                'X-GF-Key' => $api_key,
             ],
-            'body' => $body,
         ]);
 
-        if (is_wp_error($response)) {
-            return $response;
+        if (is_wp_error($presign_response)) {
+            return new WP_Error('presign_failed', 'প্রিসাইন URL পাওয়া যায়নি: ' . $presign_response->get_error_message());
         }
 
-        $code = wp_remote_retrieve_response_code($response);
-        $data = json_decode(wp_remote_retrieve_body($response), true);
+        $presign_code = wp_remote_retrieve_response_code($presign_response);
+        $presign_data = json_decode(wp_remote_retrieve_body($presign_response), true);
 
-        if ($code === 201 && !empty($data['data'])) {
-            return $data['data'];
+        if ($presign_code !== 200 || empty($presign_data['data']['url']) || empty($presign_data['data']['object_key'])) {
+            $error_msg = isset($presign_data['error']['message']) ? $presign_data['error']['message'] : 'প্রিসাইন URL পাওয়া যায়নি (HTTP ' . $presign_code . ')';
+            return new WP_Error('presign_failed', $error_msg);
         }
 
-        $error_msg = isset($data['error']['message']) ? $data['error']['message'] : 'আপলোড ব্যর্থ হয়েছে (HTTP ' . $code . ')';
-        return new WP_Error('upload_failed', $error_msg);
+        $upload_url = $presign_data['data']['url'];
+        $object_key = $presign_data['data']['object_key'];
+
+        // Step 2: Stream file directly to R2 via cURL PUT (no memory loading)
+        $fh = fopen($file_path, 'rb');
+        if (!$fh) {
+            return new WP_Error('file_open', 'ব্যাকআপ ফাইল খোলা যায়নি।');
+        }
+
+        $ch = curl_init($upload_url);
+        curl_setopt_array($ch, [
+            CURLOPT_PUT            => true,
+            CURLOPT_INFILE         => $fh,
+            CURLOPT_INFILESIZE     => $file_size,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 300,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/gzip',
+            ],
+        ]);
+
+        $curl_result = curl_exec($ch);
+        $curl_code   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error  = curl_error($ch);
+        curl_close($ch);
+        fclose($fh);
+
+        if ($curl_code < 200 || $curl_code >= 300) {
+            $err_detail = !empty($curl_error) ? $curl_error : 'HTTP ' . $curl_code;
+            return new WP_Error('r2_upload_failed', 'R2 আপলোড ব্যর্থ: ' . $err_detail);
+        }
+
+        // Step 3: Confirm upload with engine
+        $confirm_url = GUARDIFY_ENGINE_URL . '/api/v1/backup/confirm';
+        $confirm_response = wp_remote_post($confirm_url, [
+            'timeout' => 30,
+            'headers' => [
+                'X-GF-Key'    => $api_key,
+                'Content-Type' => 'application/json',
+            ],
+            'body' => wp_json_encode([
+                'object_key' => $object_key,
+                'file_size'  => $file_size,
+                'note'       => $note,
+            ]),
+        ]);
+
+        if (is_wp_error($confirm_response)) {
+            return new WP_Error('confirm_failed', 'ব্যাকআপ নিশ্চিতকরণ ব্যর্থ: ' . $confirm_response->get_error_message());
+        }
+
+        $confirm_code = wp_remote_retrieve_response_code($confirm_response);
+        $confirm_data = json_decode(wp_remote_retrieve_body($confirm_response), true);
+
+        if ($confirm_code === 201 && !empty($confirm_data['data'])) {
+            return $confirm_data['data'];
+        }
+
+        $error_msg = isset($confirm_data['error']['message']) ? $confirm_data['error']['message'] : 'নিশ্চিতকরণ ব্যর্থ (HTTP ' . $confirm_code . ')';
+        return new WP_Error('confirm_failed', $error_msg);
     }
 
     /**
