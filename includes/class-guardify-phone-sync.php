@@ -306,15 +306,7 @@ class Guardify_Phone_Sync {
      * Normalize a phone number to 01XXXXXXXXX format.
      */
     private function normalize_phone($phone) {
-        if (empty($phone)) {
-            return null;
-        }
-        $phone = preg_replace('/[\s\-\(\)]/', '', $phone);
-        $phone = preg_replace('/^\+?88/', '', $phone);
-        if (preg_match('/^01[3-9]\d{8}$/', $phone)) {
-            return $phone;
-        }
-        return null;
+        return Guardify_Phone_Util::clean($phone);
     }
 
     /**

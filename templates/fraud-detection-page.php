@@ -386,7 +386,7 @@ jQuery(function($){
     $('#gf-export-blocked-btn').on('click', function(){
         $(this).prop('disabled', true).text('এক্সপোর্ট হচ্ছে...');
         var self = this;
-        $.post(ajaxurl, { action: 'guardify_export_blocked', _wpnonce: nonce }, function(r){
+        $.post(ajaxurl, { action: 'guardify_export_blocked_users', _wpnonce: nonce }, function(r){
             $(self).prop('disabled', false).text('ব্লক করা ব্যবহারকারী এক্সপোর্ট');
             if (r.success && r.data.csv) {
                 downloadCSV(r.data.csv, 'guardify-blocked-users.csv');
@@ -398,7 +398,7 @@ jQuery(function($){
     $('#gf-export-rules-btn').on('click', function(){
         $(this).prop('disabled', true).text('এক্সপোর্ট হচ্ছে...');
         var self = this;
-        $.post(ajaxurl, { action: 'guardify_export_rules', _wpnonce: nonce }, function(r){
+        $.post(ajaxurl, { action: 'guardify_export_block_rules', _wpnonce: nonce }, function(r){
             $(self).prop('disabled', false).text('ব্লক রুল এক্সপোর্ট');
             if (r.success && r.data.csv) {
                 downloadCSV(r.data.csv, 'guardify-block-rules.csv');
@@ -420,7 +420,7 @@ jQuery(function($){
         reader.onload = function(e){
             var phones = e.target.result.split(/[\r\n]+/).map(function(s){ return s.trim(); }).filter(Boolean);
             if (!phones.length) { alert('ফাইলে কোনো ফোন নম্বর পাওয়া যায়নি'); btn.prop('disabled', false).text('ইম্পোর্ট করুন'); return; }
-            $.post(ajaxurl, { action: 'guardify_import_blocked', _wpnonce: nonce, phones: JSON.stringify(phones) }, function(r){
+            $.post(ajaxurl, { action: 'guardify_import_blocked_users', _wpnonce: nonce, phones: JSON.stringify(phones) }, function(r){
                 btn.prop('disabled', false).text('ইম্পোর্ট করুন');
                 if (r.success) {
                     msg.html('<div class="gf-alert gf-alert-success">' + (r.data.message || 'ইম্পোর্ট সম্পন্ন') + '</div>').show();

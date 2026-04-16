@@ -816,7 +816,7 @@ class Guardify_Fraud_Detection {
      * AJAX: Export blocked users as CSV.
      */
     public function ajax_export_blocked_users() {
-        check_ajax_referer('guardify_export', 'nonce');
+        check_ajax_referer('guardify_nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_die('Permission denied');
@@ -829,57 +829,44 @@ class Guardify_Fraud_Detection {
             ARRAY_A
         );
 
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="guardify_blocked_users_' . gmdate('Y-m-d_H-i-s') . '.csv"');
-
-        $out = fopen('php://output', 'w');
+        $out = fopen('php://memory', 'r+');
         fputcsv($out, ['phone', 'ip_address', 'block_reason', 'order_ids', 'created_at', 'last_seen']);
         foreach ($rows as $r) {
             fputcsv($out, $r);
         }
+        rewind($out);
+        $csv = stream_get_contents($out);
         fclose($out);
-        exit;
+
+        wp_send_json_success(['csv' => $csv]);
     }
 
     /**
      * AJAX: Import blocked users from CSV.
      */
     public function ajax_import_blocked_users() {
-        check_ajax_referer('guardify_import', 'nonce');
+        check_ajax_referer('guardify_nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_send_json_error('Permission denied');
         }
 
-        if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
-            wp_send_json_error('ফাইল আপলোড ব্যর্থ');
+        // Accept JSON phones array from frontend (client reads file, sends parsed data)
+        $raw = isset($_POST['phones']) ? sanitize_text_field(wp_unslash($_POST['phones'])) : '';
+        if (empty($raw)) {
+            wp_send_json_error('কোনো ফোন নম্বর পাওয়া যায়নি');
         }
 
-        $path = $_FILES['import_file']['tmp_name'];
-        if (!is_readable($path)) {
-            wp_send_json_error('ফাইল পড়া যাচ্ছে না');
+        $phones = json_decode($raw, true);
+        if (!is_array($phones) || empty($phones)) {
+            wp_send_json_error('ভুল ফরম্যাট');
         }
-
-        $handle = fopen($path, 'r');
-        if (!$handle) {
-            wp_send_json_error('ফাইল খোলা যাচ্ছে না');
-        }
-
-        // Skip header
-        fgetcsv($handle);
 
         $imported = 0;
         $skipped  = 0;
 
-        while (($data = fgetcsv($handle)) !== false) {
-            if (count($data) < 1) {
-                $skipped++;
-                continue;
-            }
-
-            $phone  = sanitize_text_field($data[0]);
-            $reason = isset($data[2]) ? sanitize_textarea_field($data[2]) : 'CSV ইম্পোর্ট';
-
+        foreach ($phones as $entry) {
+            $phone = sanitize_text_field($entry);
             if (empty($phone)) {
                 $skipped++;
                 continue;
@@ -888,10 +875,14 @@ class Guardify_Fraud_Detection {
             $phone = preg_replace('/[\s\-]/', '', $phone);
             $phone = preg_replace('/^\+?88/', '', $phone);
 
-            $this->block_phone($phone, $reason);
+            if (!preg_match('/^01[3-9]\d{8}$/', $phone)) {
+                $skipped++;
+                continue;
+            }
+
+            $this->block_phone($phone, 'CSV ইম্পোর্ট');
             $imported++;
         }
-        fclose($handle);
 
         wp_send_json_success([
             'message' => sprintf('ইম্পোর্ট সম্পন্ন। যোগ: %d, বাদ: %d', $imported, $skipped),
@@ -902,7 +893,7 @@ class Guardify_Fraud_Detection {
      * AJAX: Export advanced block rules as CSV.
      */
     public function ajax_export_block_rules() {
-        check_ajax_referer('guardify_export', 'nonce');
+        check_ajax_referer('guardify_nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_die('Permission denied');
@@ -915,23 +906,23 @@ class Guardify_Fraud_Detection {
             ARRAY_A
         );
 
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="guardify_block_rules_' . gmdate('Y-m-d_H-i-s') . '.csv"');
-
-        $out = fopen('php://output', 'w');
+        $out = fopen('php://memory', 'r+');
         fputcsv($out, ['block_type', 'block_value', 'reason', 'is_active', 'created_at']);
         foreach ($rows as $r) {
             fputcsv($out, $r);
         }
+        rewind($out);
+        $csv = stream_get_contents($out);
         fclose($out);
-        exit;
+
+        wp_send_json_success(['csv' => $csv]);
     }
 
     /**
      * AJAX: Import advanced block rules from CSV.
      */
     public function ajax_import_block_rules() {
-        check_ajax_referer('guardify_import', 'nonce');
+        check_ajax_referer('guardify_nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_send_json_error('Permission denied');
@@ -998,7 +989,7 @@ class Guardify_Fraud_Detection {
      * AJAX: Export all fraud data (blocked users + block rules) as CSV.
      */
     public function ajax_export_all_data() {
-        check_ajax_referer('guardify_export', 'nonce');
+        check_ajax_referer('guardify_nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_die('Permission denied');
@@ -1018,10 +1009,7 @@ class Guardify_Fraud_Detection {
             ARRAY_A
         );
 
-        header('Content-Type: text/csv; charset=utf-8');
-        header('Content-Disposition: attachment; filename="guardify_all_fraud_data_' . gmdate('Y-m-d_H-i-s') . '.csv"');
-
-        $out = fopen('php://output', 'w');
+        $out = fopen('php://memory', 'r+');
 
         fputcsv($out, ['=== ব্লক রুল ===']);
         fputcsv($out, ['block_type', 'block_value', 'reason', 'is_active', 'created_at']);
@@ -1036,15 +1024,18 @@ class Guardify_Fraud_Detection {
             fputcsv($out, $r);
         }
 
+        rewind($out);
+        $csv = stream_get_contents($out);
         fclose($out);
-        exit;
+
+        wp_send_json_success(['csv' => $csv]);
     }
 
     /**
      * AJAX: Import all fraud data (blocked users + block rules) from CSV.
      */
     public function ajax_import_all_data() {
-        check_ajax_referer('guardify_import', 'nonce');
+        check_ajax_referer('guardify_nonce');
 
         if (!current_user_can('manage_woocommerce')) {
             wp_send_json_error('Permission denied');

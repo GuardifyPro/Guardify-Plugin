@@ -23,6 +23,7 @@ define('GUARDIFY_URL', plugin_dir_url(__FILE__));
 define('GUARDIFY_ENGINE_URL', 'https://api.guardify.pro');
 
 // Autoload includes
+require_once GUARDIFY_PATH . 'includes/class-guardify-phone-util.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-activator.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-api.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-delivery.php';
@@ -59,6 +60,17 @@ $guardifyUpdateChecker->getVcsApi()->enableReleaseAssets();
 // Make checker instance globally accessible for manual checks
 global $guardify_update_checker;
 $guardify_update_checker = $guardifyUpdateChecker;
+
+// ─── HPOS (High Performance Order Storage) Compatibility ──────
+add_action('before_woocommerce_init', function () {
+    if (class_exists('\Automattic\WooCommerce\Utilities\FeaturesUtil')) {
+        \Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
+            'custom_order_tables',
+            __FILE__,
+            true
+        );
+    }
+});
 
 /**
  * Main plugin class.

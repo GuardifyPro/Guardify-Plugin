@@ -279,10 +279,8 @@ class Guardify_Search {
         }
 
         $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
-        // Normalize: strip spaces, hyphens, parens, dots, and +880/880 prefix
-        $phone = preg_replace('/[\s\-\(\)\.]/', '', $phone);
-        $phone = preg_replace('/^\+?880/', '', $phone);
-        if (empty($phone) || !preg_match('/^01[3-9]\d{8}$/', $phone)) {
+        $phone = Guardify_Phone_Util::normalize($phone);
+        if (!Guardify_Phone_Util::validate($phone)) {
             wp_send_json_error('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)');
         }
 

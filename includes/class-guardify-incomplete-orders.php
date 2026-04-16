@@ -106,18 +106,15 @@ class Guardify_Incomplete_Orders {
     /* --- Phone Helpers --------------------------------------------- */
 
     private function normalize_phone($phone) {
-        $phone = preg_replace('/[\s\-]/', '', $phone);
-        $phone = preg_replace('/^\+?88/', '', $phone);
-        return $phone;
+        return Guardify_Phone_Util::normalize($phone);
     }
 
     private function validate_phone($phone) {
-        return (bool) preg_match('/^01[3-9]\d{8}$/', $phone);
+        return Guardify_Phone_Util::validate($phone);
     }
 
     private function phone_variations($phone) {
-        $normalized = $this->normalize_phone($phone);
-        return [$normalized, '88' . $normalized, '+88' . $normalized];
+        return Guardify_Phone_Util::variations($phone);
     }
 
     /* --- Cooldown -------------------------------------------------- */

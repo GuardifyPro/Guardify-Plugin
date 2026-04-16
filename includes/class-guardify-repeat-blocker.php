@@ -421,12 +421,10 @@ class Guardify_Repeat_Blocker {
     /* ───── utilities ───── */
 
     private function normalize_phone($phone) {
-        $phone = preg_replace('/[\s\-\(\)]/', '', $phone);
-        $phone = preg_replace('/^\+?88/', '', $phone);
-        return $phone;
+        return Guardify_Phone_Util::normalize($phone);
     }
 
     private function is_valid_bd_phone($phone) {
-        return (bool) preg_match('/^01[3-9]\d{8}$/', $phone);
+        return Guardify_Phone_Util::validate($phone);
     }
 }

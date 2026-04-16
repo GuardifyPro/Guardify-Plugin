@@ -27,31 +27,42 @@ class Guardify_Custom_Status {
      * Register the custom post statuses.
      */
     public function register_status() {
-        register_post_status('wc-otp-pending', [
-            'label'                     => 'OTP Pending',
-            'public'                    => true,
-            'exclude_from_search'       => false,
-            'show_in_admin_all_list'    => true,
-            'show_in_admin_status_list' => true,
-            'label_count'               => _n_noop(
-                'OTP Pending <span class="count">(%s)</span>',
-                'OTP Pending <span class="count">(%s)</span>',
-                'guardify-pro'
-            ),
-        ]);
+        // Use register_post_status as fallback — wc_register_order_status isn't
+        // available in all WC versions, but register_post_status still works with HPOS.
+        $statuses = [
+            'wc-otp-pending' => [
+                'label'                     => 'OTP Pending',
+                'public'                    => true,
+                'exclude_from_search'       => false,
+                'show_in_admin_all_list'    => true,
+                'show_in_admin_status_list' => true,
+                'label_count'               => _n_noop(
+                    'OTP Pending <span class="count">(%s)</span>',
+                    'OTP Pending <span class="count">(%s)</span>',
+                    'guardify-pro'
+                ),
+            ],
+            'wc-waiting-shipment' => [
+                'label'                     => 'Waiting for Shipment',
+                'public'                    => true,
+                'exclude_from_search'       => false,
+                'show_in_admin_all_list'    => true,
+                'show_in_admin_status_list' => true,
+                'label_count'               => _n_noop(
+                    'Waiting for Shipment <span class="count">(%s)</span>',
+                    'Waiting for Shipment <span class="count">(%s)</span>',
+                    'guardify-pro'
+                ),
+            ],
+        ];
 
-        register_post_status('wc-waiting-shipment', [
-            'label'                     => 'Waiting for Shipment',
-            'public'                    => true,
-            'exclude_from_search'       => false,
-            'show_in_admin_all_list'    => true,
-            'show_in_admin_status_list' => true,
-            'label_count'               => _n_noop(
-                'Waiting for Shipment <span class="count">(%s)</span>',
-                'Waiting for Shipment <span class="count">(%s)</span>',
-                'guardify-pro'
-            ),
-        ]);
+        foreach ($statuses as $slug => $args) {
+            if (function_exists('wc_register_order_status')) {
+                wc_register_order_status($slug, $args);
+            } else {
+                register_post_status($slug, $args);
+            }
+        }
     }
 
     /**
