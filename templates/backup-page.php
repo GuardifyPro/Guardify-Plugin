@@ -127,6 +127,64 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
         </div>
     </div>
 
+    <?php if ($gf_can_move) : ?>
+    <div class="gf-card">
+        <div class="gf-card-header">
+            <div class="gf-card-heading">
+                <h2 class="gf-card-title">ছবি ও মিডিয়া ব্যাকআপ</h2>
+                <p class="gf-card-desc">
+                    ডাটাবেইজ ব্যাকআপে আপনার অর্ডার ও পণ্যের তথ্য থাকে, কিন্তু ছবিগুলো থাকে না।
+                    এটি চালু করলে <code>wp-content/uploads</code> ফোল্ডারের ছবিও Guardify-তে জমা থাকবে।
+                </p>
+            </div>
+            <div class="gf-card-header-actions">
+                <span id="gf-media-usage" class="gf-badge gf-badge-muted"></span>
+            </div>
+        </div>
+        <div class="gf-card-body gf-stack">
+            <div class="gf-alert gf-alert-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div>
+                    <strong class="gf-alert-title">আপনার সার্ভারে চাপ পড়বে না</strong>
+                    আপনার সাইট শুধু ফাইলের নাম, আকার ও তারিখ পড়ে পাঠায় — কোনো ফাইল স্ক্যান বা
+                    হিসাব করে না। কোন ছবিটি নতুন সেটা Guardify ঠিক করে, আর যেগুলো আগেই জমা আছে
+                    সেগুলো আবার আপলোড হয় না। কাজটি ছোট ছোট ভাগে পটভূমিতে চলে।
+                </div>
+            </div>
+
+            <div class="gf-settings-list">
+                <label class="gf-toggle-row">
+                    <span class="gf-toggle-info">
+                        <span class="gf-toggle-label">মিডিয়া ব্যাকআপ চালু করুন</span>
+                        <span class="gf-toggle-desc">প্রথমবার সব ছবি আপলোড হতে সময় লাগবে। এরপর শুধু নতুন ও পরিবর্তিত ছবি যাবে।</span>
+                    </span>
+                    <span class="gf-switch">
+                        <input type="checkbox" id="gf-media-enabled" <?php checked(get_option('guardify_media_enabled', 'no'), 'yes'); ?> />
+                        <span class="gf-switch-slider"></span>
+                    </span>
+                </label>
+            </div>
+
+            <div id="gf-media-live" class="gf-hidden"></div>
+            <div id="gf-media-status"></div>
+
+            <div class="gf-row">
+                <button type="button" id="gf-media-sync" class="gf-btn gf-btn-secondary">এখনই মিডিয়া ব্যাকআপ নিন</button>
+                <button type="button" id="gf-media-restore" class="gf-btn gf-btn-ghost">মিডিয়া রিস্টোর</button>
+                <button type="button" id="gf-media-cancel" class="gf-btn gf-btn-ghost gf-hidden">বাতিল করুন</button>
+            </div>
+
+            <p class="gf-help">
+                <strong>মিডিয়া রিস্টোর</strong> Guardify-তে জমা ছবিগুলো আবার সাইটে নামায়। এটি কোনো
+                ফাইল মুছে না — যেগুলো ঠিক আছে সেগুলোতে হাত দেয় না, তাই সাইট চালু থাকা অবস্থায়ও
+                নিরাপদে চালানো যায়। সাইট নতুন সার্ভারে নেওয়ার পর এটিই ছবিগুলো ফিরিয়ে আনে।
+            </p>
+
+            <div id="gf-media-skips"></div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="gf-card gf-card-danger">
         <div class="gf-card-header">
             <div class="gf-card-heading">
@@ -599,6 +657,214 @@ jQuery(function ($) {
                 domainNotice('error', res.data.error);
             }
         });
+    }
+
+
+    /* ── Media ────────────────────────────────────────────────────────── */
+
+    var mediaTimer = null;
+
+    function mediaNotice(type, message) {
+        $('#gf-media-status').html(
+            $('<div>').addClass('gf-alert gf-alert-' + type).text(message)
+        );
+    }
+
+    function mediaRunning(running) {
+        $('#gf-media-sync, #gf-media-restore').prop('disabled', running);
+        $('#gf-media-cancel').toggleClass('gf-hidden', !running);
+    }
+
+    // Sizes are shown in Bengali numerals to match the rest of the product. A merchant reading
+    // "৪.২ GB" beside "১,২৪০টি ফাইল" should not find one of the two in Latin digits.
+    function bnDigits(text) {
+        var map = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        return String(text).replace(/[0-9]/g, function (d) { return map[+d]; });
+    }
+
+    function humanBytes(bytes) {
+        bytes = +bytes || 0;
+        if (bytes < 1024) { return bnDigits(bytes) + ' B'; }
+        var units = ['KB', 'MB', 'GB', 'TB'];
+        var value = bytes / 1024;
+        var i = 0;
+        while (value >= 1024 && i < units.length - 1) { value /= 1024; i++; }
+        return bnDigits(value.toFixed(value < 10 ? 1 : 0)) + ' ' + units[i];
+    }
+
+    function renderUsage(usage) {
+        var $badge = $('#gf-media-usage');
+
+        if (!usage || !usage.enabled) {
+            // A free-plan site gets no ceiling and no number. Showing "০ B / ০ B" would read
+            // as a broken feature rather than as one this plan does not include.
+            $badge.text('').addClass('gf-hidden');
+            return;
+        }
+
+        $badge.removeClass('gf-hidden').text(
+            humanBytes(usage.bytes) + ' / ' + humanBytes(usage.ceiling) +
+            '  ·  ' + bnDigits(usage.files) + 'টি ফাইল'
+        );
+    }
+
+    function renderSkips(skips) {
+        var $box = $('#gf-media-skips').empty();
+        if (!skips || !skips.length) { return; }
+
+        // Shown rather than logged. A media backup with holes in it is only useful if the
+        // merchant can find out which files are missing and why, and the two commonest
+        // reasons — a blocked file type and a file over the size limit — are both things they
+        // can look at and understand.
+        var $alert = $('<div>').addClass('gf-alert gf-alert-warning');
+        $alert.append($('<strong>').addClass('gf-alert-title')
+            .text('কিছু ফাইল বাদ পড়েছে (' + bnDigits(skips.length) + 'টি দেখানো হচ্ছে)'));
+
+        var $list = $('<ul>').addClass('gf-alert-list');
+        skips.forEach(function (s) {
+            $list.append($('<li>').append(
+                $('<code>').text(s.path),
+                document.createTextNode(' — ' + (s.reason || ''))
+            ));
+        });
+
+        $box.append($alert.append($list));
+    }
+
+    function pollMedia() {
+        $.post(ajaxUrl, { action: 'guardify_media_status', _ajax_nonce: nonce })
+            .done(function (res) {
+                if (!res.success) { mediaRunning(false); return; }
+
+                var d = res.data;
+
+                if (d.state === 'syncing') {
+                    mediaRunning(true);
+                    $('#gf-media-live').removeClass('gf-hidden').html(
+                        $('<div>').addClass('gf-alert gf-alert-info').text(
+                            d.message + '  ' +
+                            bnDigits(d.uploaded) + 'টি আপলোড হয়েছে (' + humanBytes(d.bytes) + '), ' +
+                            bnDigits(d.seen) + 'টি ফাইল দেখা হয়েছে।'
+                        )
+                    );
+                    mediaTimer = setTimeout(pollMedia, 5000);
+                    return;
+                }
+
+                if (d.state === 'restoring') {
+                    mediaRunning(true);
+                    $('#gf-media-live').removeClass('gf-hidden').html(
+                        $('<div>').addClass('gf-alert gf-alert-info').text(
+                            d.message + '  ' + bnDigits(d.written) + 'টি নামানো হয়েছে, ' +
+                            bnDigits(d.present) + 'টি আগেই ঠিক আছে।'
+                        )
+                    );
+                    mediaTimer = setTimeout(pollMedia, 5000);
+                    return;
+                }
+
+                mediaRunning(false);
+                $('#gf-media-live').addClass('gf-hidden').empty();
+                renderUsage(d.usage);
+
+                if (d.last) {
+                    mediaNotice(d.last.ok ? 'success' : 'error', d.last.message);
+                }
+                renderSkips(d.skips);
+            })
+            .fail(function () {
+                mediaRunning(false);
+            });
+    }
+
+    $('#gf-media-enabled').on('change', function () {
+        var enabled = $(this).is(':checked') ? 'yes' : 'no';
+
+        $.post(ajaxUrl, {
+            action: 'guardify_media_save_settings',
+            guardify_media_enabled: enabled,
+            _ajax_nonce: nonce
+        }, function (res) {
+            if (res.success) {
+                GF.toast(res.data.message, { type: 'success' });
+            } else {
+                GF.toast(res.data || 'সেভ করা যায়নি।', { type: 'error' });
+            }
+        });
+    });
+
+    $('#gf-media-sync').on('click', function () {
+        if (!$('#gf-media-enabled').is(':checked')) {
+            mediaNotice('warning', 'আগে মিডিয়া ব্যাকআপ চালু করুন।');
+            return;
+        }
+
+        if (mediaTimer) { clearTimeout(mediaTimer); mediaTimer = null; }
+        $('#gf-media-status').empty();
+        $('#gf-media-skips').empty();
+        mediaRunning(true);
+
+        $.post(ajaxUrl, { action: 'guardify_media_start', _ajax_nonce: nonce })
+            .done(function (res) {
+                if (!res.success) {
+                    mediaRunning(false);
+                    mediaNotice('error', res.data || 'শুরু করা যায়নি।');
+                    return;
+                }
+                $('#gf-media-live').removeClass('gf-hidden')
+                    .html($('<div>').addClass('gf-alert gf-alert-info').text(res.data.message));
+                mediaTimer = setTimeout(pollMedia, 4000);
+            })
+            .fail(function () {
+                mediaRunning(false);
+                mediaNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+            });
+    });
+
+    $('#gf-media-restore').on('click', function () {
+        if (!confirm('Guardify-তে জমা ছবিগুলো এই সাইটে নামানো হবে।\n\n' +
+                     'কোনো ফাইল মুছে ফেলা হবে না — যেগুলো ইতিমধ্যে ঠিক আছে সেগুলোতে হাত দেওয়া হবে না।')) {
+            return;
+        }
+
+        if (mediaTimer) { clearTimeout(mediaTimer); mediaTimer = null; }
+        $('#gf-media-status').empty();
+        mediaRunning(true);
+
+        $.post(ajaxUrl, { action: 'guardify_media_restore', _ajax_nonce: nonce })
+            .done(function (res) {
+                if (!res.success) {
+                    mediaRunning(false);
+                    mediaNotice('error', res.data || 'রিস্টোর শুরু করা যায়নি।');
+                    return;
+                }
+                $('#gf-media-live').removeClass('gf-hidden')
+                    .html($('<div>').addClass('gf-alert gf-alert-info').text(res.data.message));
+                mediaTimer = setTimeout(pollMedia, 4000);
+            })
+            .fail(function () {
+                mediaRunning(false);
+                mediaNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+            });
+    });
+
+    $('#gf-media-cancel').on('click', function () {
+        if (!confirm('চলমান মিডিয়া কাজটি বাতিল করবেন? যা আপলোড হয়েছে তা জমা থাকবে।')) { return; }
+
+        if (mediaTimer) { clearTimeout(mediaTimer); mediaTimer = null; }
+
+        $.post(ajaxUrl, { action: 'guardify_media_cancel', _ajax_nonce: nonce })
+            .done(function (res) {
+                mediaRunning(false);
+                $('#gf-media-live').addClass('gf-hidden').empty();
+                mediaNotice('info', (res.data && res.data.message) || 'বাতিল হয়েছে।');
+            });
+    });
+
+    // A sync started before this page was loaded is picked back up, rather than the screen
+    // showing nothing while the merchant's server is busy uploading.
+    if ($('#gf-media-sync').length) {
+        pollMedia();
     }
 
 

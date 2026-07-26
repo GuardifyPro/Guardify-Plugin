@@ -1862,6 +1862,30 @@
     margin-bottom: 0.125rem;
 }
 
+/* A list of specifics inside an alert — the media files a sync skipped, and why.
+   Capped in height and scrolled rather than allowed to grow: a shop with a hundred
+   skipped files would otherwise push every control below it off the screen. */
+.gf-alert-list {
+    margin: 0.5rem 0 0;
+    padding-left: 1.1rem;
+    max-height: 12rem;
+    overflow-y: auto;
+    font-size: var(--gf-text-sm);
+    line-height: 1.7;
+}
+
+.gf-alert-list li {
+    margin: 0;
+    /* A long upload path must wrap rather than widen the card, which on a 360px screen
+       is the difference between a readable warning and a page that scrolls sideways. */
+    overflow-wrap: anywhere;
+}
+
+.gf-alert-list code {
+    font-size: 0.92em;
+    padding: 0.05rem 0.25rem;
+}
+
 .gf-alert-success, .gf-notice-success { background: oklch(var(--gf-success-c) / 0.09);     border-color: oklch(var(--gf-success-c) / 0.25);     border-left-color: var(--gf-success); }
 .gf-alert-warning, .gf-notice-warning { background: oklch(var(--gf-warning-c) / 0.11);     border-color: oklch(var(--gf-warning-c) / 0.28);     border-left-color: var(--gf-warning); }
 .gf-alert-error,   .gf-notice-error   { background: oklch(var(--gf-destructive-c) / 0.09); border-color: oklch(var(--gf-destructive-c) / 0.24); border-left-color: var(--gf-destructive); }

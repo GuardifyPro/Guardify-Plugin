@@ -49,6 +49,7 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-quick-view.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-backup.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-restore.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-domain.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-media.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-onboarding.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
@@ -153,6 +154,7 @@ final class Guardify_Pro {
         Guardify_Backup::get_instance();
         Guardify_Restore::get_instance();
         Guardify_Domain::get_instance();
+        Guardify_Media::get_instance();
         Guardify_Onboarding::get_instance();
 
         // Admin menu

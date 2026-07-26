@@ -18,19 +18,19 @@ msgstr ""
 "Language-Team: Bengali (Bangladesh)\n"
 "X-Domain: guardify-pro\n"
 
-#: guardify-pro.php:235 guardify-pro.php:244
+#: guardify-pro.php:237 guardify-pro.php:246
 msgid "Guardify:"
 msgstr ""
 
-#: guardify-pro.php:236
+#: guardify-pro.php:238
 msgid "OTP পাঠানো যাচ্ছে না, তাই চেকআউটে ভেরিফিকেশন সাময়িকভাবে বন্ধ রাখা হয়েছে — নইলে কোনো অর্ডারই সম্পন্ন হতো না। SMS ব্যালেন্স ও সংযোগ পরীক্ষা করুন।"
 msgstr ""
 
-#: guardify-pro.php:245
+#: guardify-pro.php:247
 msgid "ইঞ্জিনের সাথে সর্বশেষ সংযোগ ব্যর্থ হয়েছে।"
 msgstr ""
 
-#: guardify-pro.php:334 guardify-pro.php:341 guardify-pro.php:348 guardify-pro.php:355 guardify-pro.php:362 guardify-pro.php:369 includes/class-guardify-onboarding.php:98 includes/class-guardify-search.php:27 templates/backup-page.php:12 templates/design-system-page.php:17 templates/fraud-detection-page.php:13 templates/incomplete-orders-page.php:13 templates/onboarding-page.php:12 templates/settings-page.php:16 templates/sms-logs-page.php:13
+#: guardify-pro.php:336 guardify-pro.php:343 guardify-pro.php:350 guardify-pro.php:357 guardify-pro.php:364 guardify-pro.php:371 includes/class-guardify-onboarding.php:98 includes/class-guardify-search.php:27 templates/backup-page.php:12 templates/design-system-page.php:17 templates/fraud-detection-page.php:13 templates/incomplete-orders-page.php:13 templates/onboarding-page.php:12 templates/settings-page.php:16 templates/sms-logs-page.php:13
 msgid "Unauthorized"
 msgstr ""
 
