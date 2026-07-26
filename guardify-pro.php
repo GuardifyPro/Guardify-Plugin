@@ -47,6 +47,7 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-sms-logs.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-phone-sync.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-quick-view.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-backup.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-onboarding.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
 require_once GUARDIFY_PATH . 'plugin-update-checker/plugin-update-checker.php';
@@ -123,6 +124,7 @@ final class Guardify_Pro {
         Guardify_Phone_Sync::get_instance();
         Guardify_Quick_View::get_instance();
         Guardify_Backup::get_instance();
+        Guardify_Onboarding::get_instance();
 
         // Admin menu
         add_action('admin_menu', [$this, 'register_menu']);
@@ -341,7 +343,7 @@ final class Guardify_Pro {
     }
 
     public function enqueue_admin_assets($hook) {
-        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs', 'guardify-backup', 'guardify-design-system'];
+        $guardify_pages = ['guardify-pro', 'guardify-setup', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs', 'guardify-backup', 'guardify-design-system'];
         $is_guardify = false;
         foreach ($guardify_pages as $page) {
             if (strpos($hook, $page) !== false) {

@@ -16,6 +16,12 @@ class Guardify_Activator {
         Guardify_Incomplete_Orders::create_table();
         Guardify_Fraud_Detection::create_tables();
 
+        // Open the setup wizard on the next admin page load. A merchant who lands on an
+        // 819-line settings screen with a dozen toggles, several of which refuse orders,
+        // either turns everything on and loses sales or turns nothing on and concludes the
+        // plugin does nothing. Both end in an uninstall.
+        Guardify_Onboarding::schedule_redirect();
+
         // Flush rewrite rules
         flush_rewrite_rules();
     }
