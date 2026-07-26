@@ -767,12 +767,31 @@ class Guardify_Restore {
     public function ajax_abort() {
         $this->guard();
 
-        $job = get_option(self::JOB_OPTION, null);
-        if (!is_array($job)) {
+        if (!$this->abort('ব্যবহারকারী রিস্টোর বাতিল করেছেন।')) {
             wp_send_json_success(['message' => 'কোনো রিস্টোর চলছে না।']);
         }
 
-        $this->fail($job, 'ব্যবহারকারী রিস্টোর বাতিল করেছেন।');
         wp_send_json_success(['message' => 'রিস্টোর বাতিল হয়েছে। সাইটে কোনো পরিবর্তন হয়নি।']);
+    }
+
+    /**
+     * Abandon a running restore from anywhere in the plugin.
+     *
+     * Public because the domain change drives a restore of its own and has to be able to
+     * call it off. Going through here rather than deleting the job row directly is what
+     * ensures the staging tables are dropped, the temp files removed and the engine told —
+     * a caller that only forgets the job leaves a full copy of a database on the merchant's
+     * disk and an authorisation open on ours.
+     *
+     * @return bool Whether there was anything to abort.
+     */
+    public function abort($reason = '') {
+        $job = get_option(self::JOB_OPTION, null);
+        if (!is_array($job)) {
+            return false;
+        }
+
+        $this->fail($job, $reason !== '' ? $reason : 'রিস্টোর বাতিল করা হয়েছে।');
+        return true;
     }
 }

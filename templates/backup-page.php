@@ -13,6 +13,8 @@ if (!current_user_can('manage_woocommerce')) {
 }
 
 $backup_instance = Guardify_Backup::get_instance();
+$gf_can_move     = current_user_can('manage_options');
+$gf_domain       = Guardify_Domain::current_domain();
 $schedule_info   = $backup_instance->get_schedule_info();
 $is_connected    = !empty(get_option('guardify_api_key', ''));
 ?>
@@ -180,6 +182,62 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
             </div>
         </div>
     </div>
+
+    <?php if ($gf_can_move) : ?>
+    <div class="gf-card">
+        <div class="gf-card-header">
+            <div class="gf-card-heading">
+                <h2 class="gf-card-title">ডোমেইন পরিবর্তন</h2>
+                <p class="gf-card-desc">
+                    সাইট নতুন ডোমেইনে নিয়ে যাচ্ছেন? এক ক্লিকে সব ঠিকানা বদলে যাবে — পোস্ট, পণ্যের ছবি,
+                    থিম ও প্লাগইনের সেটিংস, সবকিছু।
+                </p>
+            </div>
+            <div class="gf-card-header-actions">
+                <span class="gf-badge gf-badge-muted gf-mono"><?php echo esc_html($gf_domain); ?></span>
+            </div>
+        </div>
+        <div class="gf-card-body gf-stack">
+            <div class="gf-alert gf-alert-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div>
+                    <strong class="gf-alert-title">সাধারণ সার্চ-রিপ্লেস প্লাগইনের মতো নয়</strong>
+                    WordPress অনেক সেটিংস এমন ফরম্যাটে রাখে যেখানে লেখার দৈর্ঘ্যও সংরক্ষিত থাকে। সাধারণ
+                    রিপ্লেস করলে ওই হিসাব ভেঙে যায় আর উইজেট, থিম ও পেমেন্ট সেটিংস চুপচাপ মুছে যায় —
+                    কোনো এরর ছাড়াই। Guardify কাজটি নিজের সার্ভারে করে, সঠিক হিসাব রেখে।
+                </div>
+            </div>
+
+            <div id="gf-domain-live" class="gf-hidden"></div>
+
+            <div class="gf-field gf-field-wide" id="gf-domain-input-wrap">
+                <label class="gf-label" for="gf-domain-new">নতুন ডোমেইন</label>
+                <input type="text" id="gf-domain-new" class="gf-input gf-input-mono"
+                       autocomplete="off" spellcheck="false" placeholder="newshop.com.bd">
+                <span class="gf-help">
+                    শুধু ঠিকানাটি লিখুন — https:// বা www. লেখার দরকার নেই। শুরু করার আগে নিশ্চিত করুন
+                    নতুন ডোমেইনটি এই সাইটের দিকেই পয়েন্ট করা আছে।
+                </span>
+            </div>
+
+            <div class="gf-alert gf-alert-warning">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9L2.4 17.5c-.8.9.2 2.5 1.7 2.5h15.8c1.5 0 2.5-1.6 1.7-2.5L13.7 3.9c-.8-.8-2.7-.8-3.4 0z"/></svg>
+                <div>
+                    <strong class="gf-alert-title">শেষ হলে আপনাকে নতুন ঠিকানায় লগইন করতে হবে</strong>
+                    পরিবর্তনের সময় সাইট চালু থাকবে। শেষ ধাপে ঠিকানা বদলে যাবে, তাই তখন
+                    পুরোনো ঠিকানায় wp-admin আর খুলবে না।
+                </div>
+            </div>
+
+            <div id="gf-domain-status"></div>
+
+            <div class="gf-row">
+                <button type="button" id="gf-domain-start" class="gf-btn gf-btn-primary">ডোমেইন পরিবর্তন করুন</button>
+                <button type="button" id="gf-domain-cancel" class="gf-btn gf-btn-ghost gf-hidden">বাতিল করুন</button>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <?php endif; ?>
 </div>
@@ -415,6 +473,134 @@ jQuery(function ($) {
             }
         });
     })();
+
+    /* ── Domain change ────────────────────────────────────────────────── */
+
+    /*
+     * One click, three stages the merchant never has to think about: a fresh backup, the
+     * engine rewriting every URL in it, and a restore that swaps the result in atomically.
+     * Polling drives it because each stage is already a sliced background job — this only
+     * asks whether the current one has finished.
+     */
+    var domainTimer = null;
+
+    function domainNotice(type, text) {
+        $('#gf-domain-status').html($('<div>').addClass('gf-alert gf-alert-' + type).text(text));
+    }
+
+    function domainRunning(running) {
+        $('#gf-domain-input-wrap').toggleClass('gf-hidden', running);
+        $('#gf-domain-cancel').toggleClass('gf-hidden', !running);
+        GF.setLoading($('#gf-domain-start'), running);
+    }
+
+    function pollDomain() {
+        $.post(ajaxUrl, { action: 'guardify_domain_advance', _ajax_nonce: nonce })
+            .done(function (res) {
+                if (!res.success) {
+                    domainRunning(false);
+                    domainNotice('error', res.data || 'ডোমেইন পরিবর্তন ব্যর্থ হয়েছে।');
+                    return;
+                }
+
+                var d = res.data;
+
+                if (d.error) {
+                    domainRunning(false);
+                    $('#gf-domain-live').addClass('gf-hidden').empty();
+                    domainNotice('error', d.error);
+                    return;
+                }
+
+                if (d.done) {
+                    domainRunning(false);
+                    $('#gf-domain-live').addClass('gf-hidden').empty();
+                    domainNotice('success',
+                        'ডোমেইন পরিবর্তন সম্পন্ন হয়েছে। এখন থেকে সাইটটি ' + d.new + ' ঠিকানায় চলবে।');
+                    // The old address no longer serves wp-admin, so staying here would show
+                    // a screen whose every subsequent request fails. Sent on rather than
+                    // left to discover it.
+                    setTimeout(function () {
+                        window.location.href = 'https://' + d.new + '/wp-admin/admin.php?page=guardify-backup';
+                    }, 2500);
+                    return;
+                }
+
+                $('#gf-domain-live').removeClass('gf-hidden')
+                    .html($('<div>').addClass('gf-alert gf-alert-info').text(d.message));
+                domainTimer = setTimeout(pollDomain, 5000);
+            })
+            .fail(function () {
+                // A failure here is usually the site having just moved: the browser is
+                // still on the old address and admin-ajax is answering from the new one.
+                domainRunning(false);
+                domainNotice('warning',
+                    'সংযোগ বিচ্ছিন্ন হয়েছে — সম্ভবত সাইটটি নতুন ঠিকানায় চলে গেছে। নতুন ঠিকানায় গিয়ে দেখুন।');
+            });
+    }
+
+    $('#gf-domain-start').on('click', function () {
+        var newDomain = $.trim($('#gf-domain-new').val());
+
+        if (!newDomain) {
+            domainNotice('error', 'নতুন ডোমেইনটি লিখুন।');
+            return;
+        }
+
+        if (!confirm('আপনি কি নিশ্চিত?\n\nসাইটের সব ঠিকানা ' + newDomain + ' এ বদলে যাবে। ' +
+                     'পরিবর্তনের সময় সাইট চালু থাকবে, তবে শেষ হলে আপনাকে নতুন ঠিকানায় লগইন করতে হবে।')) {
+            return;
+        }
+
+        if (domainTimer) { clearTimeout(domainTimer); domainTimer = null; }
+        $('#gf-domain-status').empty();
+        domainRunning(true);
+
+        $.post(ajaxUrl, { action: 'guardify_domain_start', new_domain: newDomain, _ajax_nonce: nonce })
+            .done(function (res) {
+                if (!res.success) {
+                    domainRunning(false);
+                    domainNotice('error', res.data || 'শুরু করা যায়নি।');
+                    return;
+                }
+                $('#gf-domain-live').removeClass('gf-hidden')
+                    .html($('<div>').addClass('gf-alert gf-alert-info').text(res.data.message));
+                domainTimer = setTimeout(pollDomain, 4000);
+            })
+            .fail(function () {
+                domainRunning(false);
+                domainNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+            });
+    });
+
+    $('#gf-domain-cancel').on('click', function () {
+        if (!confirm('ডোমেইন পরিবর্তন বাতিল করবেন? আপনার সাইটে কোনো পরিবর্তন হয়নি।')) { return; }
+
+        if (domainTimer) { clearTimeout(domainTimer); domainTimer = null; }
+
+        $.post(ajaxUrl, { action: 'guardify_domain_cancel', _ajax_nonce: nonce })
+            .done(function (res) {
+                domainRunning(false);
+                $('#gf-domain-live').addClass('gf-hidden').empty();
+                domainNotice('info', (res.data && res.data.message) || 'বাতিল হয়েছে।');
+            });
+    });
+
+    // A change started before this page was loaded — a closed browser, a reload — is picked
+    // back up rather than appearing not to be happening.
+    if ($('#gf-domain-start').length) {
+        $.post(ajaxUrl, { action: 'guardify_domain_status', _ajax_nonce: nonce }, function (res) {
+            if (res.success && res.data.stage && res.data.stage !== 'failed') {
+                domainRunning(true);
+                $('#gf-domain-live').removeClass('gf-hidden')
+                    .html($('<div>').addClass('gf-alert gf-alert-info').text(res.data.message));
+                domainTimer = setTimeout(pollDomain, 3000);
+            } else if (res.success && res.data.error) {
+                domainNotice('error', res.data.error);
+            }
+        });
+    }
+
 
     /* ── Schedule ─────────────────────────────────────────────────────── */
 

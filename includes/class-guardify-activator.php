@@ -62,6 +62,7 @@ class Guardify_Activator {
             }
         }
         delete_option('guardify_restore_job');
+        delete_option('guardify_domain_change');
         delete_transient('guardify_restore_slice_lock');
 
         flush_rewrite_rules();
