@@ -26,6 +26,7 @@ define('GUARDIFY_ENGINE_URL', 'https://api.guardify.pro');
 require_once GUARDIFY_PATH . 'includes/class-guardify-crypto.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-signer.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-phone-util.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-format.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-activator.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-api.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-delivery.php';

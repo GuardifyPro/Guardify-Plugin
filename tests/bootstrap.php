@@ -78,6 +78,20 @@ function esc_html__($text, $domain = '') {
     return $text;
 }
 
+function esc_attr__($text, $domain = '') {
+    return $text;
+}
+
+// The real functions do rather more, but the property under test is the one that matters
+// for output built by string concatenation: markup in the data must not survive as markup.
+function esc_html($text) {
+    return htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8');
+}
+
+function esc_attr($text) {
+    return htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8');
+}
+
 function untrailingslashit($str) {
     return rtrim((string) $str, '/\\');
 }
