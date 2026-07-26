@@ -1,0 +1,19 @@
+<svg width="20" height="20" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    WordPress admin menu icon.
+
+    Deliberately different from logo.svg. WordPress recolours menu icons by applying CSS
+    filters to a single-colour glyph, so a gradient tile would be flattened into a solid
+    block and the knocked-out G would disappear. This version drops the tile entirely and
+    draws the G as a filled glyph in plain black, which is what WordPress expects to
+    recolour (it turns grey when idle and white when the menu item is active).
+
+    The stroke is heavier than the tiled version (72 vs 58) because a glyph on the page
+    background has no surrounding mass to hold its weight at 20px, where WordPress renders
+    it.
+  -->
+  <g stroke="#000000" stroke-width="72" fill="none">
+    <path d="M370 150 A150 150 0 1 0 406 256" stroke-linecap="round"/>
+    <path d="M412 256 L292 256" stroke-linecap="butt"/>
+  </g>
+</svg>

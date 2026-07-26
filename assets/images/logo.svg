@@ -1,20 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48">
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Guardify">
+  <!--
+    Guardify mark. Identical geometry to the portal's copy so the plugin and the website
+    are visibly the same product.
+
+    Drawn as two strokes: the arc keeps round terminals, the bar's inner terminal is
+    squared off. A uniformly rounded glyph reads as a default; the flat cut is the one
+    detail that makes it look drawn.
+
+    The previous file used <text font-family="Arial">, so the letter rendered differently
+    on every machine and vanished when the SVG was rasterised on a host without Arial.
+    Everything here is geometry.
+  -->
   <defs>
-    <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4F82F7"/>
-      <stop offset="100%" stop-color="#1E46BE"/>
+    <linearGradient id="gf-tile" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F766E"/>
+      <stop offset="0.55" stop-color="#0B5F5A"/>
+      <stop offset="1" stop-color="#083F42"/>
     </linearGradient>
   </defs>
-  <!-- Shield icon -->
-  <path d="M24 4L8 10v12c0 10.8 7.2 20 16 23 8.8-3 16-12.2 16-23V10L24 4z" fill="url(#sg)"/>
-  <text x="24" y="32"
-    font-family="Arial,Helvetica,sans-serif"
-    font-weight="700" font-size="20"
-    fill="white" text-anchor="middle">G</text>
-  <!-- Wordmark -->
-  <text x="54" y="30"
-    font-family="Inter,Arial,Helvetica,sans-serif"
-    font-size="18" fill="#111827">
-    <tspan font-weight="700">Guardify</tspan><tspan font-weight="500" fill="#2D62D8"> Pro</tspan>
-  </text>
+
+  <rect width="512" height="512" rx="118" fill="url(#gf-tile)"/>
+
+  <g stroke="#FFFFFF" stroke-width="58" fill="none">
+    <path d="M358 164 A138 138 0 1 0 394 256" stroke-linecap="round"/>
+    <path d="M400 256 L302 256" stroke-linecap="butt"/>
+  </g>
 </svg>
