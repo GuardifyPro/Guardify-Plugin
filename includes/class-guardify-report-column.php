@@ -256,6 +256,15 @@ class Guardify_Report_Column {
                 . '</div>';
         }
 
+        // A courier that did not answer means this card is built on less history than the
+        // customer actually has, so the score reads worse than the truth. Saying nothing
+        // would have the merchant refuse someone over an outage on our side.
+        if (!empty($summary['partial'])) {
+            $html .= '<div class="gf-rc-partial" title="'
+                . esc_attr__('একটি কুরিয়ার সাড়া দেয়নি — কিছু পার্সেল এই হিসাবে নেই', 'guardify-pro')
+                . '">অসম্পূর্ণ তথ্য</div>';
+        }
+
         $html .= '<div class="gf-rc-stats">';
         $html .= '<span>মোট ' . esc_html(Guardify_Format::count($total)) . '</span>';
         $html .= '<span class="gf-rc-divider">·</span>';
@@ -469,6 +478,15 @@ JS;
 .gf-rc-tone-unknown .gf-rc-bar-fill { background: #cbd5e1; }
 
 .gf-rc-conf { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+
+/* Amber, not red. A missing courier is a gap in what we know, not a finding about the
+   customer, and colouring it like a warning about them would be a lie. */
+.gf-rc-partial {
+    font-size: 10px; font-weight: 600; color: #92400e;
+    background: #fffbeb; border: 1px solid #fde68a;
+    border-radius: 5px; padding: 2px 6px; margin-bottom: 5px;
+    display: inline-block;
+}
 
 /* Fraud reports: their own line, and the only red that appears on an otherwise green
    card, because a courier complaint is a different fact from a failed delivery. */

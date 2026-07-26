@@ -171,6 +171,15 @@ $sparse = $col->t_render(gf_good_summary([
 ]));
 gf_assert(strpos($sparse, 'Pathao') === false, 'a courier with no parcels is left off the card');
 
+// ─── A missing courier is disclosed, not hidden ──────────────────────────────
+
+// When a courier is down its parcels simply do not appear, so the customer looks newer and
+// less proven than they are — and the score reads worse than the truth. Saying nothing has
+// the merchant refuse someone over an outage on our side.
+$partial = $col->t_render(gf_good_summary(['partial' => true]));
+gf_assert(strpos($partial, 'অসম্পূর্ণ তথ্য') !== false, 'a partial lookup is disclosed on the card');
+gf_assert(strpos($html, 'অসম্পূর্ণ তথ্য') === false, 'a complete lookup carries no such warning');
+
 // ─── Malformed input does not break the screen ───────────────────────────────
 
 // The engine and the plugin update independently. A field that arrives missing, null, or
