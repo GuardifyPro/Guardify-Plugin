@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'claude/**']
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # The plugin blocks orders at checkout. A regression in that path refuses every order
+  # on every installed site at once, so the units guarding it have to run on every push.
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      # 7.4 is the floor declared in the plugin header, and 8.4 is what current hosts
+      # ship. Testing only one end means a syntax feature or a deprecation breaks sites
+      # at the other end without CI noticing.
+      matrix:
+        php: ['7.4', '8.4']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          # openssl and hash back Guardify_Crypto and Guardify_Signer; mbstring is
+          # needed because every user-facing string in this plugin is Bengali.
+          extensions: openssl, mbstring
+          coverage: none
+
+      - name: Lint every PHP file
+        run: |
+          set -e
+          status=0
+          # plugin-update-checker is a vendored dependency and targets its own PHP range;
+          # linting it here would fail on code we do not control or ship changes to.
+          while IFS= read -r file; do
+            if ! php -l "$file" > /dev/null 2>&1; then
+              echo "Syntax error in $file"
+              php -l "$file" || true
+              status=1
+            fi
+          done < <(find . -name '*.php' -not -path './plugin-update-checker/*' -not -path './.git/*')
+          exit $status
+
+      - name: Run unit tests
+        run: |
+          set -e
+          for suite in tests/test-*.php; do
+            echo "── $suite"
+            php "$suite"
+          done
+
+  # Catches the mistakes that only show up after a merchant installs the zip: a class
+  # referenced but never required, or a text domain that does not match the header.
+  consistency:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Every includes/ class is required by the bootstrap
+        run: |
+          set -e
+          status=0
+          for file in includes/*.php; do
+            name="$(basename "$file")"
+            if ! grep -q "includes/$name" guardify-pro.php; then
+              echo "$file exists but is never required in guardify-pro.php"
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Plugin version matches the GUARDIFY_VERSION constant
+        run: |
+          set -e
+          header="$(grep -m1 '^ \* Version:' guardify-pro.php | sed 's/.*Version: *//' | tr -d '[:space:]')"
+          constant="$(grep -m1 "define('GUARDIFY_VERSION'" guardify-pro.php | sed "s/.*'\\(.*\\)'.*/\\1/")"
+          echo "header=$header constant=$constant"
+          if [ "$header" != "$constant" ]; then
+            echo "Plugin header version ($header) does not match GUARDIFY_VERSION ($constant)."
+            echo "These drive the update checker and the admin display separately; a mismatch"
+            echo "means sites either never see an update or report the wrong version."
+            exit 1
+          fi
+
+      - name: readme.txt stable tag matches the plugin version
+        run: |
+          set -e
+          version="$(grep -m1 "define('GUARDIFY_VERSION'" guardify-pro.php | sed "s/.*'\\(.*\\)'.*/\\1/")"
+          stable="$(grep -m1 '^Stable tag:' readme.txt | sed 's/.*Stable tag: *//' | tr -d '[:space:]')"
+          if [ "$version" != "$stable" ]; then
+            echo "readme.txt Stable tag ($stable) does not match GUARDIFY_VERSION ($version)."
+            exit 1
+          fi

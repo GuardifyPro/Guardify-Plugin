@@ -1,13 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+<svg width="64" height="64" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!--
+    Small-size variant: tighter corner radius and a heavier stroke, because at 16px a
+    118px radius reads as a plain circle and a 58px stroke thins out. Optical correction
+    at this size cannot come from uniform scaling, so the geometry is adjusted instead of
+    the logo simply being reused smaller.
+  -->
   <defs>
-    <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#4F82F7"/>
-      <stop offset="100%" stop-color="#1E46BE"/>
+    <linearGradient id="gf-fav" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#08454A"/>
     </linearGradient>
   </defs>
-  <path d="M24 4L8 10v12c0 10.8 7.2 20 16 23 8.8-3 16-12.2 16-23V10L24 4z" fill="url(#sg)"/>
-  <text x="24" y="32"
-    font-family="Arial,Helvetica,sans-serif"
-    font-weight="700" font-size="20"
-    fill="white" text-anchor="middle">G</text>
+
+  <rect width="512" height="512" rx="96" fill="url(#gf-fav)"/>
+
+  <path d="M356 158 A142 142 0 1 0 398 256 L296 256"
+        stroke="#FFFFFF" stroke-width="68" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

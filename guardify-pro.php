@@ -23,6 +23,8 @@ define('GUARDIFY_URL', plugin_dir_url(__FILE__));
 define('GUARDIFY_ENGINE_URL', 'https://api.guardify.pro');
 
 // Autoload includes
+require_once GUARDIFY_PATH . 'includes/class-guardify-crypto.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-signer.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-phone-util.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-activator.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-api.php';
@@ -143,14 +145,50 @@ final class Guardify_Pro {
         add_action('rest_api_init', [$this, 'register_rest_routes']);
     }
 
+    /**
+     * The admin menu icon, as a base64 data URI.
+     *
+     * WordPress recolours menu icons with CSS filters, which only works on a
+     * single-colour glyph — a gradient tile gets flattened to a solid block and the
+     * knocked-out G disappears. menu-icon.svg is the monochrome variant drawn for exactly
+     * this, with a heavier stroke since a glyph on the page background has no surrounding
+     * mass to hold its weight at the 20px WordPress renders it at.
+     *
+     * Read once and cached in a transient: this runs on every admin page load, and
+     * hitting the filesystem each time for a 400-byte file is pure waste.
+     *
+     * @return string Data URI, or a Dashicon name if the file cannot be read.
+     */
+    private function menu_icon() {
+        $cached = get_transient('guardify_menu_icon');
+        if (is_string($cached) && $cached !== '') {
+            return $cached;
+        }
+
+        $path = GUARDIFY_PATH . 'assets/images/menu-icon.svg';
+        if (!is_readable($path)) {
+            return 'dashicons-shield';
+        }
+
+        $svg = file_get_contents($path);
+        if ($svg === false) {
+            return 'dashicons-shield';
+        }
+
+        $icon = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        set_transient('guardify_menu_icon', $icon, WEEK_IN_SECONDS);
+
+        return $icon;
+    }
+
     public function register_menu() {
         add_menu_page(
-            'Guardify Pro',
-            'Guardify Pro',
+            'Guardify',
+            'Guardify',
             'manage_woocommerce',
             'guardify-pro',
             [$this, 'render_settings_page'],
-            'dashicons-shield',
+            $this->menu_icon(),
             56
         );
 
