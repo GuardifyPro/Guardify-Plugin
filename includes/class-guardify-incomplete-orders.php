@@ -137,9 +137,18 @@ class Guardify_Incomplete_Orders {
         $placeholders = implode(',', array_fill(0, count($variations), '%s'));
         $cutoff       = gmdate('Y-m-d H:i:s', strtotime('-' . $minutes . ' minutes', current_time('timestamp')));
 
-        // Check WC orders (HPOS compatible via wc_orders table)
+        // Check WC orders (HPOS compatible via wc_orders table).
+        //
+        // Whether HPOS is enabled does not change between requests, and this ran on every
+        // checkout AJAX call. Cached for a day: a site turning HPOS on is doing a
+        // migration, not something that needs to be noticed within the minute.
         $wc_table = $wpdb->prefix . 'wc_orders';
-        if ($wpdb->get_var("SHOW TABLES LIKE '{$wc_table}'") === $wc_table) {
+        $has_hpos = get_transient('guardify_has_hpos_table');
+        if ($has_hpos === false) {
+            $has_hpos = ($wpdb->get_var("SHOW TABLES LIKE '{$wc_table}'") === $wc_table) ? 'yes' : 'no';
+            set_transient('guardify_has_hpos_table', $has_hpos, DAY_IN_SECONDS);
+        }
+        if ($has_hpos === 'yes') {
             $count = (int) $wpdb->get_var($wpdb->prepare(
                 "SELECT COUNT(*) FROM {$wc_table}
                  WHERE billing_phone IN ({$placeholders})
@@ -228,6 +237,20 @@ class Guardify_Incomplete_Orders {
 
     /* --- Server-side Capture (checkout_update_order_review) --------- */
 
+    /**
+     * Capture a checkout in progress.
+     *
+     * This runs on `woocommerce_checkout_update_order_review`, which fires on every AJAX
+     * refresh of the checkout form — a country change, a postcode, a shipping method, a
+     * coupon, and in many themes every field blur. The original version did four to five
+     * queries on each of those, including a `SHOW TABLES`, a `COUNT(*)` across
+     * `wc_orders`, and a full row update carrying a JSON blob of the cart.
+     *
+     * That is a write storm on the merchant's busiest page, where slowness costs sales
+     * directly. So nothing happens unless the captured data has actually changed, and even
+     * then no more often than once every few seconds per shopper. A customer filling in a
+     * checkout now costs one write, not one per keystroke's worth of AJAX.
+     */
     public function capture_from_checkout_review($post_data) {
         global $wpdb;
         parse_str($post_data, $data);
@@ -239,20 +262,33 @@ class Guardify_Incomplete_Orders {
             return;
         }
 
+        $fields = [
+            'name'     => $this->sanitize_field($data, 'billing_first_name'),
+            'email'    => isset($data['billing_email']) ? sanitize_email($data['billing_email']) : '',
+            'address'  => $this->sanitize_field($data, 'billing_address_1'),
+            'city'     => $this->sanitize_field($data, 'billing_city'),
+            'state'    => $this->sanitize_field($data, 'billing_state'),
+            'country'  => $this->sanitize_field($data, 'billing_country'),
+            'postcode' => $this->sanitize_field($data, 'billing_postcode'),
+        ];
+
+        // The gate, before any query. collect_cart_data() walks the cart and
+        // is_in_cooldown() costs several queries of its own, so both sit behind it.
+        if (!$this->should_capture($phone, $fields)) {
+            return;
+        }
+
         if ($this->is_in_cooldown($phone)) {
             return;
         }
 
-        $cart = $this->collect_cart_data();
+        $cart      = $this->collect_cart_data();
         $cart_json = !empty($cart['items']) ? wp_json_encode($cart['items']) : '';
 
-        $name     = $this->sanitize_field($data, 'billing_first_name');
-        $email    = isset($data['billing_email']) ? sanitize_email($data['billing_email']) : '';
-        $address  = $this->sanitize_field($data, 'billing_address_1');
-        $city     = $this->sanitize_field($data, 'billing_city');
-        $state    = $this->sanitize_field($data, 'billing_state');
-        $country  = $this->sanitize_field($data, 'billing_country');
-        $postcode = $this->sanitize_field($data, 'billing_postcode');
+        $row = array_merge($fields, [
+            'cart_data'  => $cart_json,
+            'cart_total' => $cart['total'],
+        ]);
 
         $existing = (int) $wpdb->get_var($wpdb->prepare(
             "SELECT COUNT(*) FROM {$this->table_name} WHERE phone = %s AND status = 'pending'",
@@ -260,38 +296,63 @@ class Guardify_Incomplete_Orders {
         ));
 
         if (!$existing) {
-            $wpdb->insert($this->table_name, [
-                'name'       => $name,
+            $wpdb->insert($this->table_name, array_merge($row, [
                 'phone'      => $phone,
-                'email'      => $email,
-                'address'    => $address,
-                'city'       => $city,
-                'state'      => $state,
-                'country'    => $country,
-                'postcode'   => $postcode,
-                'cart_data'  => $cart_json,
-                'cart_total' => $cart['total'],
                 'created_at' => current_time('mysql'),
-            ]);
-        } elseif (!empty($cart_json)) {
-            $wpdb->update(
-                $this->table_name,
-                [
-                    'name'       => $name,
-                    'email'      => $email,
-                    'address'    => $address,
-                    'city'       => $city,
-                    'state'      => $state,
-                    'country'    => $country,
-                    'postcode'   => $postcode,
-                    'cart_data'  => $cart_json,
-                    'cart_total' => $cart['total'],
-                    'created_at' => current_time('mysql'),
-                ],
-                ['phone' => $phone, 'status' => 'pending']
-            );
+            ]));
+            return;
         }
+
+        if ($cart_json === '') {
+            return;
+        }
+
+        // created_at is deliberately not touched.
+        //
+        // It is the abandonment clock: the reminder schedule, the daily counts and the
+        // cleanup that deletes rows older than N days all read it. Refreshing it on every
+        // update meant a cart the customer kept fiddling with never aged — it was never
+        // eligible for a reminder and never cleaned up, and "today's new carts" counted
+        // last-touch rather than arrival.
+        $wpdb->update($this->table_name, $row, ['phone' => $phone, 'status' => 'pending']);
     }
+
+    /**
+     * Whether this capture is worth a database write.
+     *
+     * Two conditions, both held in the WooCommerce session rather than in the database,
+     * because the whole point is to answer without touching it: the captured values must
+     * have changed since the last write, and a minimum interval must have passed. The
+     * interval catches the case the fingerprint cannot — a shopper toggling one field back
+     * and forth, which changes the fingerprint every time.
+     */
+    private function should_capture($phone, array $fields) {
+        if (!function_exists('WC') || !WC()->session) {
+            // No session means no way to remember, so the old behaviour applies. This is
+            // the path a non-AJAX or headless checkout takes, and it is rare enough that a
+            // write per call is acceptable.
+            return true;
+        }
+
+        $fingerprint = md5($phone . '|' . implode('|', $fields));
+        $last        = WC()->session->get('guardify_incomplete_capture');
+
+        if (is_array($last)
+            && isset($last['fp'], $last['at'])
+            && $last['fp'] === $fingerprint
+        ) {
+            return false;
+        }
+
+        $interval = (int) apply_filters('guardify_incomplete_capture_interval', 10);
+        if (is_array($last) && isset($last['at']) && (time() - (int) $last['at']) < $interval) {
+            return false;
+        }
+
+        WC()->session->set('guardify_incomplete_capture', ['fp' => $fingerprint, 'at' => time()]);
+        return true;
+    }
+
 
     private function sanitize_field($data, $key) {
         $val = isset($data[$key]) ? $data[$key] : '';

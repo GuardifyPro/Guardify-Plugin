@@ -11,6 +11,9 @@ define('ABSPATH', __DIR__ . '/');
 define('GUARDIFY_VERSION', 'test');
 define('HOUR_IN_SECONDS', 3600);
 define('MINUTE_IN_SECONDS', 60);
+define('DAY_IN_SECONDS', 86400);
+define('ARRAY_A', 'ARRAY_A');
+define('ARRAY_N', 'ARRAY_N');
 
 // wp-config salts, so Guardify_Crypto can derive a key.
 define('AUTH_KEY', 'p8Zq2!vR7#tYw4^eL0nX6&mB1@sD3*fG5%hJ9(kA)cV-uI+oP=zN_rT');
@@ -75,8 +78,36 @@ function esc_html__($text, $domain = '') {
     return $text;
 }
 
+function esc_attr__($text, $domain = '') {
+    return $text;
+}
+
+// The real functions do rather more, but the property under test is the one that matters
+// for output built by string concatenation: markup in the data must not survive as markup.
+function esc_html($text) {
+    return htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8');
+}
+
+function esc_attr($text) {
+    return htmlspecialchars((string) $text, ENT_QUOTES, 'UTF-8');
+}
+
 function untrailingslashit($str) {
     return rtrim((string) $str, '/\\');
+}
+
+// Filters are pass-through here. The units under test use them to let a site override a
+// default, and every test asserts the default, so running the real hook system would only
+// add a dependency without adding a check.
+function apply_filters($hook, $value) {
+    return $value;
+}
+
+// mysqli is not loaded in the test image, so the real escaping cannot be used. This
+// mirrors what addslashes-based escaping produces for the cases the dump can hit, which
+// is enough to assert that a quote in the data does not end the SQL literal early.
+function esc_sql($data) {
+    return addslashes((string) $data);
 }
 
 // ─── Tiny assertion harness ──────────────────────────────────────────────────

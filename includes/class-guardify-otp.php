@@ -58,9 +58,31 @@ class Guardify_OTP {
             return; // Fail open
         }
 
+        // If OTP delivery is broken, verification is impossible and demanding it would refuse
+        // every order on the shop with no path forward for any customer — an SMS balance
+        // hitting zero or a gateway outage would take the whole shop down silently. Fail open
+        // and make the reason visible in the admin instead.
+        if (self::delivery_broken()) {
+            return;
+        }
+
+        // Scope: 'risky' asks for verification only when the risk assessment called for it,
+        // 'all' asks every customer. Scoping to risky is the default because every OTP costs
+        // an SMS and adds a step to a checkout that was otherwise going to succeed.
+        if (get_option('guardify_otp_scope', 'risky') === 'risky') {
+            $flag = WC()->session ? WC()->session->get('guardify_dp_flagged') : null;
+            $needs_otp = is_array($flag) && isset($flag['action']) && $flag['action'] === 'otp';
+            if (!$needs_otp) {
+                return;
+            }
+        }
+
         $verified = WC()->session->get($this->session_key, false);
         if (!$verified) {
-            wc_add_notice('অর্ডার নিশ্চিত করতে আপনার ফোন নম্বর ভেরিফাই করুন।', 'error');
+            wc_add_notice(
+                esc_html__('অর্ডার নিশ্চিত করতে আপনার ফোন নম্বর ভেরিফাই করুন।', 'guardify-pro'),
+                'error'
+            );
             return;
         }
 
@@ -127,11 +149,45 @@ class Guardify_OTP {
         if (!empty($result['success']) && $result['success'] === true) {
             // Only increment rate limit after successful send
             set_transient($throttle_key, $attempts + 1, 5 * MINUTE_IN_SECONDS);
-            wp_send_json_success(['message' => 'OTP পাঠানো হয়েছে।']);
+            self::record_delivery(true);
+            wp_send_json_success(['message' => esc_html__('OTP পাঠানো হয়েছে।', 'guardify-pro')]);
         }
 
-        $msg = isset($result['error']) ? $result['error'] : 'OTP পাঠানো যায়নি।';
+        self::record_delivery(false);
+
+        $msg = isset($result['error']) ? $result['error'] : esc_html__('OTP পাঠানো যায়নি।', 'guardify-pro');
         wp_send_json_error(['message' => $msg]);
+    }
+
+    /**
+     * Consecutive OTP send failures, and the threshold at which verification stops being
+     * demanded.
+     *
+     * Three is low on purpose. The failure modes here — an exhausted SMS balance, a gateway
+     * outage, a revoked key — do not resolve themselves between one customer and the next, so
+     * waiting longer only refuses more orders for no additional information.
+     */
+    const DELIVERY_FAILURE_KEY = 'guardify_otp_send_failures';
+    const DELIVERY_FAILURE_LIMIT = 3;
+
+    /**
+     * Note whether an OTP send succeeded, for the circuit breaker.
+     */
+    private static function record_delivery($ok) {
+        if ($ok) {
+            delete_transient(self::DELIVERY_FAILURE_KEY);
+            return;
+        }
+
+        $failures = (int) get_transient(self::DELIVERY_FAILURE_KEY);
+        set_transient(self::DELIVERY_FAILURE_KEY, $failures + 1, HOUR_IN_SECONDS);
+    }
+
+    /**
+     * Whether OTP delivery is currently failing badly enough to stop gating checkout.
+     */
+    public static function delivery_broken() {
+        return (int) get_transient(self::DELIVERY_FAILURE_KEY) >= self::DELIVERY_FAILURE_LIMIT;
     }
 
     /**

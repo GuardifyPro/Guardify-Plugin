@@ -80,6 +80,11 @@ jobs:
           done
           exit $status
 
+      - name: Translation catalogue is up to date
+        # A .pot committed once and never regenerated is worse than none: it looks
+        # authoritative while describing a version of the plugin that no longer exists.
+        run: php bin/make-pot.php --check
+
       - name: Plugin version matches the GUARDIFY_VERSION constant
         run: |
           set -e

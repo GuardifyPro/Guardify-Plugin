@@ -114,7 +114,7 @@ class Guardify_Delivery {
             }
             .gf-progress-fill {
                 height: 100%;
-                background: linear-gradient(90deg, #7c3aed, #5b0afa);
+                background: linear-gradient(90deg, #0F766E, #0B5F5A);
                 border-radius: 11px;
                 transition: width 0.5s ease;
                 position: relative;
@@ -134,13 +134,13 @@ class Guardify_Delivery {
             .gf-fraud-report {
                 margin-top: 15px;
                 padding: 15px;
-                background: #f6efff;
+                background: #f0fbf9;
                 border-radius: 8px;
-                border: 1px solid #e9d5ff;
+                border: 1px solid #c8e9e4;
             }
             .gf-fraud-report h4 {
                 margin: 0 0 10px;
-                color: #5b21b6;
+                color: #0B5F5A;
                 font-size: 14px;
                 font-weight: 700;
             }

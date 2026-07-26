@@ -26,6 +26,7 @@ define('GUARDIFY_ENGINE_URL', 'https://api.guardify.pro');
 require_once GUARDIFY_PATH . 'includes/class-guardify-crypto.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-signer.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-phone-util.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-format.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-activator.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-api.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-delivery.php';
@@ -46,6 +47,9 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-sms-logs.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-phone-sync.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-quick-view.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-backup.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-restore.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-domain.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-onboarding.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
 require_once GUARDIFY_PATH . 'plugin-update-checker/plugin-update-checker.php';
@@ -93,6 +97,31 @@ final class Guardify_Pro {
         register_deactivation_hook(GUARDIFY_FILE, ['Guardify_Activator', 'deactivate']);
 
         add_action('plugins_loaded', [$this, 'init']);
+
+        // Translations load on `init`, not earlier. The plugin header has declared a text
+        // domain and a Domain Path since the first release but nothing ever loaded them,
+        // so every string already wrapped in __() was untranslatable regardless of what a
+        // site dropped into languages/. Loading before `init` is what WordPress 6.7 began
+        // warning about, so this is deliberately not on plugins_loaded with the rest.
+        add_action('init', [$this, 'load_textdomain']);
+    }
+
+    /**
+     * Make the plugin's strings translatable.
+     *
+     * The source strings are Bengali, which is the right default for the market this is
+     * built for — a merchant in Dhaka should not be reading English, and a translation
+     * layer that has to be installed before the product reads correctly is a product built
+     * for somewhere else. This exists so those strings can be corrected without editing
+     * PHP, and so an agency running an English-speaking back office can supply an en_US
+     * catalogue rather than being locked out.
+     */
+    public function load_textdomain() {
+        load_plugin_textdomain(
+            'guardify-pro',
+            false,
+            dirname(plugin_basename(GUARDIFY_FILE)) . '/languages'
+        );
     }
 
     public function init() {
@@ -122,6 +151,9 @@ final class Guardify_Pro {
         Guardify_Phone_Sync::get_instance();
         Guardify_Quick_View::get_instance();
         Guardify_Backup::get_instance();
+        Guardify_Restore::get_instance();
+        Guardify_Domain::get_instance();
+        Guardify_Onboarding::get_instance();
 
         // Admin menu
         add_action('admin_menu', [$this, 'register_menu']);
@@ -137,9 +169,10 @@ final class Guardify_Pro {
         add_action('wp_ajax_guardify_save_settings', [$this, 'ajax_save_settings']);
         add_action('wp_ajax_guardify_support_ticket', [$this, 'ajax_support_ticket']);
         add_action('wp_ajax_guardify_check_update', [$this, 'ajax_check_update']);
-        add_action('wp_ajax_guardify_export_blocked', [$this, 'ajax_export_blocked']);
-        add_action('wp_ajax_guardify_export_rules', [$this, 'ajax_export_rules']);
-        add_action('wp_ajax_guardify_import_blocked', [$this, 'ajax_import_blocked']);
+
+        // Operational warnings the merchant has to see, since these are states where the
+        // plugin has stopped enforcing something they are paying for.
+        add_action('admin_notices', [$this, 'render_degraded_notices']);
 
         // REST API
         add_action('rest_api_init', [$this, 'register_rest_routes']);
@@ -179,6 +212,40 @@ final class Guardify_Pro {
         set_transient('guardify_menu_icon', $icon, WEEK_IN_SECONDS);
 
         return $icon;
+    }
+
+    /**
+     * Warn when a feature has silently stopped enforcing.
+     *
+     * These are the states that cost a merchant money without any visible symptom. OTP
+     * delivery failing means checkout verification has been switched off to avoid refusing
+     * every order — correct behaviour, but invisible unless it is said out loud, and a
+     * merchant who does not know will not top up their SMS balance.
+     */
+    public function render_degraded_notices() {
+        if (!current_user_can('manage_woocommerce')) {
+            return;
+        }
+
+        if (get_option('guardify_otp_enabled', 'no') === 'yes'
+            && class_exists('Guardify_OTP')
+            && Guardify_OTP::delivery_broken()) {
+            printf(
+                '<div class="notice notice-warning"><p><strong>%s</strong> %s</p></div>',
+                esc_html__('Guardify:', 'guardify-pro'),
+                esc_html__('OTP পাঠানো যাচ্ছে না, তাই চেকআউটে ভেরিফিকেশন সাময়িকভাবে বন্ধ রাখা হয়েছে — নইলে কোনো অর্ডারই সম্পন্ন হতো না। SMS ব্যালেন্স ও সংযোগ পরীক্ষা করুন।', 'guardify-pro')
+            );
+        }
+
+        $err = get_transient('guardify_last_api_error');
+        if (is_array($err) && !empty($err['message'])) {
+            printf(
+                '<div class="notice notice-warning"><p><strong>%s</strong> %s <code>%s</code></p></div>',
+                esc_html__('Guardify:', 'guardify-pro'),
+                esc_html__('ইঞ্জিনের সাথে সর্বশেষ সংযোগ ব্যর্থ হয়েছে।', 'guardify-pro'),
+                esc_html($err['message'])
+            );
+        }
     }
 
     public function register_menu() {
@@ -245,6 +312,21 @@ final class Guardify_Pro {
             'guardify-backup',
             [$this, 'render_backup_page']
         );
+
+        // A page that renders every component in the design system, so a change
+        // to admin.css can be checked by eye instead of by clicking through five
+        // merchant-facing screens hoping to spot what broke. Debug-only: it is a
+        // developer tool, and a merchant finding it would only be confused.
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            add_submenu_page(
+                'guardify-pro',
+                'ডিজাইন সিস্টেম',
+                'ডিজাইন সিস্টেম',
+                'manage_woocommerce',
+                'guardify-design-system',
+                [$this, 'render_design_system_page']
+            );
+        }
     }
 
     public function render_settings_page() {
@@ -282,8 +364,15 @@ final class Guardify_Pro {
         include GUARDIFY_PATH . 'templates/backup-page.php';
     }
 
+    public function render_design_system_page() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(esc_html__('Unauthorized', 'guardify-pro'));
+        }
+        include GUARDIFY_PATH . 'templates/design-system-page.php';
+    }
+
     public function enqueue_admin_assets($hook) {
-        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs', 'guardify-backup'];
+        $guardify_pages = ['guardify-pro', 'guardify-setup', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs', 'guardify-backup', 'guardify-design-system'];
         $is_guardify = false;
         foreach ($guardify_pages as $page) {
             if (strpos($hook, $page) !== false) {
@@ -668,89 +757,6 @@ final class Guardify_Pro {
     }
 
     /**
-     * AJAX: Export blocked users as CSV.
-     */
-    public function ajax_export_blocked() {
-        check_ajax_referer('guardify_nonce');
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Unauthorized');
-        }
-
-        global $wpdb;
-        $table = $wpdb->prefix . 'guardify_fraud_tracking';
-        $rows = $wpdb->get_results("SELECT phone, ip_address, block_reason, last_seen FROM {$table} WHERE is_blocked = 1 ORDER BY last_seen DESC");
-
-        $csv = "ফোন,IP,কারণ,সর্বশেষ\n";
-        foreach ($rows as $r) {
-            $csv .= sprintf(
-                "%s,%s,%s,%s\n",
-                $r->phone,
-                $r->ip_address ?: '',
-                str_replace(',', ';', $r->block_reason ?: ''),
-                $r->last_seen ?: ''
-            );
-        }
-
-        wp_send_json_success(['csv' => $csv]);
-    }
-
-    /**
-     * AJAX: Export block rules as CSV.
-     */
-    public function ajax_export_rules() {
-        check_ajax_referer('guardify_nonce');
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Unauthorized');
-        }
-
-        global $wpdb;
-        $table = $wpdb->prefix . 'guardify_blocks';
-        $rows = $wpdb->get_results("SELECT block_type, block_value, reason, created_at FROM {$table} WHERE is_active = 1 ORDER BY created_at DESC");
-
-        $csv = "টাইপ,ভ্যালু,কারণ,তৈরির সময়\n";
-        foreach ($rows as $r) {
-            $csv .= sprintf(
-                "%s,%s,%s,%s\n",
-                $r->block_type,
-                $r->block_value,
-                str_replace(',', ';', $r->reason ?: ''),
-                $r->created_at ?: ''
-            );
-        }
-
-        wp_send_json_success(['csv' => $csv]);
-    }
-
-    /**
-     * AJAX: Import blocked phones from JSON array.
-     */
-    public function ajax_import_blocked() {
-        check_ajax_referer('guardify_nonce');
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Unauthorized');
-        }
-
-        $raw = isset($_POST['phones']) ? wp_unslash($_POST['phones']) : '';
-        $phones = json_decode($raw, true);
-        if (!is_array($phones) || empty($phones)) {
-            wp_send_json_error('কোনো ফোন নম্বর পাওয়া যায়নি');
-        }
-
-        $fraud = Guardify_Fraud_Detection::get_instance();
-        $count = 0;
-        foreach ($phones as $phone) {
-            $phone = preg_replace('/[\s\-]/', '', sanitize_text_field($phone));
-            $phone = preg_replace('/^\+?88/', '', $phone);
-            if (!empty($phone) && preg_match('/^01[3-9]\d{8}$/', $phone)) {
-                $fraud->block_phone($phone, 'ইম্পোর্ট থেকে ব্লক');
-                $count++;
-            }
-        }
-
-        wp_send_json_success(['message' => $count . ' টি ফোন নম্বর ইম্পোর্ট ও ব্লক করা হয়েছে।']);
-    }
-
-    /**
      * AJAX: Save plugin feature settings.
      */
     public function ajax_save_settings() {
@@ -788,9 +794,15 @@ final class Guardify_Pro {
             'guardify_fraud_auto_block_dp'             => ['type' => 'float', 'min' => 0, 'max' => 100, 'default' => 0],
             'guardify_fraud_auto_block_order_limit'    => ['type' => 'int', 'min' => 1, 'max' => 50, 'default' => 3],
             'guardify_fraud_auto_block_time_limit'     => ['type' => 'int', 'min' => 1, 'max' => 720, 'default' => 24],
-            'guardify_incomplete_retention'             => ['type' => 'int', 'min' => 1, 'max' => 365, 'default' => 30],
+            // min 0, because 0 means "never delete" — cleanup() already treats it that way and
+            // the field offers it. Clamping to 1 made the documented option unreachable: a
+            // merchant who entered 0 silently got one-day retention, which is the opposite.
+            'guardify_incomplete_retention'             => ['type' => 'int', 'min' => 0, 'max' => 365, 'default' => 30],
             'guardify_incomplete_cooldown_enabled'      => ['type' => 'yesno', 'default' => 'yes'],
-            'guardify_incomplete_cooldown'              => ['type' => 'int', 'min' => 1, 'max' => 1440, 'default' => 30],
+            // max matches the field's 30 days. Clamping to 1440 meant a merchant asking for a
+            // 30-day reminder cooldown silently got 24 hours, and their customers were nagged
+            // about the same abandoned cart 29 more times than they asked for.
+            'guardify_incomplete_cooldown'              => ['type' => 'int', 'min' => 5, 'max' => 43200, 'default' => 30],
             'guardify_default_courier'                 => ['type' => 'enum', 'values' => ['steadfast', 'pathao'], 'default' => 'steadfast'],
         ];
 

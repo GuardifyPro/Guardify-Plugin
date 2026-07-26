@@ -19,11 +19,19 @@ fi
 
 echo "Building $PLUGIN_SLUG v$VERSION ..."
 
-# Copy plugin files (excluding dev/git files)
+# Copy plugin files, leaving development scaffolding behind.
+#
+# tests/, bin/ and .github/ were shipping to every merchant's server. They are dead weight
+# on a shared host, and tests/bootstrap.php in particular defines stand-ins for WordPress
+# functions — harmless where it sits, but not something to place inside a live install.
+# languages/ stays: it is what makes the strings translatable at runtime.
 rsync -a \
   --exclude='.git' \
   --exclude='.gitignore' \
+  --exclude='.github' \
   --exclude='build-zip.sh' \
+  --exclude='tests' \
+  --exclude='bin' \
   --exclude='*.zip' \
   --exclude='.DS_Store' \
   --exclude='node_modules' \
