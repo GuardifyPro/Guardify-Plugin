@@ -95,6 +95,31 @@ final class Guardify_Pro {
         register_deactivation_hook(GUARDIFY_FILE, ['Guardify_Activator', 'deactivate']);
 
         add_action('plugins_loaded', [$this, 'init']);
+
+        // Translations load on `init`, not earlier. The plugin header has declared a text
+        // domain and a Domain Path since the first release but nothing ever loaded them,
+        // so every string already wrapped in __() was untranslatable regardless of what a
+        // site dropped into languages/. Loading before `init` is what WordPress 6.7 began
+        // warning about, so this is deliberately not on plugins_loaded with the rest.
+        add_action('init', [$this, 'load_textdomain']);
+    }
+
+    /**
+     * Make the plugin's strings translatable.
+     *
+     * The source strings are Bengali, which is the right default for the market this is
+     * built for — a merchant in Dhaka should not be reading English, and a translation
+     * layer that has to be installed before the product reads correctly is a product built
+     * for somewhere else. This exists so those strings can be corrected without editing
+     * PHP, and so an agency running an English-speaking back office can supply an en_US
+     * catalogue rather than being locked out.
+     */
+    public function load_textdomain() {
+        load_plugin_textdomain(
+            'guardify-pro',
+            false,
+            dirname(plugin_basename(GUARDIFY_FILE)) . '/languages'
+        );
     }
 
     public function init() {

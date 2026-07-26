@@ -1,0 +1,124 @@
+# Copyright (C) Tansiq Labs
+# This file is distributed under the same licence as the Guardify Pro plugin.
+#
+# The source strings are Bengali. That is deliberate: this plugin is built for the
+# Bangladeshi market, and a merchant in Dhaka should not have to install a translation
+# before the product reads correctly. A catalogue here is for correcting that Bengali
+# without editing PHP, or for supplying English to an agency back office — not for making
+# Bengali an afterthought.
+#
+# Regenerate with: php bin/make-pot.php
+msgid ""
+msgstr ""
+"Project-Id-Version: Guardify Pro\n"
+"Report-Msgid-Bugs-To: https://github.com/GuardifyPro/Guardify-Plugin/issues\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language-Team: Bengali (Bangladesh)\n"
+"X-Domain: guardify-pro\n"
+
+#: guardify-pro.php:231 guardify-pro.php:240
+msgid "Guardify:"
+msgstr ""
+
+#: guardify-pro.php:232
+msgid "OTP পাঠানো যাচ্ছে না, তাই চেকআউটে ভেরিফিকেশন সাময়িকভাবে বন্ধ রাখা হয়েছে — নইলে কোনো অর্ডারই সম্পন্ন হতো না। SMS ব্যালেন্স ও সংযোগ পরীক্ষা করুন।"
+msgstr ""
+
+#: guardify-pro.php:241
+msgid "ইঞ্জিনের সাথে সর্বশেষ সংযোগ ব্যর্থ হয়েছে।"
+msgstr ""
+
+#: guardify-pro.php:330 guardify-pro.php:337 guardify-pro.php:344 guardify-pro.php:351 guardify-pro.php:358 guardify-pro.php:365 includes/class-guardify-onboarding.php:98 includes/class-guardify-search.php:27 templates/backup-page.php:12 templates/design-system-page.php:17 templates/fraud-detection-page.php:13 templates/incomplete-orders-page.php:13 templates/onboarding-page.php:12 templates/settings-page.php:16 templates/sms-logs-page.php:13
+msgid "Unauthorized"
+msgstr ""
+
+#: includes/class-guardify-api.php:242
+msgid "Not connected"
+msgstr ""
+
+#: includes/class-guardify-api.php:249
+msgid "No API key configured"
+msgstr ""
+
+#: includes/class-guardify-api.php:277
+msgid "Plugin not connected"
+msgstr ""
+
+#: includes/class-guardify-api.php:301
+msgid "Could not encode request payload"
+msgstr ""
+
+#: includes/class-guardify-api.php:382
+msgid "Request failed (HTTP %d)"
+msgstr ""
+
+#: includes/class-guardify-backup.php:708
+msgid "প্রিসাইন URL পাওয়া যায়নি।"
+msgstr ""
+
+#: includes/class-guardify-backup.php:752
+msgid "ব্যাকআপ নিশ্চিতকরণ ব্যর্থ।"
+msgstr ""
+
+#: includes/class-guardify-onboarding.php:140
+msgid "Guardify চালু হয়েছে।"
+msgstr ""
+
+#: includes/class-guardify-onboarding.php:141
+msgid "৩ মিনিটের সেটআপ শেষ করলে আপনার দোকান সুরক্ষিত হবে।"
+msgstr ""
+
+#: includes/class-guardify-onboarding.php:143
+msgid "সেটআপ শুরু করুন"
+msgstr ""
+
+#: includes/class-guardify-otp.php:83
+msgid "অর্ডার নিশ্চিত করতে আপনার ফোন নম্বর ভেরিফাই করুন।"
+msgstr ""
+
+#: includes/class-guardify-otp.php:153
+msgid "OTP পাঠানো হয়েছে।"
+msgstr ""
+
+#: includes/class-guardify-otp.php:158
+msgid "OTP পাঠানো যায়নি।"
+msgstr ""
+
+#: includes/class-guardify-report-column.php:261
+msgid "কুরিয়ার এই নম্বরের বিরুদ্ধে অভিযোগ জমা দিয়েছে"
+msgstr ""
+
+#: includes/class-guardify-report-column.php:272
+msgid "একটি কুরিয়ার সাড়া দেয়নি — কিছু পার্সেল এই হিসাবে নেই"
+msgstr ""
+
+#: includes/class-guardify-smart-filter.php:127
+msgid "এই নম্বরের ডেলিভারি রেকর্ড খুব দুর্বল — অর্ডার প্লেস করা যাচ্ছে না।"
+msgstr ""
+
+#: includes/class-guardify-smart-filter.php:137
+msgid "এই অর্ডারের জন্য %d%% অ্যাডভান্স পেমেন্ট প্রয়োজন। অনুগ্রহ করে আমাদের সাথে যোগাযোগ করুন।"
+msgstr ""
+
+#: includes/class-guardify-smart-filter.php:153
+msgid "অর্ডার সম্পন্ন করতে ফোন নম্বর ভেরিফিকেশন প্রয়োজন।"
+msgstr ""
+
+#: includes/class-guardify-vpn-block.php:90
+msgid "VPN/প্রক্সি সনাক্ত হয়েছে। নিরাপত্তার কারণে অর্ডার প্লেস করা যাচ্ছে না। অনুগ্রহ করে VPN বন্ধ করে আবার চেষ্টা করুন।"
+msgstr ""
+
+#: includes/class-guardify-vpn-block.php:119
+msgid "Guardify: এই অর্ডারটি VPN/প্রক্সি IP থেকে এসেছে বলে সনাক্ত হয়েছে। (মোবাইল অপারেটরের NAT-ও কখনো এভাবে ধরা পড়ে — যাচাই করে নিন।)"
+msgstr ""
+
+#: templates/settings-page.php:144
+msgid "সংযুক্ত"
+msgstr ""
+
+#: templates/settings-page.php:144
+msgid "সংযুক্ত নয়"
+msgstr ""
+
