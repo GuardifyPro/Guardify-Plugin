@@ -30,6 +30,17 @@ class Guardify_Activator {
         // Clear backup crons
         wp_clear_scheduled_hook('guardify_scheduled_backup');
         wp_clear_scheduled_hook('guardify_check_pending_backup');
+        wp_clear_scheduled_hook('guardify_backup_worker');
+
+        // A dump interrupted by deactivation leaves a temp file and a job row behind. The
+        // file is the larger problem: it is a full copy of the database sitting in the
+        // uploads directory, and nothing will ever come back to remove it.
+        $job = get_option('guardify_backup_job', null);
+        if (is_array($job) && !empty($job['path']) && file_exists($job['path'])) {
+            wp_delete_file($job['path']);
+        }
+        delete_option('guardify_backup_job');
+        delete_transient('guardify_backup_slice_lock');
 
         flush_rewrite_rules();
     }

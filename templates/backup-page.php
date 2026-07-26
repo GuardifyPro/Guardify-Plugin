@@ -217,26 +217,76 @@ jQuery(function ($) {
 
     /* ── Manual backup ────────────────────────────────────────────────── */
 
+    /*
+     * The dump runs in the background in bounded slices, so this button only queues it.
+     * Holding an admin-ajax request open for the length of a database dump would hit the
+     * PHP timeout on any large shop and report a failure for a backup that was still
+     * running perfectly well — so progress is polled instead.
+     */
+    var pollTimer = null;
+
+    function pollBackup($btn, $status) {
+        $.post(ajaxUrl, { action: 'guardify_backup_status', _ajax_nonce: nonce }, function (res) {
+            if (!res.success) { return; }
+
+            if (res.data.running) {
+                var pct = res.data.percent || 0;
+                $status.removeClass('gf-success gf-error')
+                    .text('ব্যাকআপ চলছে… ' + pct + '%');
+                pollTimer = setTimeout(function () { pollBackup($btn, $status); }, 3000);
+                return;
+            }
+
+            GF.setLoading($btn, false);
+
+            var last = res.data.last;
+            if (last && last.ok) {
+                $status.addClass('gf-success').text(last.message || 'ব্যাকআপ সম্পন্ন হয়েছে।');
+                GF.toast(last.message || 'ব্যাকআপ সম্পন্ন হয়েছে।', { type: 'success' });
+                loadBackups();
+            } else if (last) {
+                $status.addClass('gf-error').text(last.message || 'ব্যাকআপ ব্যর্থ হয়েছে।');
+            } else {
+                $status.text('');
+            }
+        }).fail(function () {
+            GF.setLoading($btn, false);
+            $status.addClass('gf-error').text('সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+        });
+    }
+
     $('#gf-backup-now').on('click', function () {
         var $btn = $(this);
         var $status = $('#gf-backup-status').removeClass('gf-success gf-error').text('');
 
+        if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
         GF.setLoading($btn, true);
 
         $.post(ajaxUrl, { action: 'guardify_backup_now', _ajax_nonce: nonce }, function (res) {
             if (res.success) {
-                $status.addClass('gf-success').text(res.data.message || 'ব্যাকআপ সম্পন্ন হয়েছে।');
-                GF.toast(res.data.message || 'ব্যাকআপ সম্পন্ন হয়েছে।', { type: 'success' });
-                loadBackups();
+                $status.text(res.data.message || 'ব্যাকআপ শুরু হয়েছে।');
+                pollTimer = setTimeout(function () { pollBackup($btn, $status); }, 2000);
             } else {
+                GF.setLoading($btn, false);
                 $status.addClass('gf-error').text(res.data || 'ব্যাকআপ ব্যর্থ হয়েছে।');
             }
         }).fail(function () {
-            $status.addClass('gf-error').text('সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
-        }).always(function () {
             GF.setLoading($btn, false);
+            $status.addClass('gf-error').text('সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
         });
     });
+
+    // A dump queued in an earlier page view is still running; pick its progress back up
+    // rather than showing an idle screen while the site is mid-backup.
+    (function resumeIfRunning() {
+        $.post(ajaxUrl, { action: 'guardify_backup_status', _ajax_nonce: nonce }, function (res) {
+            if (res.success && res.data.running) {
+                var $btn = $('#gf-backup-now');
+                GF.setLoading($btn, true);
+                pollBackup($btn, $('#gf-backup-status'));
+            }
+        });
+    })();
 
     /* ── Restore ──────────────────────────────────────────────────────── */
 
