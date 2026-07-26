@@ -23,6 +23,8 @@ define('GUARDIFY_URL', plugin_dir_url(__FILE__));
 define('GUARDIFY_ENGINE_URL', 'https://api.guardify.pro');
 
 // Autoload includes
+require_once GUARDIFY_PATH . 'includes/class-guardify-crypto.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-signer.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-phone-util.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-activator.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-api.php';
