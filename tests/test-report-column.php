@@ -171,6 +171,42 @@ $sparse = $col->t_render(gf_good_summary([
 ]));
 gf_assert(strpos($sparse, 'Pathao') === false, 'a courier with no parcels is left off the card');
 
+// ─── The network covers the couriers that have no API ────────────────────────
+
+// Most Bangladeshi couriers publish no phone-history API, so a customer who has taken a
+// dozen parcels through one of them is invisible to every courier we can query. Gating
+// "new customer" on courier parcels alone throws away the one signal that knows better —
+// what every Guardify-connected shop has seen — which is the whole point of the network.
+$networkOnly = $col->t_render([
+    'total_parcels'   => 0,
+    'total_delivered' => 0,
+    'risk' => [
+        'score' => 88, 'band' => 'good', 'confidence' => 'medium',
+        'effective_n' => 12, 'network_stores' => 4, 'action' => 'allow',
+    ],
+]);
+
+gf_assert(strpos($networkOnly, 'নতুন কাস্টমার') === false,
+    'a customer known across the network is not called new');
+gf_assert(strpos($networkOnly, '৮৮') !== false, 'the network-informed score is shown');
+gf_assert(strpos($networkOnly, '৪ দোকানে রেকর্ড') !== false,
+    'the number of network shops is named — it is the one fact only Guardify has');
+
+// One shop is this shop. Saying "recorded at 1 shop" tells the merchant nothing and makes
+// the network look emptier than it is.
+$oneStore = $col->t_render(gf_good_summary([
+    'risk' => ['score' => 91, 'band' => 'excellent', 'confidence' => 'high',
+               'effective_n' => 40, 'network_stores' => 1, 'action' => 'allow'],
+]));
+gf_assert(strpos($oneStore, 'gf-rc-network') === false, 'a single-shop record is not called a network');
+
+// Genuinely nothing anywhere still says so.
+$nothing = $col->t_render([
+    'total_parcels' => 0,
+    'risk' => ['score' => 75, 'band' => 'unknown', 'confidence' => 'none', 'effective_n' => 0],
+]);
+gf_assert(strpos($nothing, 'নতুন কাস্টমার') !== false, 'zero evidence anywhere is still a new customer');
+
 // ─── A missing courier is disclosed, not hidden ──────────────────────────────
 
 // When a courier is down its parcels simply do not appear, so the customer looks newer and

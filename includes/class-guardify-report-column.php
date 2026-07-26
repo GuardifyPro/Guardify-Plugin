@@ -206,10 +206,18 @@ class Guardify_Report_Column {
         $risk  = isset($summary['risk']) && is_array($summary['risk']) ? $summary['risk'] : [];
         $total = (int) ($summary['total_parcels'] ?? 0);
 
-        // No history at all is worth saying plainly. Rendering a score of 75 against zero
-        // parcels — which is what the baseline produces — reads as a measurement when it is
+        // effective_n, not total_parcels. The score also draws on the Guardify network —
+        // what every connected shop has seen of this number — and that covers the couriers
+        // with no public history API, which is most of them. A customer with twelve parcels
+        // through Paperfly has no courier history we can query and is emphatically not new,
+        // and gating on total_parcels alone would throw away the one signal that knows it.
+        $evidence = isset($risk['effective_n']) ? (int) $risk['effective_n'] : $total;
+        $stores   = isset($risk['network_stores']) ? (int) $risk['network_stores'] : 0;
+
+        // No history anywhere is worth saying plainly. Rendering a score of 75 against zero
+        // evidence — which is what the baseline produces — reads as a measurement when it is
         // really an assumption, and a merchant acting on it is acting on nothing.
-        if ($total === 0) {
+        if ($evidence === 0) {
             return '<span class="gf-rc-new">নতুন কাস্টমার</span>';
         }
 
@@ -263,6 +271,15 @@ class Guardify_Report_Column {
             $html .= '<div class="gf-rc-partial" title="'
                 . esc_attr__('একটি কুরিয়ার সাড়া দেয়নি — কিছু পার্সেল এই হিসাবে নেই', 'guardify-pro')
                 . '">অসম্পূর্ণ তথ্য</div>';
+        }
+
+        // The consortium line. This is the part a merchant cannot get anywhere else — a
+        // customer unknown to their own shop and to the queryable couriers, but with a
+        // record across other Guardify shops — so it is worth stating rather than leaving
+        // buried inside a score nobody can decompose.
+        if ($stores > 1) {
+            $html .= '<div class="gf-rc-network">Guardify নেটওয়ার্কে '
+                . esc_html(Guardify_Format::count($stores)) . ' দোকানে রেকর্ড</div>';
         }
 
         $html .= '<div class="gf-rc-stats">';
@@ -478,6 +495,14 @@ JS;
 .gf-rc-tone-unknown .gf-rc-bar-fill { background: #cbd5e1; }
 
 .gf-rc-conf { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+
+/* The network line is the brand colour on purpose: it is the one fact on this card that
+   comes from Guardify itself rather than from a courier. */
+.gf-rc-network {
+    font-size: 10px; font-weight: 500; color: #0b5f5a;
+    background: #eaf7f5; border-radius: 4px;
+    padding: 2px 6px; margin-bottom: 5px; display: inline-block;
+}
 
 /* Amber, not red. A missing courier is a gap in what we know, not a finding about the
    customer, and colouring it like a warning about them would be a lie. */
