@@ -19,9 +19,20 @@ class Guardify_API {
     const OPT_SECRET     = 'guardify_signing_secret';
     const OPT_AUTH_MODE  = 'guardify_auth_mode';
     const OPT_LAST_ERROR = 'guardify_last_api_error';
+    /** Set when the engine holds a signing secret this install can no longer produce. */
+    const OPT_SECRET_LOST = 'guardify_signing_secret_lost';
+    /** Consecutive rejected signatures, for the settings screen. */
+    const TRANSIENT_SIG_FAILURES = 'guardify_signature_failures';
 
     /** Requests that must never be retried because they are not idempotent. */
-    const NON_IDEMPOTENT = ['/api/v1/courier/send', '/api/v1/sms/send', '/api/v1/otp/send'];
+    const NON_IDEMPOTENT = [
+        '/api/v1/courier/send',
+        '/api/v1/sms/send',
+        '/api/v1/otp/send',
+        // Single-use: the signing secret is issued exactly once. A retry after a first attempt
+        // that actually succeeded but timed out would spend the only chance to collect it.
+        '/api/v1/auth/upgrade',
+    ];
 
     private $engine_url;
     private $api_key;
@@ -81,11 +92,35 @@ class Guardify_API {
         return true;
     }
 
+    /**
+     * Whether the engine expects signed requests but this install cannot produce them.
+     *
+     * Reached when the signing secret is gone and cannot be reissued — most often after
+     * rotating the wp-config salts (routine hardening advice, and mandatory after a
+     * compromise), which changes the key that Guardify_Crypto derives and makes the stored
+     * ciphertext undecryptable. The merchant needs a new API key, and needs to be told so
+     * rather than left with silently failing requests.
+     */
+    public function secret_lost() {
+        return (bool) get_option(self::OPT_SECRET_LOST, false)
+            || (get_option(self::OPT_AUTH_MODE, 'legacy') === 'hmac' && $this->secret === '');
+    }
+
+    /**
+     * Consecutive rejected signatures, for display in settings.
+     */
+    public function signature_failures() {
+        return (int) get_transient(self::TRANSIENT_SIG_FAILURES);
+    }
+
     public function clear_credentials() {
         delete_option(self::OPT_KEY);
+        delete_option(self::OPT_SECRET_LOST);
+        delete_transient(self::TRANSIENT_SIG_FAILURES);
         delete_option(self::OPT_SECRET);
         delete_option(self::OPT_AUTH_MODE);
-        delete_option(self::OPT_LAST_ERROR);
+        delete_transient(self::OPT_LAST_ERROR);
+        delete_option(self::OPT_LAST_ERROR); // pre-0.5 installs stored this as an option
         delete_option('guardify_secret_key_enc'); // removed in 0.4.x
         delete_transient('guardify_upgrade_attempted');
 
@@ -127,12 +162,20 @@ class Guardify_API {
         return false;
     }
 
-    public function get($path, $query_params = []) {
-        return $this->request('GET', $path, $query_params);
+    /**
+     * @param string $path
+     * @param array  $query_params
+     * @param array  $opts {timeout?: float, retries?: int}
+     */
+    public function get($path, $query_params = [], $opts = []) {
+        return $this->request('GET', $path, $query_params, true, true, $opts);
     }
 
-    public function post($path, $body = []) {
-        return $this->request('POST', $path, $body);
+    /**
+     * @param array $opts {timeout?: float, retries?: int}
+     */
+    public function post($path, $body = [], $opts = []) {
+        return $this->request('POST', $path, $body, true, true, $opts);
     }
 
     /**
@@ -141,6 +184,57 @@ class Guardify_API {
      */
     public function post_async($path, $body = []) {
         return $this->request('POST', $path, $body, false);
+    }
+
+    /**
+     * Request options for anything called during checkout.
+     *
+     * Checkout is the one place where a slow response costs the merchant money rather
+     * than convenience. `woocommerce_checkout_process` runs *before* the order is created,
+     * so if the request outlives PHP's max_execution_time — commonly 30s on the shared
+     * hosting most Bangladeshi shops use — the customer gets a fatal error, no order row
+     * exists, and the merchant never learns the sale was attempted.
+     *
+     * Two calls can be registered on that hook (risk assessment and the VPN check), so the
+     * per-call budget has to assume it is not alone. At 2.5 seconds with no retry, the
+     * worst case across both is 5 seconds: slow, survivable, and it always ends in the
+     * fail-open path rather than a white screen.
+     *
+     * Retries are explicitly disabled here. Elsewhere they buy reliability; here they
+     * multiply the one number that must stay small.
+     *
+     * @return array
+     */
+    public static function checkout_opts() {
+        return ['timeout' => 2.5, 'retries' => 1];
+    }
+
+    /**
+     * Authentication headers for a request this class cannot make itself.
+     *
+     * Streaming downloads need wp_remote_get's `stream` and `filename` options, which the
+     * shared request path does not carry. Rather than letting those callers hand-roll an
+     * `X-GF-Key` header — which is unsigned, and therefore rejected outright once a key is in
+     * hmac mode — they take the real headers from here.
+     *
+     * @param string $method
+     * @param string $path_with_query Path including any query string, exactly as it will be sent.
+     * @param string $body            Raw request body, '' for GET.
+     * @return array<string,string>
+     */
+    public function signed_headers($method, $path_with_query, $body = '') {
+        if ($this->is_connected() && !$this->is_signed()) {
+            $this->ensure_signed();
+        }
+
+        return Guardify_Signer::headers($this->api_key, $this->secret, $method, $path_with_query, $body);
+    }
+
+    /**
+     * The engine base URL, for callers building their own request.
+     */
+    public function engine_url() {
+        return $this->engine_url;
     }
 
     public function check_status() {
@@ -163,7 +257,7 @@ class Guardify_API {
      * @return array{code:string,message:string,time:int}|null
      */
     public function last_error() {
-        $err = get_option(self::OPT_LAST_ERROR, null);
+        $err = get_transient(self::OPT_LAST_ERROR);
         return is_array($err) ? $err : null;
     }
 
@@ -175,15 +269,23 @@ class Guardify_API {
      * @param array  $data
      * @param bool   $blocking      False for fire-and-forget.
      * @param bool   $allow_upgrade Set false to prevent recursion from ensure_signed().
+     * @param array  $opts          {timeout?: float, retries?: int} — see checkout_opts().
      * @return array
      */
-    private function request($method, $path, $data = [], $blocking = true, $allow_upgrade = true) {
+    private function request($method, $path, $data = [], $blocking = true, $allow_upgrade = true, $opts = []) {
         if (!$this->is_connected()) {
             return ['success' => false, 'error' => __('Plugin not connected', 'guardify-pro')];
         }
 
+        $timeout    = isset($opts['timeout']) ? (float) $opts['timeout'] : 20.0;
+        $max_tries  = isset($opts['retries']) ? max(1, (int) $opts['retries']) : null;
+
         // Opportunistically move legacy keys onto signed requests.
-        if ($allow_upgrade && !$this->is_signed()) {
+        //
+        // Skipped when the caller asked for a tight budget: the upgrade is an extra
+        // round trip, and spending a checkout's entire allowance on it would stall the
+        // very request the customer is waiting on. The next admin-side call does it.
+        if ($allow_upgrade && !$this->is_signed() && $max_tries !== 1) {
             $this->ensure_signed();
         }
 
@@ -204,7 +306,7 @@ class Guardify_API {
 
         $args = [
             'method'   => $method,
-            'timeout'  => $blocking ? 20 : 1,
+            'timeout'  => $blocking ? $timeout : 1,
             'blocking' => (bool) $blocking,
             'headers'  => array_merge(
                 Guardify_Signer::headers($this->api_key, $this->secret, $method, $path_with_query, $body),
@@ -220,7 +322,13 @@ class Guardify_API {
             $args['body'] = $body;
         }
 
-        $attempts = $this->is_retryable($method, $path) ? 3 : 1;
+        // An explicit retry budget always wins. Retries improve reliability for background
+        // work, but on a request the customer is waiting for they only multiply the wait.
+        if ($max_tries !== null) {
+            $attempts = $max_tries;
+        } else {
+            $attempts = $this->is_retryable($method, $path) ? 3 : 1;
+        }
         $response = null;
 
         for ($attempt = 1; $attempt <= $attempts; $attempt++) {
@@ -257,7 +365,8 @@ class Guardify_API {
         $decoded = json_decode(wp_remote_retrieve_body($response), true);
 
         if ($code >= 200 && $code < 300 && is_array($decoded)) {
-            delete_option(self::OPT_LAST_ERROR);
+            delete_transient(self::OPT_LAST_ERROR);
+            delete_transient(self::TRANSIENT_SIG_FAILURES);
             // Unwrap the engine's {success, data} envelope so callers see the payload.
             if (array_key_exists('success', $decoded) && isset($decoded['data']) && is_array($decoded['data'])) {
                 return $decoded['data'];
@@ -274,13 +383,25 @@ class Guardify_API {
                 $code
             );
 
-        // A signature the engine will not accept usually means the stored secret no
-        // longer matches the key. Drop it so the next call re-upgrades cleanly.
+        // A rejected signature must not destroy the secret.
+        //
+        // Deleting it looks like self-healing but is a one-way trip: the engine keeps the key
+        // in hmac mode, and the only route to a replacement secret — /auth/upgrade — refuses
+        // unsigned calls and is single-use anyway. So one transient rejection, from a WAF
+        // rewriting the request line or a proxy re-serialising the body, would leave the
+        // install permanently unable to authenticate with no way back short of a new key.
+        //
+        // The secret is kept and the failure is surfaced instead. A genuinely wrong secret
+        // keeps failing visibly, which is recoverable; a discarded one is not.
         if (in_array($code_str, ['BAD_SIGNATURE', 'MISSING_SIGNATURE'], true)) {
-            delete_option(self::OPT_SECRET);
-            update_option(self::OPT_AUTH_MODE, 'legacy', false);
+            $count = (int) get_transient(self::TRANSIENT_SIG_FAILURES);
+            set_transient(self::TRANSIENT_SIG_FAILURES, $count + 1, DAY_IN_SECONDS);
+        } elseif ($code_str === 'ALREADY_UPGRADED') {
+            // The engine has this key in hmac mode but this install has no usable secret —
+            // a restored backup, or rotated wp-config salts that made the stored ciphertext
+            // undecryptable. It cannot be recovered, so stop retrying and say so.
+            update_option(self::OPT_SECRET_LOST, 1, false);
             delete_transient('guardify_upgrade_attempted');
-            $this->secret = '';
         }
 
         return $this->fail($code_str, $message);
@@ -301,11 +422,18 @@ class Guardify_API {
      * Record the failure for the settings screen and return it to the caller.
      */
     private function fail($code, $message) {
-        update_option(self::OPT_LAST_ERROR, [
+        // A transient, not an option.
+        //
+        // During an engine outage every concurrent checkout reaches this path, and writing
+        // one shared wp_options row from all of them serialises on a row lock precisely when
+        // the site is already struggling. A transient can land in object cache instead of the
+        // database, and expires on its own so a stale error does not sit in the admin
+        // indefinitely.
+        set_transient(self::OPT_LAST_ERROR, [
             'code'    => (string) $code,
             'message' => (string) $message,
             'time'    => time(),
-        ], false);
+        ], 15 * MINUTE_IN_SECONDS);
 
         return ['success' => false, 'error' => $message, 'code' => $code];
     }

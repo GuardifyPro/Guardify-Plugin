@@ -46,22 +46,79 @@ class Guardify_VPN_Block {
             return; // Fail open
         }
 
-        // Cache VPN check result per IP for 10 min
+        // Cache VPN check result per IP for 10 min. The tight budget is because this runs
+        // inside woocommerce_checkout_process, before the order exists: a request that
+        // outlives max_execution_time loses the sale with no record it was attempted.
         $cache_key = 'gf_vpn_' . md5($ip);
         $result = get_transient($cache_key);
         if (false === $result) {
-            $result = $api->post('/api/v1/ip/check', ['ip' => $ip]);
-            set_transient($cache_key, $result, 10 * MINUTE_IN_SECONDS);
+            $result = $api->post('/api/v1/ip/check', ['ip' => $ip], Guardify_API::checkout_opts());
+            if (is_array($result) && empty($result['error'])) {
+                set_transient($cache_key, $result, 10 * MINUTE_IN_SECONDS);
+            }
         }
         $d = isset($result['data']) ? $result['data'] : $result;
 
-        $risk = isset($d['risk_level']) ? $d['risk_level'] : 'clean';
-        $is_vpn = !empty($d['is_vpn']);
+        $risk     = isset($d['risk_level']) ? $d['risk_level'] : 'clean';
+        $is_vpn   = !empty($d['is_vpn']);
         $is_proxy = !empty($d['is_proxy']);
 
-        if ($risk === 'high_risk' || $risk === 'high' || $is_vpn || $is_proxy) {
-            wc_add_notice('VPN/প্রক্সি সনাক্ত হয়েছে। নিরাপত্তার কারণে অর্ডার প্লেস করা যাচ্ছে না। অনুগ্রহ করে VPN বন্ধ করে আবার চেষ্টা করুন।', 'error');
+        if (!($risk === 'high_risk' || $risk === 'high' || $is_vpn || $is_proxy)) {
+            return;
         }
+
+        // Bangladesh is a mobile-first market and the mobile operators run large carrier-grade
+        // NAT ranges, a meaningful share of which public IP-reputation feeds classify as
+        // proxies. Blocking on that signal alone refuses ordinary customers on their phones —
+        // the exact people the merchant most wants to sell to — and the merchant has no way to
+        // see it happening, because the order is never created.
+        //
+        // So enforcement is opt-in. By default the detection is recorded on the order for the
+        // merchant to review, and a merchant who has decided they want hard blocking can turn
+        // it on knowingly.
+        if (get_option('guardify_vpn_block_enforce', 'no') !== 'yes') {
+            if (WC()->session) {
+                WC()->session->set('guardify_vpn_flagged', ['ip' => $ip, 'risk_level' => $risk]);
+            }
+            if (!has_action('woocommerce_checkout_order_processed', [$this, 'save_vpn_flag_to_order'])) {
+                add_action('woocommerce_checkout_order_processed', [$this, 'save_vpn_flag_to_order'], 10, 1);
+            }
+            return;
+        }
+
+        wc_add_notice(
+            esc_html__('VPN/প্রক্সি সনাক্ত হয়েছে। নিরাপত্তার কারণে অর্ডার প্লেস করা যাচ্ছে না। অনুগ্রহ করে VPN বন্ধ করে আবার চেষ্টা করুন।', 'guardify-pro'),
+            'error'
+        );
+    }
+
+    /**
+     * Record a proxy detection on the order instead of refusing it.
+     *
+     * This is what makes the advisory default useful rather than merely harmless: the
+     * merchant sees which orders were flagged and can judge for themselves whether the
+     * signal is worth acting on for their customer base.
+     */
+    public function save_vpn_flag_to_order($order_id) {
+        if (!WC()->session) {
+            return;
+        }
+        $flag = WC()->session->get('guardify_vpn_flagged');
+        if (!$flag) {
+            return;
+        }
+        WC()->session->set('guardify_vpn_flagged', null);
+
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            return;
+        }
+
+        $order->update_meta_data('_guardify_vpn_flagged', 'yes');
+        $order->add_order_note(
+            esc_html__('Guardify: এই অর্ডারটি VPN/প্রক্সি IP থেকে এসেছে বলে সনাক্ত হয়েছে। (মোবাইল অপারেটরের NAT-ও কখনো এভাবে ধরা পড়ে — যাচাই করে নিন।)', 'guardify-pro')
+        );
+        $order->save();
     }
 
     /**

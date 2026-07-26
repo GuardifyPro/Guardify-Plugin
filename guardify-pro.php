@@ -141,6 +141,10 @@ final class Guardify_Pro {
         add_action('wp_ajax_guardify_export_rules', [$this, 'ajax_export_rules']);
         add_action('wp_ajax_guardify_import_blocked', [$this, 'ajax_import_blocked']);
 
+        // Operational warnings the merchant has to see, since these are states where the
+        // plugin has stopped enforcing something they are paying for.
+        add_action('admin_notices', [$this, 'render_degraded_notices']);
+
         // REST API
         add_action('rest_api_init', [$this, 'register_rest_routes']);
     }
@@ -179,6 +183,40 @@ final class Guardify_Pro {
         set_transient('guardify_menu_icon', $icon, WEEK_IN_SECONDS);
 
         return $icon;
+    }
+
+    /**
+     * Warn when a feature has silently stopped enforcing.
+     *
+     * These are the states that cost a merchant money without any visible symptom. OTP
+     * delivery failing means checkout verification has been switched off to avoid refusing
+     * every order — correct behaviour, but invisible unless it is said out loud, and a
+     * merchant who does not know will not top up their SMS balance.
+     */
+    public function render_degraded_notices() {
+        if (!current_user_can('manage_woocommerce')) {
+            return;
+        }
+
+        if (get_option('guardify_otp_enabled', 'no') === 'yes'
+            && class_exists('Guardify_OTP')
+            && Guardify_OTP::delivery_broken()) {
+            printf(
+                '<div class="notice notice-warning"><p><strong>%s</strong> %s</p></div>',
+                esc_html__('Guardify:', 'guardify-pro'),
+                esc_html__('OTP পাঠানো যাচ্ছে না, তাই চেকআউটে ভেরিফিকেশন সাময়িকভাবে বন্ধ রাখা হয়েছে — নইলে কোনো অর্ডারই সম্পন্ন হতো না। SMS ব্যালেন্স ও সংযোগ পরীক্ষা করুন।', 'guardify-pro')
+            );
+        }
+
+        $err = get_transient('guardify_last_api_error');
+        if (is_array($err) && !empty($err['message'])) {
+            printf(
+                '<div class="notice notice-warning"><p><strong>%s</strong> %s <code>%s</code></p></div>',
+                esc_html__('Guardify:', 'guardify-pro'),
+                esc_html__('ইঞ্জিনের সাথে সর্বশেষ সংযোগ ব্যর্থ হয়েছে।', 'guardify-pro'),
+                esc_html($err['message'])
+            );
+        }
     }
 
     public function register_menu() {
@@ -245,6 +283,21 @@ final class Guardify_Pro {
             'guardify-backup',
             [$this, 'render_backup_page']
         );
+
+        // A page that renders every component in the design system, so a change
+        // to admin.css can be checked by eye instead of by clicking through five
+        // merchant-facing screens hoping to spot what broke. Debug-only: it is a
+        // developer tool, and a merchant finding it would only be confused.
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            add_submenu_page(
+                'guardify-pro',
+                'ডিজাইন সিস্টেম',
+                'ডিজাইন সিস্টেম',
+                'manage_woocommerce',
+                'guardify-design-system',
+                [$this, 'render_design_system_page']
+            );
+        }
     }
 
     public function render_settings_page() {
@@ -282,8 +335,15 @@ final class Guardify_Pro {
         include GUARDIFY_PATH . 'templates/backup-page.php';
     }
 
+    public function render_design_system_page() {
+        if (!current_user_can('manage_woocommerce')) {
+            wp_die(esc_html__('Unauthorized', 'guardify-pro'));
+        }
+        include GUARDIFY_PATH . 'templates/design-system-page.php';
+    }
+
     public function enqueue_admin_assets($hook) {
-        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs', 'guardify-backup'];
+        $guardify_pages = ['guardify-pro', 'guardify-search', 'guardify-incomplete', 'guardify-fraud', 'guardify-sms-logs', 'guardify-backup', 'guardify-design-system'];
         $is_guardify = false;
         foreach ($guardify_pages as $page) {
             if (strpos($hook, $page) !== false) {

@@ -296,28 +296,23 @@ class Guardify_Backup {
             return new WP_Error('bad_file', 'ব্যাকআপ ফাইল পড়া যায়নি।');
         }
 
-        // Step 1: Get presigned upload URL from engine
-        $presign_url = GUARDIFY_ENGINE_URL . '/api/v1/backup/presign-upload';
-        $presign_response = wp_remote_get($presign_url, [
-            'timeout' => 30,
-            'headers' => [
-                'X-GF-Key' => $api_key,
-            ],
-        ]);
+        // Step 1: presigned upload URL from the engine.
+        //
+        // Routed through Guardify_API so the request is signed. Calling wp_remote_get directly
+        // with only an X-GF-Key header worked while keys were bearer-authenticated and fails
+        // with 401 the moment a key is in hmac mode — which would break backup and restore for
+        // every signed install.
+        $api = new Guardify_API();
+        $presign_data = $api->get('/api/v1/backup/presign-upload');
 
-        if (is_wp_error($presign_response)) {
-            return new WP_Error('presign_failed', 'প্রিসাইন URL পাওয়া যায়নি: ' . $presign_response->get_error_message());
-        }
-
-        $presign_code = wp_remote_retrieve_response_code($presign_response);
-        $presign_data = json_decode(wp_remote_retrieve_body($presign_response), true);
-
-        if ($presign_code !== 200 || empty($presign_data['data']['url']) || empty($presign_data['data']['object_key'])) {
-            $error_msg = isset($presign_data['error']['message']) ? $presign_data['error']['message'] : 'প্রিসাইন URL পাওয়া যায়নি (HTTP ' . $presign_code . ')';
+        if (empty($presign_data['url']) || empty($presign_data['object_key'])) {
+            $error_msg = isset($presign_data['error'])
+                ? $presign_data['error']
+                : esc_html__('প্রিসাইন URL পাওয়া যায়নি।', 'guardify-pro');
             return new WP_Error('presign_failed', $error_msg);
         }
 
-        $upload_url = $presign_data['data']['url'];
+        $upload_url = $presign_data['url'];
         $object_key = $presign_data['data']['object_key'];
 
         // Step 2: Stream file directly to R2 via cURL PUT (no memory loading)
@@ -349,23 +344,20 @@ class Guardify_Backup {
             return new WP_Error('r2_upload_failed', 'R2 আপলোড ব্যর্থ: ' . $err_detail);
         }
 
-        // Step 3: Confirm upload with engine
-        $confirm_url = GUARDIFY_ENGINE_URL . '/api/v1/backup/confirm';
-        $confirm_response = wp_remote_post($confirm_url, [
-            'timeout' => 30,
-            'headers' => [
-                'X-GF-Key'    => $api_key,
-                'Content-Type' => 'application/json',
-            ],
-            'body' => wp_json_encode([
-                'object_key' => $object_key,
-                'file_size'  => $file_size,
-                'note'       => $note,
-            ]),
+        // Step 3: confirm the upload with the engine, signed.
+        $confirm_data = $api->post('/api/v1/backup/confirm', [
+            'object_key' => $object_key,
+            'file_size'  => $file_size,
+            'note'       => $note,
         ]);
 
-        if (is_wp_error($confirm_response)) {
-            return new WP_Error('confirm_failed', 'ব্যাকআপ নিশ্চিতকরণ ব্যর্থ: ' . $confirm_response->get_error_message());
+        if (isset($confirm_data['success']) && $confirm_data['success'] === false) {
+            return new WP_Error(
+                'confirm_failed',
+                isset($confirm_data['error'])
+                    ? $confirm_data['error']
+                    : esc_html__('ব্যাকআপ নিশ্চিতকরণ ব্যর্থ।', 'guardify-pro')
+            );
         }
 
         $confirm_code = wp_remote_retrieve_response_code($confirm_response);
@@ -391,19 +383,27 @@ class Guardify_Backup {
             return new WP_Error('no_key', 'API কী পাওয়া যায়নি।');
         }
 
-        // Download the backup file from engine
-        $url = GUARDIFY_ENGINE_URL . '/api/v1/backup/download?id=' . rawurlencode($backup_id);
+        // Download the backup, streaming to disk so a large dump is never held in memory.
+        //
+        // This one keeps its own wp_remote_get because the shared client has no streaming
+        // path, but it takes real signed headers rather than a bare key — the path and query
+        // string passed here must match the request byte for byte, since both are covered by
+        // the signature.
+        $api  = new Guardify_API();
+        $path = '/api/v1/backup/download?id=' . rawurlencode($backup_id);
 
         $temp_file = wp_tempnam('guardify_restore_');
 
-        $response = wp_remote_get($url, [
-            'timeout'  => 120,
-            'stream'   => true,
-            'filename' => $temp_file,
-            'headers'  => [
-                'X-GF-Key' => $api_key,
-                'Accept'   => 'application/gzip',
-            ],
+        $response = wp_remote_get($api->engine_url() . $path, [
+            'timeout'     => 120,
+            'stream'      => true,
+            'filename'    => $temp_file,
+            'redirection' => 0,
+            'sslverify'   => true,
+            'headers'     => array_merge(
+                $api->signed_headers('GET', $path),
+                ['Accept' => 'application/gzip']
+            ),
         ]);
 
         if (is_wp_error($response)) {
