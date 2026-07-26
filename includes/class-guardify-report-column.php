@@ -249,7 +249,7 @@ jQuery(function($){
 .gf-rc-loading::before {
     content: ''; position: absolute; top: 0; left: 0;
     width: 100%; height: 100%;
-    background: linear-gradient(90deg, #6366f1, #4f46e5);
+    background: linear-gradient(90deg, #0F766E, #0B5F5A);
     animation: gf-rc-slide 1.5s ease-in-out infinite;
 }
 @keyframes gf-rc-slide {
@@ -320,7 +320,7 @@ jQuery(function($){
 /* New customer */
 .gf-rc-new {
     display: inline-block; font-size: 10px; font-weight: 600;
-    color: #6366f1; background: #eef2ff; padding: 2px 10px;
+    color: #0B5F5A; background: #eaf7f5; padding: 2px 10px;
     border-radius: 9px;
 }
 

@@ -194,6 +194,22 @@
     }
 }
 
+/* Native controls — the time picker's clock, a date picker's calendar, the
+ * inner scrollbars — are drawn by the browser and only follow color-scheme.
+ * Set on our subtree rather than :root so the rest of wp-admin, which is
+ * light in every WordPress admin scheme, is left alone. */
+@media (prefers-color-scheme: dark) {
+    .gf-wrap,
+    .gf-modal-overlay,
+    .gf-drawer-overlay,
+    .gf-report-popup {
+        color-scheme: dark;
+    }
+}
+
+.gf-theme-dark { color-scheme: dark; }
+.gf-theme-light { color-scheme: light; }
+
 .gf-theme-light {
     --gf-bg-c: 0.990 0.002 210;
     --gf-fg-c: 0.170 0.012 210;
@@ -331,6 +347,16 @@
 .gf-wrap p {
     margin: 0;
     padding: 0;
+}
+
+/* Headings get a colour here because no heading component chooses its own.
+ * Paragraphs do not: half of them are muted, and a rule at this specificity
+ * would silently repaint every one of them at full contrast. They take the
+ * wrapper's colour by inheritance instead. */
+.gf-wrap h1,
+.gf-wrap h2,
+.gf-wrap h3,
+.gf-wrap h4 {
     color: var(--gf-fg);
 }
 
@@ -344,6 +370,7 @@
 }
 
 .gf-wrap p:not([class]) {
+    color: var(--gf-fg);
     font-size: inherit;
     line-height: inherit;
 }
@@ -907,6 +934,25 @@
     background-position: right 0.5rem center;
     background-size: 16px 16px;
     cursor: pointer;
+}
+
+/* The caret is baked into a data URI, so its colour cannot come from a token
+ * and has to be restated per scheme. */
+@media (prefers-color-scheme: dark) {
+    .gf-wrap select.gf-input,
+    .gf-wrap .gf-select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa4a7' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    }
+}
+
+.gf-theme-dark select.gf-input,
+.gf-theme-dark .gf-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa4a7' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.gf-theme-light select.gf-input,
+.gf-theme-light .gf-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7477' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
 }
 
 .gf-field-row,
@@ -1939,6 +1985,17 @@
 .gf-modal-overlay.is-open,
 .gf-modal-overlay.gf-modal-open {
     display: flex;
+}
+
+/* Scroll lock while an overlay is up, but only on narrow viewports. On a
+ * desktop, hiding the body's overflow reclaims the scrollbar's width and
+ * shifts the entire admin sideways the moment a dialog opens. On a phone
+ * there is no scrollbar to reclaim, and a page scrolling behind a full-height
+ * sheet is genuinely disorienting. */
+@media (max-width: 782px) {
+    body.gf-overlay-open {
+        overflow: hidden;
+    }
 }
 
 .gf-modal {
