@@ -2,7 +2,12 @@
 defined('ABSPATH') || exit;
 
 /**
- * Guardify Backup — managed WordPress database backup & restore.
+ * Guardify Backup — managed WordPress database backup.
+ *
+ * Restore lives in Guardify_Restore. It was moved out because the two have opposite
+ * risk profiles: a failed backup costs an archive, a failed restore costs the shop, and
+ * the second needed a structure — staging tables and an atomic swap — that has nothing to
+ * do with producing a dump.
  *
  * The dump runs as a *resumable job* rather than one long request. A backup is enqueued
  * (by the schedule, by the merchant, or by the Guardify portal), and a worker cron then
@@ -78,7 +83,6 @@ class Guardify_Backup {
         add_action('wp_ajax_guardify_backup_now', [$this, 'ajax_backup_now']);
         add_action('wp_ajax_guardify_backup_status', [$this, 'ajax_backup_status']);
         add_action('wp_ajax_guardify_backup_list', [$this, 'ajax_backup_list']);
-        add_action('wp_ajax_guardify_backup_restore', [$this, 'ajax_backup_restore']);
         add_action('wp_ajax_guardify_backup_save_schedule', [$this, 'ajax_save_schedule']);
     }
 
@@ -275,6 +279,7 @@ class Guardify_Backup {
             'cursor'  => null,
             'offset'  => 0,
             'rows'    => 0,
+            'raw'     => strlen($header),
             'total'   => count($tables),
             'started' => time(),
         ], false);
@@ -393,7 +398,7 @@ class Guardify_Backup {
         // The dump is finished; upload it. This part is network-bound rather than CPU-bound,
         // so it does not need slicing — and it streams from disk, never into memory.
         update_option(self::JOB_OPTION, $job, false);
-        $result = $this->upload_to_engine($job['path'], $job['note']);
+        $result = $this->upload_to_engine($job['path'], $job['note'], (int) $job['raw']);
         delete_transient(self::SLICE_LOCK);
 
         return $this->finish_job($result);
@@ -468,6 +473,7 @@ class Guardify_Backup {
                 $buffer .= "INSERT INTO `{$table}` {$columns} VALUES " . implode(',', $tuples) . ";\n";
                 $tuples = [];
                 gzwrite($gz, $buffer);
+                $job['raw'] += strlen($buffer);
                 $buffer = '';
             }
         }
@@ -476,6 +482,7 @@ class Guardify_Backup {
         }
         if ($buffer !== '') {
             gzwrite($gz, $buffer);
+            $job['raw'] += strlen($buffer);
         }
 
         $count = count($rows);
@@ -650,43 +657,12 @@ class Guardify_Backup {
     }
 
     /**
-     * Run a backup to completion in this request.
-     *
-     * Only used where waiting is the point — the safety copy taken immediately before a
-     * restore, where continuing without one would be reckless. Everything else goes
-     * through the sliced worker.
-     *
-     * @return array|WP_Error
-     */
-    public function create_backup($note = '') {
-        // No cron spawn: this request runs the slices itself, and a second worker racing it
-        // would only contend on the slice lock.
-        $started = $this->start_backup($note, '', false);
-        if (is_wp_error($started)) {
-            return $started;
-        }
-
-        $stop = microtime(true) + 240;
-        while (microtime(true) < $stop) {
-            $status = $this->run_slice();
-            if (is_wp_error($status)) {
-                return $status;
-            }
-            if ($status === 'done' || $status === 'idle') {
-                return ['message' => 'ব্যাকআপ সম্পন্ন হয়েছে।'];
-            }
-        }
-
-        return new WP_Error('timeout', 'ব্যাকআপ নির্ধারিত সময়ে শেষ হয়নি।');
-    }
-
-    /**
      * Upload a finished archive to R2 via presigned URL (3-step flow).
      * Step 1: ask the engine for a presigned URL.
      * Step 2: stream the file straight to R2.
      * Step 3: confirm with the engine so the archive is recorded.
      */
-    private function upload_to_engine($file_path, $note = '') {
+    private function upload_to_engine($file_path, $note = '', $raw_size = 0) {
         $file_size = @filesize($file_path);
         if ($file_size === false || $file_size <= 0) {
             return new WP_Error('bad_file', 'ব্যাকআপ ফাইল পড়া যায়নি।');
@@ -740,9 +716,19 @@ class Guardify_Backup {
 
         // Guardify_API unwraps the {success, data} envelope, so a successful confirm comes
         // back as the archive record itself and a failure as {success: false, error}.
+        // The checksum is computed here, after the upload, over the exact bytes on disk.
+        //
+        // It is what lets a restore know the archive is intact *before* it starts dropping
+        // tables. hash_file streams, so this is one extra read of a file that was just
+        // written and is still in the page cache — cheap next to producing it, and the
+        // alternative is a restore that discovers corruption halfway through.
+        $checksum = hash_file('sha256', $file_path);
+
         $confirm = $api->post('/api/v1/backup/confirm', [
             'object_key' => $object_key,
             'file_size'  => $file_size,
+            'raw_size'   => (int) $raw_size,
+            'checksum'   => $checksum === false ? '' : $checksum,
             'note'       => $note,
         ]);
 
@@ -754,120 +740,6 @@ class Guardify_Backup {
         }
 
         return $confirm;
-    }
-
-    /**
-     * Restore a database backup.
-     *
-     * @param string $backup_id The backup UUID.
-     * @return true|WP_Error
-     */
-    public function restore_backup($backup_id) {
-        // Download the backup, streaming to disk so a large dump is never held in memory.
-        //
-        // This one keeps its own wp_remote_get because the shared client has no streaming
-        // path, but it takes real signed headers rather than a bare key — the path and query
-        // string passed here must match the request byte for byte, since both are covered by
-        // the signature.
-        $api = new Guardify_API();
-        if (!$api->is_connected()) {
-            return new WP_Error('no_key', 'API কী পাওয়া যায়নি।');
-        }
-
-        $path      = '/api/v1/backup/download?id=' . rawurlencode($backup_id);
-        $temp_file = wp_tempnam('guardify_restore_');
-
-        $response = wp_remote_get($api->engine_url() . $path, [
-            'timeout'     => 120,
-            'stream'      => true,
-            'filename'    => $temp_file,
-            'redirection' => 0,
-            'sslverify'   => true,
-            'headers'     => array_merge(
-                $api->signed_headers('GET', $path),
-                ['Accept' => 'application/gzip']
-            ),
-        ]);
-
-        if (is_wp_error($response)) {
-            wp_delete_file($temp_file);
-            return new WP_Error('download_failed', 'ব্যাকআপ ডাউনলোড ব্যর্থ: ' . $response->get_error_message());
-        }
-
-        $code = wp_remote_retrieve_response_code($response);
-        if ($code !== 200) {
-            wp_delete_file($temp_file);
-            return new WP_Error('download_failed', 'ব্যাকআপ ডাউনলোড ব্যর্থ (HTTP ' . $code . ')');
-        }
-
-        $result = $this->import_sql_gz($temp_file);
-        wp_delete_file($temp_file);
-
-        return $result;
-    }
-
-    /**
-     * Import a gzipped SQL file into the WordPress database.
-     */
-    private function import_sql_gz($file_path) {
-        global $wpdb;
-
-        $gz = gzopen($file_path, 'rb');
-        if (!$gz) {
-            return new WP_Error('gz_open', 'ব্যাকআপ ফাইল খোলা যায়নি।');
-        }
-
-        $buffer   = '';
-        $errors   = [];
-        $executed = 0;
-
-        while (!gzeof($gz)) {
-            $line = gzgets($gz, 65536);
-            if ($line === false) {
-                break;
-            }
-
-            // Comment and blank lines are only skipped when nothing is buffered. Inside a
-            // statement a line starting with "--" is row data, not a comment, and dropping
-            // it would corrupt the INSERT it belongs to.
-            if ($buffer === '') {
-                $trimmed = trim($line);
-                if ($trimmed === '' || strpos($trimmed, '--') === 0 || strpos($trimmed, '/*') === 0) {
-                    continue;
-                }
-            }
-
-            $buffer .= $line;
-
-            if (substr(rtrim($buffer), -1) === ';') {
-                $sql    = trim($buffer);
-                $buffer = '';
-
-                if ($sql === '') {
-                    continue;
-                }
-
-                // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- importing raw SQL backup
-                $result = $wpdb->query($sql);
-                if ($result === false) {
-                    $errors[] = $wpdb->last_error;
-                    if (count($errors) > 10) {
-                        gzclose($gz);
-                        return new WP_Error('import_errors', 'অনেক ত্রুটি হয়েছে। প্রথম: ' . $errors[0]);
-                    }
-                } else {
-                    $executed++;
-                }
-            }
-        }
-
-        gzclose($gz);
-
-        if (!empty($errors) && $executed === 0) {
-            return new WP_Error('import_failed', 'ইম্পোর্ট সম্পূর্ণ ব্যর্থ: ' . $errors[0]);
-        }
-
-        return true;
     }
 
     // ─── AJAX Handlers ───────────────────────────────────────────────────
@@ -947,36 +819,6 @@ class Guardify_Backup {
         }
 
         wp_send_json_success(['backups' => [], 'count' => 0]);
-    }
-
-    /**
-     * AJAX: Restore from a specific backup.
-     */
-    public function ajax_backup_restore() {
-        check_ajax_referer('guardify_nonce');
-
-        if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error('Unauthorized');
-        }
-
-        $backup_id = isset($_POST['backup_id']) ? sanitize_text_field(wp_unslash($_POST['backup_id'])) : '';
-        if (empty($backup_id) || !preg_match('/^[a-f0-9\-]{36}$/i', $backup_id)) {
-            wp_send_json_error('সঠিক ব্যাকআপ নির্বাচন করুন।');
-        }
-
-        // Safety: take a copy of the current database before overwriting it.
-        $pre_result = $this->create_backup('রিস্টোরের আগে স্বয়ংক্রিয় ব্যাকআপ');
-        if (is_wp_error($pre_result)) {
-            error_log('Guardify: Pre-restore backup failed: ' . $pre_result->get_error_message());
-        }
-
-        $result = $this->restore_backup($backup_id);
-
-        if (is_wp_error($result)) {
-            wp_send_json_error($result->get_error_message());
-        }
-
-        wp_send_json_success(['message' => 'ডাটাবেইজ সফলভাবে রিস্টোর হয়েছে।']);
     }
 
     /**

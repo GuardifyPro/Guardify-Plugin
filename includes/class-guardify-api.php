@@ -280,6 +280,12 @@ class Guardify_API {
         $timeout    = isset($opts['timeout']) ? (float) $opts['timeout'] : 20.0;
         $max_tries  = isset($opts['retries']) ? max(1, (int) $opts['retries']) : null;
 
+        // Extra headers for calls that carry an out-of-band authorisation of their own —
+        // the restore token, for instance. They are merged *after* the signature headers
+        // on every attempt, including retries, because a retry rebuilds the header set
+        // from scratch and would otherwise send an unauthorised request the second time.
+        $extra_headers = isset($opts['headers']) && is_array($opts['headers']) ? $opts['headers'] : [];
+
         // Opportunistically move legacy keys onto signed requests.
         //
         // Skipped when the caller asked for a tight budget: the upgrade is an extra
@@ -310,7 +316,8 @@ class Guardify_API {
             'blocking' => (bool) $blocking,
             'headers'  => array_merge(
                 Guardify_Signer::headers($this->api_key, $this->secret, $method, $path_with_query, $body),
-                $base_headers
+                $base_headers,
+                $extra_headers
             ),
             // The engine is a known first-party host; never follow it elsewhere.
             'redirection' => 0,
@@ -337,7 +344,8 @@ class Guardify_API {
                 // otherwise a retry looks like a replay and the engine rejects it.
                 $args['headers'] = array_merge(
                     Guardify_Signer::headers($this->api_key, $this->secret, $method, $path_with_query, $body),
-                    $base_headers
+                    $base_headers,
+                    $extra_headers
                 );
                 usleep(200000 * (int) pow(2, $attempt - 2)); // 200ms, then 400ms
             }

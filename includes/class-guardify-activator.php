@@ -37,6 +37,7 @@ class Guardify_Activator {
         wp_clear_scheduled_hook('guardify_scheduled_backup');
         wp_clear_scheduled_hook('guardify_check_pending_backup');
         wp_clear_scheduled_hook('guardify_backup_worker');
+        wp_clear_scheduled_hook('guardify_restore_worker');
 
         // A dump interrupted by deactivation leaves a temp file and a job row behind. The
         // file is the larger problem: it is a full copy of the database sitting in the
@@ -47,6 +48,21 @@ class Guardify_Activator {
         }
         delete_option('guardify_backup_job');
         delete_transient('guardify_backup_slice_lock');
+
+        // An interrupted restore leaves an archive, an expanded .sql, and staging tables.
+        // The files are removed here; the staging tables are deliberately left alone —
+        // they hold a database the merchant may still want, and dropping them on
+        // deactivation would destroy the only copy of it.
+        $restore = get_option('guardify_restore_job', null);
+        if (is_array($restore)) {
+            foreach (['archive', 'sql'] as $gf_key) {
+                if (!empty($restore[$gf_key]) && file_exists($restore[$gf_key])) {
+                    wp_delete_file($restore[$gf_key]);
+                }
+            }
+        }
+        delete_option('guardify_restore_job');
+        delete_transient('guardify_restore_slice_lock');
 
         flush_rewrite_rules();
     }

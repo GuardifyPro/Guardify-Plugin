@@ -129,16 +129,47 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
         <div class="gf-card-header">
             <div class="gf-card-heading">
                 <h2 class="gf-card-title">রিস্টোর</h2>
-                <p class="gf-card-desc">আগের কোনো ব্যাকআপ থেকে ডাটাবেইজ ফিরিয়ে আনুন।</p>
+                <p class="gf-card-desc">
+                    আগের কোনো ব্যাকআপ থেকে ডাটাবেইজ ফিরিয়ে আনুন। রিস্টোর শুরু করতে হয় Guardify
+                    ড্যাশবোর্ড থেকে — সেখানে আমরা ফাইলটি পুরোপুরি যাচাই করে একটি কোড দিই।
+                </p>
             </div>
         </div>
         <div class="gf-card-body gf-stack">
+            <div class="gf-alert gf-alert-info">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div>
+                    <strong class="gf-alert-title">আপনার সাইট চালু থাকবে</strong>
+                    Guardify নতুন ডাটা আলাদা টেবিলে তৈরি করে, তারপর এক ধাপে বদলে দেয়। মাঝপথে কিছু ভুল হলে
+                    আপনার বর্তমান ডাটাবেইজে কোনো পরিবর্তন হবে না।
+                </div>
+            </div>
+
             <div class="gf-alert gf-alert-warning">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9L2.4 17.5c-.8.9.2 2.5 1.7 2.5h15.8c1.5 0 2.5-1.6 1.7-2.5L13.7 3.9c-.8-.8-2.7-.8-3.4 0z"/></svg>
                 <div>
-                    <strong class="gf-alert-title">রিস্টোর বর্তমান ডাটাবেইজ প্রতিস্থাপন করে</strong>
-                    ব্যাকআপের সময়ের পরে আসা সব অর্ডার ও পরিবর্তন হারিয়ে যাবে। নিরাপত্তার জন্য রিস্টোর শুরুর আগে বর্তমান অবস্থার একটি ব্যাকআপ স্বয়ংক্রিয়ভাবে নেওয়া হবে।
+                    <strong class="gf-alert-title">ব্যাকআপের পরের অর্ডারগুলো থাকবে না</strong>
+                    যে সময়ের ব্যাকআপ ফেরাচ্ছেন, তার পরে আসা অর্ডার ও পরিবর্তন মুছে যাবে।
                 </div>
+            </div>
+
+            <div id="gf-restore-live" class="gf-hidden"></div>
+
+            <div class="gf-field gf-field-wide">
+                <label class="gf-label" for="gf-restore-token">রিস্টোর কোড</label>
+                <input type="text" id="gf-restore-token" class="gf-input gf-input-mono"
+                       autocomplete="off" spellcheck="false" placeholder="Guardify ড্যাশবোর্ড থেকে পাওয়া কোড">
+                <span class="gf-help">
+                    <a href="https://guardify.pro/backups" target="_blank" rel="noopener">ড্যাশবোর্ডে যান</a> —
+                    ব্যাকআপ বেছে নিয়ে সাইটের ডোমেইন লিখে নিশ্চিত করলে কোডটি পাবেন। কোড ৩০ মিনিট পর্যন্ত বৈধ।
+                </span>
+            </div>
+
+            <div id="gf-restore-status"></div>
+
+            <div class="gf-row">
+                <button type="button" id="gf-restore-btn" class="gf-btn gf-btn-danger">রিস্টোর শুরু করুন</button>
+                <button type="button" id="gf-restore-abort" class="gf-btn gf-btn-ghost gf-hidden">বাতিল করুন</button>
             </div>
 
             <div id="gf-backup-list-container">
@@ -180,34 +211,27 @@ jQuery(function ($) {
                 return;
             }
 
-            var $select = $('<select>')
-                .attr({ id: 'gf-restore-select', 'aria-label': 'ব্যাকআপ বাছুন' })
-                .addClass('gf-select');
-
-            // Built with the DOM API rather than string concatenation: a
-            // backup note is free text a merchant typed, and one that happens
-            // to contain a quote would otherwise break out of the option.
-            backups.forEach(function (b) {
+            var $list = $('<ul>').addClass('gf-kv');
+            backups.slice(0, 10).forEach(function (b) {
                 var d     = new Date(b.created_at);
                 var label = d.toLocaleDateString('bn-BD', {
                     year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
                 var size  = (b.file_size / 1024 / 1024).toFixed(2) + ' MB';
-                var text  = label + ' (' + size + ')' + (b.note ? ' — ' + b.note : '');
-                $select.append($('<option>').val(b.id).text(text));
+                // Built with the DOM API rather than string concatenation: a backup note is
+                // free text a merchant typed, and one containing markup would otherwise be
+                // rendered as markup.
+                $list.append($('<li>').append(
+                    $('<span>').text(label),
+                    $('<span>').addClass('gf-text-muted').text(size + (b.note ? ' — ' + b.note : ''))
+                ));
             });
 
             $container.append(
-                $('<div>').addClass('gf-field gf-mb-2').append(
-                    $('<label>').addClass('gf-label').attr('for', 'gf-restore-select')
-                        .text('কোন ব্যাকআপ থেকে ফিরবেন'),
-                    $select,
-                    $('<span>').addClass('gf-help').text('মোট ' + count + ' টি ব্যাকআপ আছে। সবচেয়ে নতুনটি উপরে।')
-                ),
-                $('<div>').addClass('gf-row').append(
-                    $('<button>').attr('type', 'button').attr('id', 'gf-restore-btn')
-                        .addClass('gf-btn gf-btn-danger').text('রিস্টোর করুন'),
-                    $('<span>').attr('id', 'gf-restore-status').addClass('gf-help')
+                $('<p>').addClass('gf-label').text('সংরক্ষিত ব্যাকআপ'),
+                $list,
+                $('<p>').addClass('gf-help').text(
+                    'মোট ' + count + ' টি ব্যাকআপ আছে। কোনটি ফেরাবেন তা Guardify ড্যাশবোর্ড থেকে বেছে নিন।'
                 )
             );
         });
@@ -290,37 +314,107 @@ jQuery(function ($) {
 
     /* ── Restore ──────────────────────────────────────────────────────── */
 
-    $(document).on('click', '#gf-restore-btn', function () {
-        var backupId = $('#gf-restore-select').val();
-        if (!backupId) { return; }
+    /*
+     * The plugin never decides that a restore may happen — it only carries one out. The
+     * archive is verified end to end on Guardify's side and the target domain is confirmed
+     * there, which is both a safety property and the reason a 400MB integrity check does
+     * not run on the merchant's hosting.
+     */
+    var restoreTimer = null;
 
-        if (!confirm('আপনি কি নিশ্চিত?\n\nএই ব্যাকআপ থেকে রিস্টোর করলে বর্তমান ডাটাবেইজ প্রতিস্থাপিত হবে। রিস্টোরের আগে একটি নিরাপত্তা ব্যাকআপ নেওয়া হবে।')) {
+    function restoreNotice(type, text) {
+        $('#gf-restore-status').html($('<div>').addClass('gf-alert gf-alert-' + type).text(text));
+    }
+
+    function pollRestore() {
+        $.post(ajaxUrl, { action: 'guardify_restore_status', _ajax_nonce: nonce })
+            .done(function (res) {
+                if (!res.success) { return; }
+
+                if (res.data.running) {
+                    var line = res.data.message;
+                    if (res.data.stage === 'download' && res.data.expected > 0) {
+                        line += ' ' + Math.round((res.data.downloaded / res.data.expected) * 100) + '%';
+                    }
+                    $('#gf-restore-live').removeClass('gf-hidden')
+                        .html($('<div>').addClass('gf-alert gf-alert-info').text(line));
+                    $('#gf-restore-abort').removeClass('gf-hidden');
+                    restoreTimer = setTimeout(pollRestore, 4000);
+                    return;
+                }
+
+                $('#gf-restore-live').addClass('gf-hidden').empty();
+                $('#gf-restore-abort').addClass('gf-hidden');
+                GF.setLoading($('#gf-restore-btn'), false);
+
+                var last = res.data.last;
+                if (last && last.ok) {
+                    restoreNotice('success', last.message);
+                    GF.toast(last.message, { type: 'success' });
+                    loadBackups();
+                } else if (last) {
+                    restoreNotice('error', last.message);
+                }
+            })
+            .fail(function () {
+                GF.setLoading($('#gf-restore-btn'), false);
+                restoreNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+            });
+    }
+
+    $('#gf-restore-btn').on('click', function () {
+        var $btn  = $(this);
+        var token = $.trim($('#gf-restore-token').val());
+
+        if (!/^[a-f0-9]{64}$/i.test(token)) {
+            restoreNotice('error', 'কোডটি সঠিক নয়। Guardify ড্যাশবোর্ড থেকে কোডটি কপি করে বসান।');
             return;
         }
 
-        var $btn = $(this);
-        var $status = $('#gf-restore-status').removeClass('gf-success gf-error').text('');
+        if (!confirm('আপনি কি নিশ্চিত?\n\nএই ব্যাকআপের পরে আসা সব অর্ডার ও পরিবর্তন মুছে যাবে। নতুন ডাটা প্রস্তুত না হওয়া পর্যন্ত আপনার সাইট স্বাভাবিকভাবে চলবে।')) {
+            return;
+        }
 
+        if (restoreTimer) { clearTimeout(restoreTimer); restoreTimer = null; }
+        $('#gf-restore-status').empty();
         GF.setLoading($btn, true);
 
-        $.post(ajaxUrl, {
-            action: 'guardify_backup_restore',
-            _ajax_nonce: nonce,
-            backup_id: backupId
-        }, function (res) {
-            if (res.success) {
-                $status.addClass('gf-success').text(res.data.message || 'রিস্টোর সম্পন্ন হয়েছে।');
-                GF.toast(res.data.message || 'রিস্টোর সম্পন্ন হয়েছে।', { type: 'success' });
-                loadBackups();
-            } else {
-                $status.addClass('gf-error').text(res.data || 'রিস্টোর ব্যর্থ হয়েছে।');
-            }
-        }).fail(function () {
-            $status.addClass('gf-error').text('সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
-        }).always(function () {
-            GF.setLoading($btn, false);
-        });
+        $.post(ajaxUrl, { action: 'guardify_restore_start', token: token, _ajax_nonce: nonce })
+            .done(function (res) {
+                if (!res.success) {
+                    GF.setLoading($btn, false);
+                    restoreNotice('error', res.data || 'রিস্টোর শুরু করা যায়নি।');
+                    return;
+                }
+                $('#gf-restore-token').val('');
+                restoreNotice('info', res.data.message);
+                restoreTimer = setTimeout(pollRestore, 2000);
+            })
+            .fail(function () {
+                GF.setLoading($btn, false);
+                restoreNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+            });
     });
+
+    $('#gf-restore-abort').on('click', function () {
+        if (!confirm('রিস্টোর বাতিল করবেন? আপনার সাইটে কোনো পরিবর্তন হয়নি।')) { return; }
+        $.post(ajaxUrl, { action: 'guardify_restore_abort', _ajax_nonce: nonce })
+            .always(function () {
+                if (restoreTimer) { clearTimeout(restoreTimer); restoreTimer = null; }
+                pollRestore();
+            });
+    });
+
+    // A restore queued in an earlier page view is still running; pick it back up rather
+    // than showing an idle screen while the database is mid-swap.
+    (function resumeRestore() {
+        $.post(ajaxUrl, { action: 'guardify_restore_status', _ajax_nonce: nonce }, function (res) {
+            if (res.success && res.data.running) {
+                GF.setLoading($('#gf-restore-btn'), true);
+                pollRestore();
+            }
+        });
+    })();
 
     /* ── Schedule ─────────────────────────────────────────────────────── */
 
