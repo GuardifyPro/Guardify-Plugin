@@ -79,6 +79,8 @@ $settings = [
     'guard_action'                => get_option('guardify_checkout_guard_action', 'flag'),
     'guard_threshold'             => get_option('guardify_checkout_guard_threshold', 60),
     'guard_dry_run'               => get_option('guardify_checkout_guard_dry_run', 'yes'),
+    'site_manager_enabled'        => get_option('guardify_site_manager_enabled', 'no'),
+    'site_manager_updates'        => get_option('guardify_site_manager_updates', 'no'),
     'trusted_proxy_header'        => get_option('guardify_trusted_proxy_header', ''),
     'sms_notifications_enabled'   => get_option('guardify_sms_notifications_enabled', 'no'),
     'notification_statuses'       => get_option('guardify_notification_statuses', []),
@@ -790,6 +792,58 @@ endif;
                     </div>
                 </div>
             </div>
+
+            <?php if (current_user_can('manage_options')) : ?>
+            <div class="gf-card">
+                <div class="gf-card-header">
+                    <div class="gf-card-heading">
+                        <h2 class="gf-card-title"><?php esc_html_e('সাইট ম্যানেজমেন্ট', 'guardify-pro'); ?></h2>
+                        <p class="gf-card-desc"><?php esc_html_e('Guardify ড্যাশবোর্ড থেকে এই সাইটের প্লাগইন, থিম ও ইউজার দেখুন — একাধিক দোকান থাকলে সবগুলো এক জায়গায়।', 'guardify-pro'); ?></p>
+                    </div>
+                    <div class="gf-card-header-actions">
+                        <span id="gf-sm-summary" class="gf-badge gf-badge-muted gf-hidden"></span>
+                    </div>
+                </div>
+                <div class="gf-card-body gf-stack">
+                    <div class="gf-alert gf-alert-info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <div>
+                            <strong class="gf-alert-title"><?php esc_html_e('Guardify আপনার সাইটে ঢোকে না — সাইটই জিজ্ঞেস করে', 'guardify-pro'); ?></strong>
+                            <?php esc_html_e('আপনার সাইট ঘণ্টায় একবার Guardify-কে জিজ্ঞেস করে "আমার জন্য কোনো কাজ আছে?" — আর আপনি ড্যাশবোর্ডে যা বলেছেন সেটাই উত্তর হিসেবে পায়। বাইরে থেকে আপনার সার্ভারে কিছু করার কোনো পথ খোলা থাকে না।', 'guardify-pro'); ?>
+                        </div>
+                    </div>
+
+                    <div class="gf-settings-list">
+                        <label class="gf-toggle-row">
+                            <span class="gf-toggle-info">
+                                <span class="gf-toggle-label"><?php esc_html_e('সাইটের তথ্য Guardify-তে পাঠান', 'guardify-pro'); ?></span>
+                                <span class="gf-toggle-desc"><?php esc_html_e('কোন প্লাগইন ও থিমের কোন ভার্সন চলছে, কোনটির আপডেট আছে, আর কারা অ্যাডমিন — শুধু এটুকু। গ্রাহকের কোনো তথ্য যায় না।', 'guardify-pro'); ?></span>
+                            </span>
+                            <span class="gf-switch">
+                                <input type="checkbox" id="gf-sm-enabled" <?php checked($settings['site_manager_enabled'], 'yes'); ?> />
+                                <span class="gf-switch-slider"></span>
+                            </span>
+                        </label>
+
+                        <label class="gf-toggle-row">
+                            <span class="gf-toggle-info">
+                                <span class="gf-toggle-label"><?php esc_html_e('ড্যাশবোর্ড থেকে আপডেট করার অনুমতি দিন', 'guardify-pro'); ?></span>
+                                <span class="gf-toggle-desc"><?php esc_html_e('বন্ধ থাকলে Guardify শুধু দেখাবে কী কী পুরোনো — কিছু ইনস্টল করবে না। WordPress-এর বড় ভার্সন আপডেট কখনোই এখান থেকে হবে না, আর Guardify নিজেকেও এখান থেকে আপডেট করে না।', 'guardify-pro'); ?></span>
+                            </span>
+                            <span class="gf-switch">
+                                <input type="checkbox" id="gf-sm-updates" <?php checked($settings['site_manager_updates'], 'yes'); ?> />
+                                <span class="gf-switch-slider"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div id="gf-sm-status"></div>
+                </div>
+                <div class="gf-card-footer">
+                    <button type="button" id="gf-sm-save" class="gf-btn gf-btn-primary"><?php esc_html_e('সেভ করুন', 'guardify-pro'); ?></button>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <div class="gf-card gf-card-danger">
                 <div class="gf-card-header">

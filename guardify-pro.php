@@ -52,6 +52,7 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-domain.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-media.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-client-ip.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-checkout-guard.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-site-manager.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-onboarding.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
@@ -158,6 +159,7 @@ final class Guardify_Pro {
         Guardify_Domain::get_instance();
         Guardify_Media::get_instance();
         Guardify_Checkout_Guard::get_instance();
+        Guardify_Site_Manager::get_instance();
         Guardify_Onboarding::get_instance();
 
         // Admin menu

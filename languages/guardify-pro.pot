@@ -18,127 +18,127 @@ msgstr ""
 "Language-Team: Bengali (Bangladesh)\n"
 "X-Domain: guardify-pro\n"
 
-#: guardify-pro.php:244 guardify-pro.php:260 guardify-pro.php:271
+#: guardify-pro.php:246 guardify-pro.php:262 guardify-pro.php:273
 msgid "Guardify:"
 msgstr ""
 
-#: guardify-pro.php:245
+#: guardify-pro.php:247
 msgid "OTP পাঠানো যাচ্ছে না, তাই চেকআউটে ভেরিফিকেশন সাময়িকভাবে বন্ধ রাখা হয়েছে — নইলে কোনো অর্ডারই সম্পন্ন হতো না। SMS ব্যালেন্স ও সংযোগ পরীক্ষা করুন।"
 msgstr ""
 
-#: guardify-pro.php:261
+#: guardify-pro.php:263
 msgid "আপনার সাইট একটি প্রক্সি বা Cloudflare-এর পেছনে আছে, তাই ভিজিটরের আসল IP পাওয়া যাচ্ছে না — IP ব্লক ও VPN ব্লক কাজ করছে না।"
 msgstr ""
 
-#: guardify-pro.php:263
+#: guardify-pro.php:265
 msgid "সেটিংসে গিয়ে ঠিক করুন"
 msgstr ""
 
-#: guardify-pro.php:272
+#: guardify-pro.php:274
 msgid "ইঞ্জিনের সাথে সর্বশেষ সংযোগ ব্যর্থ হয়েছে।"
 msgstr ""
 
-#: guardify-pro.php:291 guardify-pro.php:292
+#: guardify-pro.php:293 guardify-pro.php:294
 msgid "সেটিংস"
 msgstr ""
 
-#: guardify-pro.php:300 guardify-pro.php:301
+#: guardify-pro.php:302 guardify-pro.php:303
 msgid "ফোন সার্চ"
 msgstr ""
 
-#: guardify-pro.php:309 guardify-pro.php:310 templates/fraud-detection-page.php:46
+#: guardify-pro.php:311 guardify-pro.php:312 templates/fraud-detection-page.php:46
 msgid "ফ্রড ম্যানেজমেন্ট"
 msgstr ""
 
-#: guardify-pro.php:318 templates/incomplete-orders-page.php:36 templates/settings-page.php:380
+#: guardify-pro.php:320 templates/incomplete-orders-page.php:36 templates/settings-page.php:382
 msgid "ইনকমপ্লিট অর্ডার"
 msgstr ""
 
-#: guardify-pro.php:319
+#: guardify-pro.php:321
 msgid "ইনকমপ্লিট অর্ডার <span class=\"awaiting-mod\">"
 msgstr ""
 
-#: guardify-pro.php:327 guardify-pro.php:328 templates/sms-logs-page.php:44
+#: guardify-pro.php:329 guardify-pro.php:330 templates/sms-logs-page.php:44
 msgid "SMS লগস"
 msgstr ""
 
-#: guardify-pro.php:336 guardify-pro.php:337 templates/onboarding-page.php:23
+#: guardify-pro.php:338 guardify-pro.php:339 templates/onboarding-page.php:23
 msgid "ব্যাকআপ"
 msgstr ""
 
-#: guardify-pro.php:350 guardify-pro.php:351
+#: guardify-pro.php:352 guardify-pro.php:353
 msgid "ডিজাইন সিস্টেম"
 msgstr ""
 
-#: guardify-pro.php:361 guardify-pro.php:368 guardify-pro.php:375 guardify-pro.php:382 guardify-pro.php:389 guardify-pro.php:396 includes/class-guardify-onboarding.php:98 includes/class-guardify-search.php:27 templates/backup-page.php:12 templates/design-system-page.php:17 templates/fraud-detection-page.php:13 templates/incomplete-orders-page.php:13 templates/onboarding-page.php:12 templates/settings-page.php:16 templates/sms-logs-page.php:13
+#: guardify-pro.php:363 guardify-pro.php:370 guardify-pro.php:377 guardify-pro.php:384 guardify-pro.php:391 guardify-pro.php:398 includes/class-guardify-onboarding.php:98 includes/class-guardify-search.php:27 templates/backup-page.php:12 templates/design-system-page.php:17 templates/fraud-detection-page.php:13 templates/incomplete-orders-page.php:13 templates/onboarding-page.php:12 templates/settings-page.php:16 templates/sms-logs-page.php:13
 msgid "Unauthorized"
 msgstr ""
 
-#: guardify-pro.php:488
+#: guardify-pro.php:490
 msgid "সঠিক API কী দিন। ফরম্যাট: gp_xxxx"
 msgstr ""
 
-#: guardify-pro.php:519
+#: guardify-pro.php:521
 msgid "API কী যাচাই ব্যর্থ হয়েছে।"
 msgstr ""
 
-#: guardify-pro.php:537
+#: guardify-pro.php:539
 msgid "ইমেইল ও পাসওয়ার্ড আবশ্যক।"
 msgstr ""
 
-#: guardify-pro.php:556
+#: guardify-pro.php:558
 msgid "সার্ভারে সংযোগ করা যায়নি: "
 msgstr ""
 
-#: guardify-pro.php:563
+#: guardify-pro.php:565
 msgid "লগইন ব্যর্থ।"
 msgstr ""
 
-#: guardify-pro.php:572
+#: guardify-pro.php:574
 msgid "অ্যাক্সেস টোকেন পাওয়া যায়নি।"
 msgstr ""
 
-#: guardify-pro.php:585
+#: guardify-pro.php:587
 msgid "API কী লোড করা যায়নি।"
 msgstr ""
 
-#: guardify-pro.php:616
+#: guardify-pro.php:618
 msgid "API কী তৈরি করা যায়নি।"
 msgstr ""
 
-#: guardify-pro.php:623
+#: guardify-pro.php:625
 msgid "API কী তৈরি ব্যর্থ হয়েছে।"
 msgstr ""
 
-#: guardify-pro.php:634
+#: guardify-pro.php:636
 msgid "কী যাচাই ব্যর্থ হয়েছে।"
 msgstr ""
 
-#: guardify-pro.php:683
+#: guardify-pro.php:685
 msgid "বিষয় ও বিস্তারিত আবশ্যক।"
 msgstr ""
 
-#: guardify-pro.php:709
+#: guardify-pro.php:711
 msgid "টিকেট সফলভাবে পাঠানো হয়েছে।"
 msgstr ""
 
-#: guardify-pro.php:714
+#: guardify-pro.php:716
 msgid "টিকেট পাঠানো যায়নি।"
 msgstr ""
 
-#: guardify-pro.php:773
+#: guardify-pro.php:775
 msgid "আপডেট চেকার পাওয়া যায়নি।"
 msgstr ""
 
-#: guardify-pro.php:784
+#: guardify-pro.php:786
 msgid "নতুন ভার্সন পাওয়া গেছে: "
 msgstr ""
 
-#: guardify-pro.php:789
+#: guardify-pro.php:791
 msgid "আপনার প্লাগইন আপ-টু-ডেট আছে। (ভার্সন "
 msgstr ""
 
-#: guardify-pro.php:922
+#: guardify-pro.php:924
 msgid "সেটিংস সংরক্ষিত হয়েছে।"
 msgstr ""
 
@@ -622,7 +622,7 @@ msgstr ""
 msgid "ফোন"
 msgstr ""
 
-#: includes/class-guardify-incomplete-orders.php:774 templates/settings-page.php:183
+#: includes/class-guardify-incomplete-orders.php:774 templates/settings-page.php:185
 msgid "ইমেইল"
 msgstr ""
 
@@ -1082,7 +1082,7 @@ msgstr ""
 msgid "কুরিয়ার রিপোর্ট"
 msgstr ""
 
-#: includes/class-guardify-report-column.php:167 templates/settings-page.php:149
+#: includes/class-guardify-report-column.php:167 templates/settings-page.php:151
 msgid "সংযুক্ত নয়"
 msgstr ""
 
@@ -1324,6 +1324,46 @@ msgstr ""
 
 #: includes/class-guardify-send-courier.php:609
 msgid "Guardify: কুরিয়ার স্ট্যাটাস \"%s\" → অর্ডার স্ট্যাটাস আপডেট।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:334
+msgid "তালিকা হালনাগাদ হবে।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:395 includes/class-guardify-site-manager.php:441
+msgid "ইতিমধ্যে সর্বশেষ ভার্সন।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:423
+msgid "আপডেট সম্পন্ন।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:454
+msgid "থিম আপডেট সম্পন্ন।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:474
+msgid "WordPress ইতিমধ্যে সর্বশেষ ভার্সনে আছে।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:494
+msgid "WordPress আপডেট সম্পন্ন।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:541
+msgid "সব সেশন বন্ধ করা হয়েছে।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:547
+msgid "সেশনটি বন্ধ করা হয়েছে।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:614
+msgid "সাইট ম্যানেজমেন্ট চালু হয়েছে।"
+msgstr ""
+
+#: includes/class-guardify-site-manager.php:615
+msgid "সাইট ম্যানেজমেন্ট বন্ধ হয়েছে।"
 msgstr ""
 
 #: includes/class-guardify-smart-filter.php:127
@@ -1778,7 +1818,7 @@ msgstr ""
 msgid "সর্বশেষ"
 msgstr ""
 
-#: templates/fraud-detection-page.php:133 templates/fraud-detection-page.php:248 templates/incomplete-orders-page.php:140 templates/settings-page.php:489
+#: templates/fraud-detection-page.php:133 templates/fraud-detection-page.php:248 templates/incomplete-orders-page.php:140 templates/settings-page.php:491
 msgid "অ্যাকশন"
 msgstr ""
 
@@ -1818,7 +1858,7 @@ msgstr ""
 msgid "ভ্যালু"
 msgstr ""
 
-#: templates/fraud-detection-page.php:217 templates/fraud-detection-page.php:329 templates/settings-page.php:587 templates/settings-page.php:676
+#: templates/fraud-detection-page.php:217 templates/fraud-detection-page.php:329 templates/settings-page.php:589 templates/settings-page.php:678
 msgid "(ঐচ্ছিক)"
 msgstr ""
 
@@ -1890,7 +1930,7 @@ msgstr ""
 msgid "ফোন নম্বর ব্লক করুন"
 msgstr ""
 
-#: templates/fraud-detection-page.php:320 templates/incomplete-orders-page.php:264 templates/incomplete-orders-page.php:322 templates/incomplete-orders-page.php:359 templates/settings-page.php:908 templates/sms-logs-page.php:204 templates/sms-logs-page.php:210
+#: templates/fraud-detection-page.php:320 templates/incomplete-orders-page.php:264 templates/incomplete-orders-page.php:322 templates/incomplete-orders-page.php:359 templates/settings-page.php:962 templates/sms-logs-page.php:204 templates/sms-logs-page.php:210
 msgid "বন্ধ করুন"
 msgstr ""
 
@@ -2190,7 +2230,7 @@ msgstr ""
 msgid "কনভার্ট করা যায়নি।"
 msgstr ""
 
-#: templates/onboarding-page.php:21 templates/settings-page.php:324
+#: templates/onboarding-page.php:21 templates/settings-page.php:326
 msgid "সংযোগ"
 msgstr ""
 
@@ -2242,7 +2282,7 @@ msgstr ""
 msgid "%s — অ্যাকাউন্ট খুলে API কী তৈরি করুন।"
 msgstr ""
 
-#: templates/onboarding-page.php:94 templates/settings-page.php:217
+#: templates/onboarding-page.php:94 templates/settings-page.php:219
 msgid "সংযুক্ত করুন"
 msgstr ""
 
@@ -2382,683 +2422,719 @@ msgstr ""
 msgid " টি অর্ডারের মধ্যে "
 msgstr ""
 
-#: templates/settings-page.php:144
+#: templates/settings-page.php:146
 msgid "ফ্রড ডিটেকশন ও কুরিয়ার ইন্টেলিজেন্স — আপনার ই-কমার্সের নিরাপত্তা"
 msgstr ""
 
-#: templates/settings-page.php:149
+#: templates/settings-page.php:151
 msgid "সংযুক্ত"
 msgstr ""
 
-#: templates/settings-page.php:160
+#: templates/settings-page.php:162
 msgid "প্লাগইন সংযুক্ত করুন"
 msgstr ""
 
-#: templates/settings-page.php:161
+#: templates/settings-page.php:163
 msgid "সংযুক্ত না হলে ফ্রড স্কোর, কুরিয়ার ডেটা ও SMS — কিছুই কাজ করবে না।"
 msgstr ""
 
-#: templates/settings-page.php:166
+#: templates/settings-page.php:168
 msgid "অটো কানেক্ট"
 msgstr ""
 
-#: templates/settings-page.php:167
+#: templates/settings-page.php:169
 msgid "ম্যানুয়াল কী"
 msgstr ""
 
-#: templates/settings-page.php:176
+#: templates/settings-page.php:178
 msgid "আপনার %s অ্যাকাউন্ট দিয়ে লগইন করুন — API কী স্বয়ংক্রিয়ভাবে তৈরি ও সেটআপ হয়ে যাবে। বেশিরভাগ ক্ষেত্রে এটাই সহজ পথ।"
 msgstr ""
 
-#: templates/settings-page.php:187
+#: templates/settings-page.php:189
 msgid "পাসওয়ার্ড"
 msgstr ""
 
-#: templates/settings-page.php:191
+#: templates/settings-page.php:193
 msgid "লগইন ও কানেক্ট"
 msgstr ""
 
-#: templates/settings-page.php:192
+#: templates/settings-page.php:194
 msgid "অ্যাকাউন্ট নেই?"
 msgstr ""
 
-#: templates/settings-page.php:192
+#: templates/settings-page.php:194
 msgid "রেজিস্টার করুন"
 msgstr ""
 
-#: templates/settings-page.php:202
+#: templates/settings-page.php:204
 msgid "%s পেজ থেকে নতুন কী তৈরি করে কপি করুন, তারপর নিচে পেস্ট করুন।"
 msgstr ""
 
-#: templates/settings-page.php:213
+#: templates/settings-page.php:215
 msgid "কী সবসময় %s দিয়ে শুরু হয়।"
 msgstr ""
 
-#: templates/settings-page.php:234 templates/sms-logs-page.php:107
+#: templates/settings-page.php:236 templates/sms-logs-page.php:107
 msgid "স্ট্যাটাস"
 msgstr ""
 
-#: templates/settings-page.php:235
+#: templates/settings-page.php:237
 msgid "চেক হচ্ছে…"
 msgstr ""
 
-#: templates/settings-page.php:243
+#: templates/settings-page.php:245
 msgid "ডোমেইন"
 msgstr ""
 
-#: templates/settings-page.php:252
+#: templates/settings-page.php:254
 msgid "সাবস্ক্রিপশন"
 msgstr ""
 
-#: templates/settings-page.php:261
+#: templates/settings-page.php:263
 msgid "মেয়াদ"
 msgstr ""
 
-#: templates/settings-page.php:270
+#: templates/settings-page.php:272
 msgid "SMS ব্যালেন্স"
 msgstr ""
 
-#: templates/settings-page.php:279
+#: templates/settings-page.php:281
 msgid "Steadfast ব্যালেন্স"
 msgstr ""
 
-#: templates/settings-page.php:291
+#: templates/settings-page.php:293
 msgid "বিস্তারিত দেখুন →"
 msgstr ""
 
-#: templates/settings-page.php:300
+#: templates/settings-page.php:302
 msgid "ঘোষণা"
 msgstr ""
 
-#: templates/settings-page.php:320
+#: templates/settings-page.php:322
 msgid "ফিচার"
 msgstr ""
 
-#: templates/settings-page.php:321
+#: templates/settings-page.php:323
 msgid "সুরক্ষা নিয়ম"
 msgstr ""
 
-#: templates/settings-page.php:322 templates/settings-page.php:374
+#: templates/settings-page.php:324 templates/settings-page.php:376
 msgid "SMS নোটিফিকেশন"
 msgstr ""
 
-#: templates/settings-page.php:323
+#: templates/settings-page.php:325
 msgid "SMS লগস ↗"
 msgstr ""
 
-#: templates/settings-page.php:325
+#: templates/settings-page.php:327
 msgid "সাপোর্ট"
 msgstr ""
 
-#: templates/settings-page.php:326
+#: templates/settings-page.php:328
 msgid "আপডেট"
 msgstr ""
 
-#: templates/settings-page.php:334
+#: templates/settings-page.php:336
 msgid "কোন ফিচার চালু থাকবে"
 msgstr ""
 
-#: templates/settings-page.php:335
+#: templates/settings-page.php:337
 msgid "প্রতিটি ফিচার আলাদাভাবে চালু বা বন্ধ করা যায়। নিচে সেভ বাটনে ক্লিক করার পর পরিবর্তন কার্যকর হবে।"
 msgstr ""
 
-#: templates/settings-page.php:344
+#: templates/settings-page.php:346
 msgid "স্মার্ট অর্ডার ফিল্টার"
 msgstr ""
 
-#: templates/settings-page.php:345
+#: templates/settings-page.php:347
 msgid "গ্রাহকের কুরিয়ার ডেলিভারি রেকর্ড (DP রেশিও) দেখে ঝুঁকিপূর্ণ অর্ডার ব্লক, OTP বা ফ্ল্যাগ করে। COD অর্ডার বেশি রিটার্ন হলে প্রথমে এটাই চালু করুন।"
 msgstr ""
 
-#: templates/settings-page.php:350
+#: templates/settings-page.php:352
 msgid "OTP ভেরিফিকেশন"
 msgstr ""
 
-#: templates/settings-page.php:351
+#: templates/settings-page.php:353
 msgid "চেকআউটে গ্রাহকের ফোনে SMS কোড পাঠিয়ে নম্বর যাচাই করে। ভুয়া নম্বরে অর্ডার আটকায়, তবে প্রতি অর্ডারে SMS খরচ হয়।"
 msgstr ""
 
-#: templates/settings-page.php:356
+#: templates/settings-page.php:358
 msgid "VPN / প্রক্সি ব্লক"
 msgstr ""
 
-#: templates/settings-page.php:357
+#: templates/settings-page.php:359
 msgid "VPN বা প্রক্সির পেছন থেকে আসা চেকআউট আটকায়। কিছু বৈধ গ্রাহকও VPN ব্যবহার করেন — বারবার একই জায়গা থেকে ভুয়া অর্ডার এলে চালু করুন।"
 msgstr ""
 
-#: templates/settings-page.php:362 templates/settings-page.php:568
+#: templates/settings-page.php:364 templates/settings-page.php:570
 msgid "রিপিট অর্ডার ব্লকার"
 msgstr ""
 
-#: templates/settings-page.php:363
+#: templates/settings-page.php:365
 msgid "একই ফোন নম্বর থেকে অল্প সময়ে একাধিক অর্ডার আটকায়। ভুল করে দুইবার অর্ডার হওয়া বা এক নম্বর দিয়ে স্প্যাম বন্ধ করে।"
 msgstr ""
 
-#: templates/settings-page.php:368
+#: templates/settings-page.php:370
 msgid "ফ্রড ডিটেকশন"
 msgstr ""
 
-#: templates/settings-page.php:369
+#: templates/settings-page.php:371
 msgid "ডিভাইস ফিঙ্গারপ্রিন্ট ও IP ট্র্যাক করে চেনা প্রতারককে চিনে রাখে এবং নিয়ম অনুযায়ী অটো-ব্লক করে।"
 msgstr ""
 
-#: templates/settings-page.php:375
+#: templates/settings-page.php:377
 msgid "অর্ডারের স্ট্যাটাস বদলালে গ্রাহককে SMS পাঠায়। কোন স্ট্যাটাসে ও কী লেখা যাবে তা SMS নোটিফিকেশন ট্যাবে ঠিক করুন।"
 msgstr ""
 
-#: templates/settings-page.php:381
+#: templates/settings-page.php:383
 msgid "চেকআউট পেজে নাম-ফোন দিয়েও অর্ডার শেষ না করা গ্রাহকদের ধরে রাখে, যাতে আপনি ফোন বা SMS দিয়ে অর্ডারটি ফিরিয়ে আনতে পারেন।"
 msgstr ""
 
-#: templates/settings-page.php:386
+#: templates/settings-page.php:388
 msgid "ফোন হিস্ট্রি"
 msgstr ""
 
-#: templates/settings-page.php:387
+#: templates/settings-page.php:389
 msgid "WooCommerce অর্ডার লিস্টে দেখায় এই নম্বর থেকে আগে কতটি অর্ডার এসেছে। পুরনো গ্রাহক চেনার সবচেয়ে দ্রুত উপায়।"
 msgstr ""
 
-#: templates/settings-page.php:392
+#: templates/settings-page.php:394
 msgid "রিপোর্ট কলাম"
 msgstr ""
 
-#: templates/settings-page.php:393
+#: templates/settings-page.php:395
 msgid "অর্ডার লিস্টে DP রেশিও ও রিস্ক ব্যাজ যোগ করে, যাতে অর্ডার খোলার আগেই ঝুঁকি দেখা যায়।"
 msgstr ""
 
-#: templates/settings-page.php:408
+#: templates/settings-page.php:410
 msgid "ইনকমপ্লিট অর্ডার সেটিংস"
 msgstr ""
 
-#: templates/settings-page.php:409
+#: templates/settings-page.php:411
 msgid "অসম্পূর্ণ চেকআউটের রেকর্ড কতদিন রাখা হবে এবং কখন আবার ক্যাপচার করা হবে।"
 msgstr ""
 
-#: templates/settings-page.php:414
+#: templates/settings-page.php:416
 msgid "রেকর্ড রাখার সময় (দিন)"
 msgstr ""
 
-#: templates/settings-page.php:416
+#: templates/settings-page.php:418
 msgid "এই দিন পার হলে পুরনো পেন্ডিং রেকর্ড অটো-ডিলিট হবে। ডাটাবেইজ হালকা রাখতে ৩০ দিনই যথেষ্ট।"
 msgstr ""
 
-#: templates/settings-page.php:423
+#: templates/settings-page.php:425
 msgid "কুলডাউন সক্রিয়"
 msgstr ""
 
-#: templates/settings-page.php:424
+#: templates/settings-page.php:426
 msgid "একজন গ্রাহক অর্ডার সম্পন্ন করার পর নির্দিষ্ট সময় পর্যন্ত তার নতুন অসম্পূর্ণ চেকআউট আর ক্যাপচার হবে না। এতে একই গ্রাহকের একই কার্ট বারবার লিস্টে আসে না।"
 msgstr ""
 
-#: templates/settings-page.php:431
+#: templates/settings-page.php:433
 msgid "কুলডাউন সময় (মিনিট)"
 msgstr ""
 
-#: templates/settings-page.php:433
+#: templates/settings-page.php:435
 msgid "ডিফল্ট ৩০ মিনিট। গ্রাহক যদি সাধারণত একই দিনে ফিরে আসেন, ছোট মানই ভালো।"
 msgstr ""
 
-#: templates/settings-page.php:441
+#: templates/settings-page.php:443
 msgid "কুরিয়ার"
 msgstr ""
 
-#: templates/settings-page.php:442
+#: templates/settings-page.php:444
 msgid "অর্ডার পাঠানোর সময় কোন কুরিয়ার আগে থেকেই সিলেক্ট থাকবে।"
 msgstr ""
 
-#: templates/settings-page.php:447
+#: templates/settings-page.php:449
 msgid "ডিফল্ট কুরিয়ার"
 msgstr ""
 
-#: templates/settings-page.php:452
+#: templates/settings-page.php:454
 msgid "প্রতিটি অর্ডারে আলাদা কুরিয়ার বেছে নেওয়া যাবে — এটি শুধু ডিফল্ট।"
 msgstr ""
 
-#: templates/settings-page.php:463
+#: templates/settings-page.php:465
 msgid "নিয়ম কড়া করার আগে"
 msgstr ""
 
-#: templates/settings-page.php:467
+#: templates/settings-page.php:469
 msgid "এই ট্যাবের নিয়মগুলো গ্রাহকের অর্ডার আটকাতে পারে। প্রথমে অ্যাকশন %s রেখে কয়েক দিন দেখুন কারা ধরা পড়ছে — তারপর ব্লকে যান। খুব কড়া নিয়ম ভালো গ্রাহকও হারায়।"
 msgstr ""
 
-#: templates/settings-page.php:468
+#: templates/settings-page.php:470
 msgid "ফ্ল্যাগ"
 msgstr ""
 
-#: templates/settings-page.php:477
+#: templates/settings-page.php:479
 msgid "স্মার্ট ফিল্টার"
 msgstr ""
 
-#: templates/settings-page.php:478
+#: templates/settings-page.php:480
 msgid "DP রেশিও = গ্রাহকের আগের পার্সেলের মধ্যে কতগুলো সফলভাবে ডেলিভার হয়েছে। যত কম, তত ঝুঁকি।"
 msgstr ""
 
-#: templates/settings-page.php:484 templates/settings-page.php:627
+#: templates/settings-page.php:486 templates/settings-page.php:629
 msgid "DP থ্রেশহোল্ড (%)"
 msgstr ""
 
-#: templates/settings-page.php:486
+#: templates/settings-page.php:488
 msgid "এর নিচে DP হলে অ্যাকশন নেওয়া হবে। ৭০% দিয়ে শুরু করুন; ১০ জনে ৩ জনের বেশি পার্সেল ফেরত দিলে সে ধরা পড়বে।"
 msgstr ""
 
-#: templates/settings-page.php:491
+#: templates/settings-page.php:493
 msgid "ব্লক করুন — অর্ডার হবে না"
 msgstr ""
 
-#: templates/settings-page.php:492
+#: templates/settings-page.php:494
 msgid "OTP ভেরিফিকেশন — নম্বর যাচাই করে ছাড়"
 msgstr ""
 
-#: templates/settings-page.php:493
+#: templates/settings-page.php:495
 msgid "ফ্ল্যাগ করুন — অর্ডার হবে, আপনি চিহ্ন দেখবেন"
 msgstr ""
 
-#: templates/settings-page.php:495
+#: templates/settings-page.php:497
 msgid "নিশ্চিত না হলে ফ্ল্যাগ বেছে নিন — কোনো অর্ডার হারাবে না।"
 msgstr ""
 
-#: templates/settings-page.php:503
+#: templates/settings-page.php:505
 msgid "নতুন গ্রাহক বাদ দিন"
 msgstr ""
 
-#: templates/settings-page.php:504
+#: templates/settings-page.php:506
 msgid "যার কোনো কুরিয়ার হিস্ট্রি নেই তার উপর ফিল্টার চলবে না। বন্ধ রাখলে প্রথমবার অর্ডার করা গ্রাহকও আটকে যেতে পারে — সাধারণত চালু রাখাই ভালো।"
 msgstr ""
 
-#: templates/settings-page.php:515
+#: templates/settings-page.php:517
 msgid "ভুয়া অর্ডার গার্ড"
 msgstr ""
 
-#: templates/settings-page.php:516
+#: templates/settings-page.php:518
 msgid "গ্রাহকের রেকর্ড নয় — অর্ডারটি কীভাবে দেওয়া হলো তা দেখে ভুয়া ও স্বয়ংক্রিয় অর্ডার ধরে।"
 msgstr ""
 
-#: templates/settings-page.php:523
+#: templates/settings-page.php:525
 msgid "নতুন নম্বরের ভুয়া অর্ডার এভাবেই ধরা পড়ে"
 msgstr ""
 
-#: templates/settings-page.php:524
+#: templates/settings-page.php:526
 msgid "স্মার্ট ফিল্টার গ্রাহকের ডেলিভারি রেকর্ড দেখে — কিন্তু দশ সেকেন্ড আগে বানানো নম্বরের কোনো রেকর্ডই থাকে না। এই গার্ড দেখে ফর্মটি কত দ্রুত পূরণ হলো, লুকানো ঘরে কিছু লেখা হলো কি না, নামটি আসল মনে হয় কি না, আর একই সংযোগ থেকে কতগুলো অর্ডার আসছে।"
 msgstr ""
 
-#: templates/settings-page.php:532
+#: templates/settings-page.php:534
 msgid "ভুয়া অর্ডার গার্ড চালু করুন"
 msgstr ""
 
-#: templates/settings-page.php:533
+#: templates/settings-page.php:535
 msgid "গ্রাহকের চেকআউটে কোনো অতিরিক্ত ধাপ যোগ হয় না, আর সার্ভারে কোনো বাড়তি কোয়েরি চলে না।"
 msgstr ""
 
-#: templates/settings-page.php:538
+#: templates/settings-page.php:540
 msgid "আপাতত শুধু রিপোর্ট করুন"
 msgstr ""
 
-#: templates/settings-page.php:539
+#: templates/settings-page.php:541
 msgid "চালু থাকলে কোনো অর্ডার আটকাবে না — শুধু অর্ডার নোটে লিখে রাখবে কোনটি ধরা পড়ত। কয়েক দিন দেখে তারপর বন্ধ করুন।"
 msgstr ""
 
-#: templates/settings-page.php:547
+#: templates/settings-page.php:549
 msgid "ধরা পড়লে কী হবে"
 msgstr ""
 
-#: templates/settings-page.php:549
+#: templates/settings-page.php:551
 msgid "শুধু অর্ডার নোটে লিখে রাখবে"
 msgstr ""
 
-#: templates/settings-page.php:550
+#: templates/settings-page.php:552
 msgid "অর্ডারটি হোল্ডে রাখবে"
 msgstr ""
 
-#: templates/settings-page.php:551
+#: templates/settings-page.php:553
 msgid "অর্ডারটি নিতে দেবে না"
 msgstr ""
 
-#: templates/settings-page.php:553
+#: templates/settings-page.php:555
 msgid "হোল্ড সবচেয়ে নিরাপদ — অর্ডারটি আসে, কিন্তু পাঠানোর আগে আপনি একবার দেখে নিতে পারেন।"
 msgstr ""
 
-#: templates/settings-page.php:557
+#: templates/settings-page.php:559
 msgid "স্কোর সীমা"
 msgstr ""
 
-#: templates/settings-page.php:559
+#: templates/settings-page.php:561
 msgid "এর সমান বা বেশি হলে ব্যবস্থা নেওয়া হবে। ৬০ রাখলে একটি শক্ত প্রমাণেই ধরা পড়ে, দুটি দুর্বল ইঙ্গিতে নয়।"
 msgstr ""
 
-#: templates/settings-page.php:569
+#: templates/settings-page.php:571
 msgid "একই ফোন নম্বর থেকে অল্প সময়ে আবার অর্ডার এলে কী হবে।"
 msgstr ""
 
-#: templates/settings-page.php:574
+#: templates/settings-page.php:576
 msgid "অপেক্ষার সময় (ঘণ্টা)"
 msgstr ""
 
-#: templates/settings-page.php:576
+#: templates/settings-page.php:578
 msgid "এই সময়ের মধ্যে একই নম্বরে দ্বিতীয় অর্ডার নেওয়া হবে না। ২৪ ঘণ্টা বেশিরভাগ দোকানের জন্য ঠিক আছে।"
 msgstr ""
 
-#: templates/settings-page.php:579
+#: templates/settings-page.php:581
 msgid "গ্রাহক যে মেসেজ দেখবে"
 msgstr ""
 
-#: templates/settings-page.php:583
+#: templates/settings-page.php:585
 msgid "লেখার মধ্যে %s বসালে সেখানে ঘণ্টার সংখ্যা আপনা-আপনি বসে যাবে।"
 msgstr ""
 
-#: templates/settings-page.php:587 templates/settings-page.php:676
+#: templates/settings-page.php:589 templates/settings-page.php:678
 msgid "সাপোর্ট ফোন নম্বর"
 msgstr ""
 
-#: templates/settings-page.php:589
+#: templates/settings-page.php:591
 msgid "দিলে পপআপে “কল করুন” বাটন আসবে — সত্যিকারের গ্রাহক আটকে গেলে সে সরাসরি ফোন করতে পারবে।"
 msgstr ""
 
-#: templates/settings-page.php:597
+#: templates/settings-page.php:599
 msgid "ফ্রড অটো-ব্লক"
 msgstr ""
 
-#: templates/settings-page.php:598
+#: templates/settings-page.php:600
 msgid "কোন শর্তে একটি ফোন নম্বর নিজে থেকেই ব্লক লিস্টে চলে যাবে। ব্লক লিস্ট ফ্রড ম্যানেজমেন্ট পেজ থেকে দেখা ও আনব্লক করা যায়।"
 msgstr ""
 
-#: templates/settings-page.php:606
+#: templates/settings-page.php:608
 msgid "এই সাইটে IP ব্লক এখন কাজ করছে না"
 msgstr ""
 
-#: templates/settings-page.php:607
+#: templates/settings-page.php:609
 msgid "সব রিকোয়েস্ট একটি প্রক্সি বা Cloudflare-এর মধ্য দিয়ে আসছে, তাই সার্ভার ভিজিটরের বদলে প্রক্সির ঠিকানা দেখতে পাচ্ছে। নিচে সঠিক হেডারটি বেছে দিলে ঠিক হয়ে যাবে।"
 msgstr ""
 
-#: templates/settings-page.php:613
+#: templates/settings-page.php:615
 msgid "ভিজিটরের IP কোথা থেকে নেওয়া হবে"
 msgstr ""
 
-#: templates/settings-page.php:615
+#: templates/settings-page.php:617
 msgid "সরাসরি সংযোগ (কোনো প্রক্সি নেই)"
 msgstr ""
 
-#: templates/settings-page.php:621
+#: templates/settings-page.php:623
 msgid "সাইট Cloudflare বা কোনো প্রক্সির পেছনে না থাকলে প্রথমটিই রাখুন।"
 msgstr ""
 
-#: templates/settings-page.php:622
+#: templates/settings-page.php:624
 msgid "হেডার এমন একটা তথ্য যা যেকোনো ভিজিটর নিজে পাঠাতে পারে — তাই সেটি তখনই বিশ্বাস করা যায় যখন আপনার সাইটের সামনে থাকা প্রক্সি নিজে সেটি বসিয়ে দেয়। ভুল করে চালু করলে ব্লক করা গ্রাহক একটি হেডার পাঠিয়েই ব্লক এড়াতে পারবে, আর ফ্রড রেকর্ডে নিরপরাধ কারো IP জমা হবে।"
 msgstr ""
 
-#: templates/settings-page.php:629
+#: templates/settings-page.php:631
 msgid "০ দিলে এই নিয়ম বন্ধ।"
 msgstr ""
 
-#: templates/settings-page.php:629
+#: templates/settings-page.php:631
 msgid "এর নিচে DP হলে নম্বর স্থায়ীভাবে ব্লক হবে — স্মার্ট ফিল্টারের চেয়ে কঠিন ব্যবস্থা, তাই কম মান (যেমন ৩০) দিন।"
 msgstr ""
 
-#: templates/settings-page.php:637
+#: templates/settings-page.php:639
 msgid "অর্ডার সংখ্যা অনুযায়ী অটো-ব্লক"
 msgstr ""
 
-#: templates/settings-page.php:638
+#: templates/settings-page.php:640
 msgid "অল্প সময়ে একই নম্বর থেকে অনেক অর্ডার এলে সেটি বট বা স্প্যাম হওয়ার সম্ভাবনা বেশি — তখন নম্বরটি ব্লক হবে।"
 msgstr ""
 
-#: templates/settings-page.php:645
+#: templates/settings-page.php:647
 msgid "অর্ডার সীমা"
 msgstr ""
 
-#: templates/settings-page.php:647
+#: templates/settings-page.php:649
 msgid "কতটি অর্ডারের পর ব্লক হবে।"
 msgstr ""
 
-#: templates/settings-page.php:650
+#: templates/settings-page.php:652
 msgid "সময়সীমা (ঘণ্টা)"
 msgstr ""
 
-#: templates/settings-page.php:652
+#: templates/settings-page.php:654
 msgid "কত ঘণ্টার মধ্যে অর্ডার গোনা হবে। “২৪ ঘণ্টায় ৩টি” বেশিরভাগ দোকানে নিরাপদ।"
 msgstr ""
 
-#: templates/settings-page.php:662
+#: templates/settings-page.php:664
 msgid "ব্লক হওয়া গ্রাহক যা দেখবে"
 msgstr ""
 
-#: templates/settings-page.php:663
+#: templates/settings-page.php:665
 msgid "ব্লক করা কেউ চেকআউট করতে গেলে এই পপআপ দেখবে। ভদ্র ভাষা রাখুন — ভুল করে ব্লক হওয়া সত্যিকারের গ্রাহকও এটি পড়বেন।"
 msgstr ""
 
-#: templates/settings-page.php:668
+#: templates/settings-page.php:670
 msgid "পপআপ টাইটেল"
 msgstr ""
 
-#: templates/settings-page.php:672
+#: templates/settings-page.php:674
 msgid "পপআপ মেসেজ"
 msgstr ""
 
-#: templates/settings-page.php:678
+#: templates/settings-page.php:680
 msgid "দিলে পপআপে কল বাটন দেখাবে।"
 msgstr ""
 
-#: templates/settings-page.php:689
+#: templates/settings-page.php:691
 msgid "কোন স্ট্যাটাসে SMS যাবে"
 msgstr ""
 
-#: templates/settings-page.php:690
+#: templates/settings-page.php:692
 msgid "প্রতিটি SMS আপনার ব্যালেন্স থেকে কাটে। যেগুলো গ্রাহকের সত্যিই জানা দরকার — যেমন অর্ডার নিশ্চিত হওয়া ও কুরিয়ারে দেওয়া — সেগুলোই বাছুন।"
 msgstr ""
 
-#: templates/settings-page.php:695
+#: templates/settings-page.php:697
 msgid "WooCommerce স্ট্যাটাস পাওয়া যায়নি।"
 msgstr ""
 
-#: templates/settings-page.php:713
+#: templates/settings-page.php:715
 msgid "SMS টেমপ্লেট"
 msgstr ""
 
-#: templates/settings-page.php:714
+#: templates/settings-page.php:716
 msgid "খালি রাখলে ওই স্ট্যাটাসে কোনো SMS যাবে না। বাংলা লেখা বেশি জায়গা নেয় — লম্বা মেসেজ একাধিক SMS হিসেবে গোনা হয়।"
 msgstr ""
 
-#: templates/settings-page.php:724
+#: templates/settings-page.php:726
 msgid "যে জায়গায় গ্রাহকের তথ্য বসাতে চান, সেখানে এগুলো লিখুন — %s"
 msgstr ""
 
-#: templates/settings-page.php:748
+#: templates/settings-page.php:750
 msgid "ফোন ডেটা সিংক"
 msgstr ""
 
-#: templates/settings-page.php:749
+#: templates/settings-page.php:751
 msgid "আপনার পুরনো অর্ডারের ফোন নম্বরগুলো Guardify Engine-এ পাঠানো হয়, যাতে কুরিয়ার ডেটার সাথে মিলিয়ে DP রেশিও তৈরি করা যায়। প্রথম সিংক শেষ হওয়ার আগে অনেক গ্রাহকের স্কোর অসম্পূর্ণ দেখাবে।"
 msgstr ""
 
-#: templates/settings-page.php:752
+#: templates/settings-page.php:754
 msgid "লোড হচ্ছে…"
 msgstr ""
 
-#: templates/settings-page.php:759
+#: templates/settings-page.php:761
 msgid "মোট অর্ডার"
 msgstr ""
 
-#: templates/settings-page.php:765
+#: templates/settings-page.php:767
 msgid "স্ক্যান হয়েছে"
 msgstr ""
 
-#: templates/settings-page.php:771
+#: templates/settings-page.php:773
 msgid "ফোন পাঠানো"
 msgstr ""
 
-#: templates/settings-page.php:779 templates/settings-page.php:782
+#: templates/settings-page.php:781 templates/settings-page.php:784
 msgid "সিংক অগ্রগতি"
 msgstr ""
 
-#: templates/settings-page.php:788
+#: templates/settings-page.php:790
 msgid "এখনই সিংক করুন"
 msgstr ""
 
-#: templates/settings-page.php:797 templates/settings-page.php:802
-msgid "সংযোগ বিচ্ছিন্ন করুন"
+#: templates/settings-page.php:800
+msgid "সাইট ম্যানেজমেন্ট"
 msgstr ""
 
-#: templates/settings-page.php:798
-msgid "API কী মুছে যাবে এবং এই সাইটে Guardify Pro-র সব সুরক্ষা বন্ধ হয়ে যাবে। আপনার সাবস্ক্রিপশন বা সংরক্ষিত ডেটা মুছবে না — আবার সংযুক্ত করলে সব ফিরে আসবে।"
+#: templates/settings-page.php:801
+msgid "Guardify ড্যাশবোর্ড থেকে এই সাইটের প্লাগইন, থিম ও ইউজার দেখুন — একাধিক দোকান থাকলে সবগুলো এক জায়গায়।"
+msgstr ""
+
+#: templates/settings-page.php:811
+msgid "Guardify আপনার সাইটে ঢোকে না — সাইটই জিজ্ঞেস করে"
 msgstr ""
 
 #: templates/settings-page.php:812
+msgid "আপনার সাইট ঘণ্টায় একবার Guardify-কে জিজ্ঞেস করে \"আমার জন্য কোনো কাজ আছে?\" — আর আপনি ড্যাশবোর্ডে যা বলেছেন সেটাই উত্তর হিসেবে পায়। বাইরে থেকে আপনার সার্ভারে কিছু করার কোনো পথ খোলা থাকে না।"
+msgstr ""
+
+#: templates/settings-page.php:819
+msgid "সাইটের তথ্য Guardify-তে পাঠান"
+msgstr ""
+
+#: templates/settings-page.php:820
+msgid "কোন প্লাগইন ও থিমের কোন ভার্সন চলছে, কোনটির আপডেট আছে, আর কারা অ্যাডমিন — শুধু এটুকু। গ্রাহকের কোনো তথ্য যায় না।"
+msgstr ""
+
+#: templates/settings-page.php:830
+msgid "ড্যাশবোর্ড থেকে আপডেট করার অনুমতি দিন"
+msgstr ""
+
+#: templates/settings-page.php:831
+msgid "বন্ধ থাকলে Guardify শুধু দেখাবে কী কী পুরোনো — কিছু ইনস্টল করবে না। WordPress-এর বড় ভার্সন আপডেট কখনোই এখান থেকে হবে না, আর Guardify নিজেকেও এখান থেকে আপডেট করে না।"
+msgstr ""
+
+#: templates/settings-page.php:843
+msgid "সেভ করুন"
+msgstr ""
+
+#: templates/settings-page.php:851 templates/settings-page.php:856
+msgid "সংযোগ বিচ্ছিন্ন করুন"
+msgstr ""
+
+#: templates/settings-page.php:852
+msgid "API কী মুছে যাবে এবং এই সাইটে Guardify Pro-র সব সুরক্ষা বন্ধ হয়ে যাবে। আপনার সাবস্ক্রিপশন বা সংরক্ষিত ডেটা মুছবে না — আবার সংযুক্ত করলে সব ফিরে আসবে।"
+msgstr ""
+
+#: templates/settings-page.php:866
 msgid "সাপোর্ট টিকেট পাঠান"
 msgstr ""
 
-#: templates/settings-page.php:813
+#: templates/settings-page.php:867
 msgid "সমস্যা বা প্রশ্ন থাকলে জানান। আপনার সাইটের ঠিকানা ও প্লাগইন ভার্সন টিকেটের সাথে অটোমেটিক যায়, আলাদা লিখতে হবে না।"
 msgstr ""
 
-#: templates/settings-page.php:818
+#: templates/settings-page.php:872
 msgid "আপনার ওয়েবসাইট"
 msgstr ""
 
-#: templates/settings-page.php:823
+#: templates/settings-page.php:877
 msgid "WhatsApp নম্বর"
 msgstr ""
 
-#: templates/settings-page.php:825
+#: templates/settings-page.php:879
 msgid "আমরা এই নম্বরেই যোগাযোগ করব।"
 msgstr ""
 
-#: templates/settings-page.php:829
+#: templates/settings-page.php:883
 msgid "বিষয়"
 msgstr ""
 
-#: templates/settings-page.php:831
+#: templates/settings-page.php:885
 msgid "সমস্যা রিপোর্ট"
 msgstr ""
 
-#: templates/settings-page.php:831
+#: templates/settings-page.php:885
 msgid "আমার একটি সমস্যা হচ্ছে"
 msgstr ""
 
-#: templates/settings-page.php:832
+#: templates/settings-page.php:886
 msgid "ফিচার রিকোয়েস্ট"
 msgstr ""
 
-#: templates/settings-page.php:832
+#: templates/settings-page.php:886
 msgid "আমার একটি ফিচার সাজেশন আছে"
 msgstr ""
 
-#: templates/settings-page.php:833
+#: templates/settings-page.php:887
 msgid "তথ্য প্রয়োজন"
 msgstr ""
 
-#: templates/settings-page.php:833
+#: templates/settings-page.php:887
 msgid "আমার তথ্য দরকার"
 msgstr ""
 
-#: templates/settings-page.php:834
+#: templates/settings-page.php:888
 msgid "সাধারণ প্রশ্ন"
 msgstr ""
 
-#: templates/settings-page.php:834
+#: templates/settings-page.php:888
 msgid "আমার একটি প্রশ্ন আছে"
 msgstr ""
 
-#: templates/settings-page.php:835
+#: templates/settings-page.php:889
 msgid "বিলিং"
 msgstr ""
 
-#: templates/settings-page.php:835
+#: templates/settings-page.php:889
 msgid "বিলিং সম্পর্কিত"
 msgstr ""
 
-#: templates/settings-page.php:840
+#: templates/settings-page.php:894
 msgid "সমস্যার বিবরণ"
 msgstr ""
 
-#: templates/settings-page.php:841
+#: templates/settings-page.php:895
 msgid "কী সমস্যা হচ্ছে? কখন শুরু হয়েছে? কোনো এরর মেসেজ আসছে?"
 msgstr ""
 
-#: templates/settings-page.php:845
+#: templates/settings-page.php:899
 msgid "ফিচারের বিবরণ"
 msgstr ""
 
-#: templates/settings-page.php:846
+#: templates/settings-page.php:900
 msgid "কোন ফিচার চাইছেন? এটা কীভাবে সাহায্য করবে?"
 msgstr ""
 
-#: templates/settings-page.php:850
+#: templates/settings-page.php:904
 msgid "কী তথ্য দরকার?"
 msgstr ""
 
-#: templates/settings-page.php:851
+#: templates/settings-page.php:905
 msgid "আপনার কোন তথ্য প্রয়োজন?"
 msgstr ""
 
-#: templates/settings-page.php:855
+#: templates/settings-page.php:909
 msgid "আপনার প্রশ্ন"
 msgstr ""
 
-#: templates/settings-page.php:856
+#: templates/settings-page.php:910
 msgid "আপনি কী জানতে চান?"
 msgstr ""
 
-#: templates/settings-page.php:860
+#: templates/settings-page.php:914
 msgid "বিলিং বিবরণ"
 msgstr ""
 
-#: templates/settings-page.php:861
+#: templates/settings-page.php:915
 msgid "বিলিং সম্পর্কে বিস্তারিত লিখুন…"
 msgstr ""
 
-#: templates/settings-page.php:865
+#: templates/settings-page.php:919
 msgid "মেসেজ পাঠান"
 msgstr ""
 
-#: templates/settings-page.php:877
+#: templates/settings-page.php:931
 msgid "প্লাগইন আপডেট"
 msgstr ""
 
-#: templates/settings-page.php:878
+#: templates/settings-page.php:932
 msgid "নতুন রিলিজ হলে WordPress ড্যাশবোর্ডেই আপডেট নোটিফিকেশন আসবে। WordPress দিনে একবার চেক করে — এখনই দেখতে চাইলে নিচের বাটন ব্যবহার করুন।"
 msgstr ""
 
-#: templates/settings-page.php:883
+#: templates/settings-page.php:937
 msgid "বর্তমান ভার্সন"
 msgstr ""
 
-#: templates/settings-page.php:885
+#: templates/settings-page.php:939
 msgid "রিলিজ পেজ"
 msgstr ""
 
-#: templates/settings-page.php:889
+#: templates/settings-page.php:943
 msgid "আপডেট চেক করুন"
 msgstr ""
 
-#: templates/settings-page.php:900
+#: templates/settings-page.php:954
 msgid "সেটিংস সংরক্ষণ করুন"
 msgstr ""
 
-#: templates/settings-page.php:901
+#: templates/settings-page.php:955
 msgid "সব ট্যাবের পরিবর্তন একসাথে সংরক্ষিত হবে।"
 msgstr ""
 
-#: templates/settings-page.php:907
+#: templates/settings-page.php:961
 msgid "টিকেট পাঠানো হয়েছে"
 msgstr ""
 
-#: templates/settings-page.php:911
+#: templates/settings-page.php:965
 msgid "আপনার মেসেজ আমরা পেয়েছি। আমাদের টিম শীঘ্রই WhatsApp-এ যোগাযোগ করবে।"
 msgstr ""
 
-#: templates/settings-page.php:913
+#: templates/settings-page.php:967
 msgid "টিকেট ID"
 msgstr ""
 
-#: templates/settings-page.php:918
+#: templates/settings-page.php:972
 msgid "কপি"
 msgstr ""
 
-#: templates/settings-page.php:921
+#: templates/settings-page.php:975
 msgid "যোগাযোগের সময় এই ID বললে আমরা দ্রুত খুঁজে পাব।"
 msgstr ""
 
-#: templates/settings-page.php:925
+#: templates/settings-page.php:979
 msgid "ঠিক আছে"
 msgstr ""
 
