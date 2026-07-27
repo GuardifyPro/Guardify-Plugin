@@ -13,6 +13,9 @@ class Guardify_Fraud_Detection {
     private $table_name;
     private $blocks_table;
 
+    /** Caches whether this shop blocks anyone at all, so the common answer costs no query. */
+    const BLOCKS_FLAG = 'guardify_has_blocks';
+
     public static function get_instance() {
         if (null === self::$instance) {
             self::$instance = new self();
@@ -78,6 +81,13 @@ class Guardify_Fraud_Detection {
         $charset = $wpdb->get_charset_collate();
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+        // No comments inside the statements below: dbDelta parses them line by line with its
+        // own rules and does not understand SQL comments — one would stop the table being
+        // created at all.
+        //
+        // ip_blocked exists because both the checkout check and the per-page check look a
+        // visitor up by address. Without it the only usable index was is_blocked, so every
+        // lookup scanned all blocked rows comparing addresses.
         $tracking = $wpdb->prefix . 'guardify_fraud_tracking';
         dbDelta("CREATE TABLE {$tracking} (
             id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -90,7 +100,8 @@ class Guardify_Fraud_Detection {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             last_seen DATETIME DEFAULT CURRENT_TIMESTAMP,
             UNIQUE KEY phone (phone),
-            KEY is_blocked (is_blocked)
+            KEY is_blocked (is_blocked),
+            KEY ip_blocked (ip_address, is_blocked)
         ) {$charset};");
 
         $blocks = $wpdb->prefix . 'guardify_blocks';
@@ -189,58 +200,148 @@ class Guardify_Fraud_Detection {
             return;
         }
 
-        $ip = $this->get_client_ip();
+        // Nothing at all happens on a shop that has never blocked anybody, which is most
+        // shops most of the time. Without this the three lookups below ran on every page
+        // view by every visitor — the home page, every product, every category — to discover
+        // over and over that an empty table is still empty.
+        if (!$this->has_any_blocks()) {
+            return;
+        }
+
+        $ip        = $this->get_client_ip();
         $device_id = isset($_COOKIE['guardify_device_id']) ? sanitize_text_field(wp_unslash($_COOKIE['guardify_device_id'])) : '';
-        $blocked_reason = '';
+
+        if ($ip === '' && $device_id === '') {
+            return;
+        }
+
+        // The answer for one visitor is cached briefly. A page view is not a decision point —
+        // nothing is being refused here, it only draws a notice — so a few minutes of
+        // staleness costs nothing, while asking the database on every page view of every
+        // session costs a query per page for the life of the shop.
+        //
+        // Checkout is not covered by this cache: check_blocked() runs its own uncached
+        // lookups on woocommerce_checkout_process, which is where refusing actually happens.
+        $cache_key = 'guardify_blk_' . md5($ip . '|' . $device_id);
+        $cached    = get_transient($cache_key);
+
+        if ($cached !== false) {
+            // Stored as a string so the "not blocked" answer is cacheable too — with a
+            // boolean, every clean visitor's miss would go back to the database, which is
+            // nearly every visitor.
+            if ($cached !== '') {
+                add_action('wp_footer', [$this, 'render_blocked_popup']);
+            }
+            return;
+        }
+
+        $blocked_reason = $this->lookup_block_reason($ip, $device_id);
+
+        set_transient($cache_key, $blocked_reason, 5 * MINUTE_IN_SECONDS);
+
+        if ($blocked_reason !== '') {
+            add_action('wp_footer', [$this, 'render_blocked_popup']);
+        }
+    }
+
+    /**
+     * Whether this shop has blocked anything at all.
+     *
+     * Cached for an hour, and cleared the moment anything is blocked or unblocked, so a
+     * merchant blocking a customer sees it take effect immediately rather than up to an hour
+     * later. The cost of being wrong in the other direction — a stale "no blocks" after a
+     * block was added — is why the invalidation is explicit rather than left to expiry.
+     */
+    private function has_any_blocks() {
+        $flag = get_transient(self::BLOCKS_FLAG);
+
+        if ($flag !== false) {
+            return $flag === '1';
+        }
 
         global $wpdb;
 
-        // 1. Check IP in block rules table
-        if (!empty($ip)) {
-            $ip_blocked = $wpdb->get_var($wpdb->prepare(
-                "SELECT COUNT(*) FROM {$this->blocks_table}
-                 WHERE is_active = 1 AND block_type = 'ip' AND block_value = %s",
-                $ip
-            ));
-            if ($ip_blocked > 0) {
-                $blocked_reason = 'IP ব্লক করা হয়েছে';
-            }
+        $any = (int) $wpdb->get_var(
+            "SELECT EXISTS (SELECT 1 FROM {$this->blocks_table} WHERE is_active = 1)
+                  + EXISTS (SELECT 1 FROM {$this->table_name} WHERE is_blocked = 1)"
+        );
+
+        set_transient(self::BLOCKS_FLAG, $any > 0 ? '1' : '0', HOUR_IN_SECONDS);
+
+        return $any > 0;
+    }
+
+    /**
+     * Forget the cached "does this shop block anyone" answer.
+     *
+     * Called from every path that blocks or unblocks. Per-visitor answers are left to expire
+     * on their own: they are at most five minutes old, and clearing them would mean finding
+     * every transient belonging to every visitor, which is a table scan of the options table
+     * to save a few minutes of staleness on a notice.
+     */
+    public static function flush_block_cache() {
+        delete_transient(self::BLOCKS_FLAG);
+    }
+
+    /**
+     * Why this visitor is blocked, or '' if they are not.
+     *
+     * One query rather than the three this used to make. The three ran in sequence with an
+     * early exit, so an ordinary visitor — blocked by nothing — paid for all three every
+     * time, and only a blocked visitor got the short path.
+     */
+    private function lookup_block_reason($ip, $device_id) {
+        global $wpdb;
+
+        $clauses = [];
+        $args    = [];
+
+        if ($ip !== '') {
+            $clauses[] = "SELECT 'ip' AS kind, reason AS why FROM {$this->blocks_table}
+                          WHERE is_active = 1 AND block_type = 'ip' AND block_value = %s";
+            $args[]    = $ip;
+
+            $clauses[] = "SELECT 'tracked' AS kind, block_reason AS why FROM {$this->table_name}
+                          WHERE is_blocked = 1 AND ip_address = %s";
+            $args[]    = $ip;
         }
 
-        // 2. Check IP in tracking table (is_blocked)
-        if (empty($blocked_reason) && !empty($ip)) {
-            $tracking_blocked = $wpdb->get_var($wpdb->prepare(
-                "SELECT block_reason FROM {$this->table_name}
-                 WHERE is_blocked = 1 AND ip_address = %s LIMIT 1",
-                $ip
-            ));
-            if ($tracking_blocked) {
-                $blocked_reason = $tracking_blocked;
-            }
+        if ($device_id !== '') {
+            $clauses[] = "SELECT 'device' AS kind, block_reason AS why FROM {$this->table_name}
+                          WHERE is_blocked = 1 AND phone = %s";
+            $args[]    = 'device:' . $device_id;
         }
 
-        // 3. Check device cookie link
-        if (empty($blocked_reason) && !empty($device_id)) {
-            $device_blocked = $wpdb->get_var($wpdb->prepare(
-                "SELECT is_blocked FROM {$this->table_name} WHERE phone = %s",
-                'device:' . $device_id
-            ));
-            if ($device_blocked) {
-                $blocked_reason = 'ডিভাইস ব্লক করা হয়েছে';
-            }
+        if (empty($clauses)) {
+            return '';
         }
 
-        if (!empty($blocked_reason)) {
-            add_action('wp_footer', [$this, 'render_blocked_popup']);
+        $sql = '(' . implode(') UNION ALL (', $clauses) . ') LIMIT 1';
+
+        // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- placeholders bound below
+        $row = $wpdb->get_row($wpdb->prepare($sql, $args));
+
+        if (!$row) {
+            return '';
         }
+
+        if (!empty($row->why)) {
+            return (string) $row->why;
+        }
+
+        // A block rule with no reason recorded still has to say something, or the popup comes
+        // up blank and the customer has no idea what happened or who to ask.
+        return $row->kind === 'device'
+            ? __('ডিভাইস ব্লক করা হয়েছে', 'guardify-pro')
+            : __('IP ব্লক করা হয়েছে', 'guardify-pro');
     }
 
     /**
      * Render non-dismissible blocked user popup on frontend.
      */
     public function render_blocked_popup() {
-        $title   = get_option('guardify_blocked_user_title', 'অর্ডার ব্লক করা হয়েছে');
-        $message = get_option('guardify_blocked_user_message', 'নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।');
+        $title   = get_option('guardify_blocked_user_title', __('অর্ডার ব্লক করা হয়েছে', 'guardify-pro'));
+        $message = get_option('guardify_blocked_user_message', __('নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।', 'guardify-pro'));
         $support = get_option('guardify_fraud_support_number', '');
         ?>
         <div id="guardify-blocked-popup" class="gf-blocked-popup" style="display:flex;">
@@ -371,7 +472,7 @@ class Guardify_Fraud_Detection {
         ));
 
         if ($blocked) {
-            throw new \Exception('এই ফোন নম্বর থেকে অর্ডার ব্লক করা হয়েছে।');
+            throw new \Exception(__('এই ফোন নম্বর থেকে অর্ডার ব্লক করা হয়েছে।', 'guardify-pro'));
         }
 
         // Check advanced block rules
@@ -387,7 +488,7 @@ class Guardify_Fraud_Detection {
         ));
 
         if ($rule_blocked > 0) {
-            throw new \Exception('এই অর্ডারটি নিরাপত্তার কারণে ব্লক করা হয়েছে।');
+            throw new \Exception(__('এই অর্ডারটি নিরাপত্তার কারণে ব্লক করা হয়েছে।', 'guardify-pro'));
         }
     }
 
@@ -444,9 +545,9 @@ class Guardify_Fraud_Detection {
         }
 
         if ($dp < $threshold) {
-            $this->block_phone($phone, sprintf('অটো-ব্লক: DP %.1f%% (থ্রেশোল্ড %.0f%%)', $dp, $threshold));
+            $this->block_phone($phone, sprintf(__('অটো-ব্লক: DP %.1f%% (থ্রেশোল্ড %.0f%%)', 'guardify-pro'), $dp, $threshold));
             $order->add_order_note(sprintf(
-                'Guardify: অটো-ব্লক — DP রেশিও %.1f%% (থ্রেশোল্ড %.0f%%, মোট %d পার্সেল)',
+                __('Guardify: অটো-ব্লক — DP রেশিও %.1f%% (থ্রেশোল্ড %.0f%%, মোট %d পার্সেল)', 'guardify-pro'),
                 $dp, $threshold, $total
             ));
             $order->save();
@@ -521,7 +622,7 @@ class Guardify_Fraud_Detection {
 
         if ($recent_count >= $order_limit) {
             $reason = sprintf(
-                'অটো-ব্লক: %d ঘণ্টায় %d টি অর্ডার (সীমা: %d)',
+                __('অটো-ব্লক: %d ঘণ্টায় %d টি অর্ডার (সীমা: %d)', 'guardify-pro'),
                 $time_limit, $recent_count, $order_limit
             );
             $this->block_phone($phone, $reason);
@@ -538,7 +639,7 @@ class Guardify_Fraud_Detection {
         if ($theorder) {
             $phone = $theorder->get_billing_phone();
             if (!empty($phone)) {
-                $actions['guardify_block_user'] = 'Guardify: ব্যবহারকারী ব্লক করুন (ফ্রড প্রোটেকশন)';
+                $actions['guardify_block_user'] = __('Guardify: ব্যবহারকারী ব্লক করুন (ফ্রড প্রোটেকশন)', 'guardify-pro');
             }
         }
         return $actions;
@@ -557,7 +658,7 @@ class Guardify_Fraud_Detection {
         $phone = preg_replace('/^\+?88/', '', $phone);
 
         if (empty($phone)) {
-            $order->add_order_note('Guardify: ব্লক ব্যর্থ — ফোন নম্বর পাওয়া যায়নি।');
+            $order->add_order_note(__('Guardify: ব্লক ব্যর্থ — ফোন নম্বর পাওয়া যায়নি।', 'guardify-pro'));
             return;
         }
 
@@ -570,16 +671,16 @@ class Guardify_Fraud_Detection {
             $wpdb->replace($this->blocks_table, [
                 'block_type'  => 'ip',
                 'block_value' => $ip,
-                'reason'      => 'অর্ডার #' . $order->get_id() . ' থেকে ব্লক',
+                'reason'      => __('অর্ডার #', 'guardify-pro') . $order->get_id() . __(' থেকে ব্লক', 'guardify-pro'),
                 'created_by'  => get_current_user_id(),
                 'is_active'   => 1,
             ], ['%s', '%s', '%s', '%d', '%d']);
         }
 
         $order->add_order_note(sprintf(
-            'Guardify: ফোন %s ব্লক করা হয়েছে। %s',
+            __('Guardify: ফোন %s ব্লক করা হয়েছে। %s', 'guardify-pro'),
             $phone,
-            (!empty($ip) ? 'IP ' . $ip . ' ও ব্লক করা হয়েছে।' : '')
+            (!empty($ip) ? 'IP ' . $ip . __(' ও ব্লক করা হয়েছে।', 'guardify-pro') : '')
         ));
     }
 
@@ -605,6 +706,9 @@ class Guardify_Fraud_Detection {
                 'block_reason' => $reason,
             ], ['%s', '%d', '%s']);
         }
+
+        self::flush_block_cache();
+
         return true;
     }
 
@@ -613,10 +717,15 @@ class Guardify_Fraud_Detection {
      */
     public function unblock_phone($phone) {
         global $wpdb;
-        return $wpdb->update($this->table_name, [
+
+        $updated = $wpdb->update($this->table_name, [
             'is_blocked'   => 0,
             'block_reason' => null,
         ], ['phone' => $phone], ['%d', '%s'], ['%s']);
+
+        self::flush_block_cache();
+
+        return $updated;
     }
 
     /**
@@ -667,17 +776,17 @@ class Guardify_Fraud_Detection {
         }
 
         $phone  = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
-        $reason = isset($_POST['reason']) ? sanitize_text_field(wp_unslash($_POST['reason'])) : 'অ্যাডমিন দ্বারা ব্লক';
+        $reason = isset($_POST['reason']) ? sanitize_text_field(wp_unslash($_POST['reason'])) : __('অ্যাডমিন দ্বারা ব্লক', 'guardify-pro');
 
         $phone = preg_replace('/[\s\-]/', '', $phone);
         $phone = preg_replace('/^\+?88/', '', $phone);
 
         if (empty($phone)) {
-            wp_send_json_error('ফোন নম্বর প্রয়োজন');
+            wp_send_json_error(__('ফোন নম্বর প্রয়োজন', 'guardify-pro'));
         }
 
         $this->block_phone($phone, $reason);
-        wp_send_json_success(['message' => 'ব্লক করা হয়েছে']);
+        wp_send_json_success(['message' => __('ব্লক করা হয়েছে', 'guardify-pro')]);
     }
 
     /**
@@ -695,7 +804,7 @@ class Guardify_Fraud_Detection {
         $phone = preg_replace('/^\+?88/', '', $phone);
 
         $this->unblock_phone($phone);
-        wp_send_json_success(['message' => 'আনব্লক করা হয়েছে']);
+        wp_send_json_success(['message' => __('আনব্লক করা হয়েছে', 'guardify-pro')]);
     }
 
     /**
@@ -713,7 +822,7 @@ class Guardify_Fraud_Detection {
         $reason = isset($_POST['reason']) ? sanitize_text_field(wp_unslash($_POST['reason'])) : '';
 
         if (!in_array($type, ['phone', 'ip'], true) || empty($value)) {
-            wp_send_json_error('ব্লক টাইপ ও ভ্যালু প্রয়োজন');
+            wp_send_json_error(__('ব্লক টাইপ ও ভ্যালু প্রয়োজন', 'guardify-pro'));
         }
 
         global $wpdb;
@@ -725,7 +834,9 @@ class Guardify_Fraud_Detection {
             'is_active'   => 1,
         ], ['%s', '%s', '%s', '%d', '%d']);
 
-        wp_send_json_success(['message' => 'ব্লক রুল যোগ হয়েছে']);
+        self::flush_block_cache();
+
+        wp_send_json_success(['message' => __('ব্লক রুল যোগ হয়েছে', 'guardify-pro')]);
     }
 
     /**
@@ -742,6 +853,7 @@ class Guardify_Fraud_Detection {
         if ($id) {
             global $wpdb;
             $wpdb->delete($this->blocks_table, ['id' => $id], ['%d']);
+            self::flush_block_cache();
         }
 
         wp_send_json_success();
@@ -759,7 +871,7 @@ class Guardify_Fraud_Detection {
 
         $phones = isset($_POST['phones']) ? array_map('sanitize_text_field', (array) $_POST['phones']) : [];
         if (empty($phones)) {
-            wp_send_json_error('কোনো ফোন নম্বর নির্বাচন করা হয়নি');
+            wp_send_json_error(__('কোনো ফোন নম্বর নির্বাচন করা হয়নি', 'guardify-pro'));
         }
 
         $count = 0;
@@ -772,7 +884,7 @@ class Guardify_Fraud_Detection {
         }
 
         wp_send_json_success([
-            'message' => sprintf('%d জন ব্যবহারকারী আনব্লক করা হয়েছে', $count),
+            'message' => sprintf(__('%d জন ব্যবহারকারী আনব্লক করা হয়েছে', 'guardify-pro'), $count),
         ]);
     }
 
@@ -788,7 +900,7 @@ class Guardify_Fraud_Detection {
 
         $id = isset($_POST['id']) ? absint($_POST['id']) : 0;
         if (!$id) {
-            wp_send_json_error('ID প্রয়োজন');
+            wp_send_json_error(__('ID প্রয়োজন', 'guardify-pro'));
         }
 
         global $wpdb;
@@ -798,14 +910,16 @@ class Guardify_Fraud_Detection {
         ));
 
         if ($current === null) {
-            wp_send_json_error('রুল পাওয়া যায়নি');
+            wp_send_json_error(__('রুল পাওয়া যায়নি', 'guardify-pro'));
         }
 
         $new_status = $current ? 0 : 1;
         $wpdb->update($this->blocks_table, ['is_active' => $new_status], ['id' => $id], ['%d'], ['%d']);
 
+        self::flush_block_cache();
+
         wp_send_json_success([
-            'message'   => $new_status ? 'রুল সক্রিয় করা হয়েছে' : 'রুল নিষ্ক্রিয় করা হয়েছে',
+            'message'   => $new_status ? __('রুল সক্রিয় করা হয়েছে', 'guardify-pro') : __('রুল নিষ্ক্রিয় করা হয়েছে', 'guardify-pro'),
             'is_active' => $new_status,
         ]);
     }
@@ -854,12 +968,12 @@ class Guardify_Fraud_Detection {
         // Accept JSON phones array from frontend (client reads file, sends parsed data)
         $raw = isset($_POST['phones']) ? sanitize_text_field(wp_unslash($_POST['phones'])) : '';
         if (empty($raw)) {
-            wp_send_json_error('কোনো ফোন নম্বর পাওয়া যায়নি');
+            wp_send_json_error(__('কোনো ফোন নম্বর পাওয়া যায়নি', 'guardify-pro'));
         }
 
         $phones = json_decode($raw, true);
         if (!is_array($phones) || empty($phones)) {
-            wp_send_json_error('ভুল ফরম্যাট');
+            wp_send_json_error(__('ভুল ফরম্যাট', 'guardify-pro'));
         }
 
         $imported = 0;
@@ -884,8 +998,10 @@ class Guardify_Fraud_Detection {
             $imported++;
         }
 
+        self::flush_block_cache();
+
         wp_send_json_success([
-            'message' => sprintf('ইম্পোর্ট সম্পন্ন। যোগ: %d, বাদ: %d', $imported, $skipped),
+            'message' => sprintf(__('ইম্পোর্ট সম্পন্ন। যোগ: %d, বাদ: %d', 'guardify-pro'), $imported, $skipped),
         ]);
     }
 
@@ -929,17 +1045,17 @@ class Guardify_Fraud_Detection {
         }
 
         if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
-            wp_send_json_error('ফাইল আপলোড ব্যর্থ');
+            wp_send_json_error(__('ফাইল আপলোড ব্যর্থ', 'guardify-pro'));
         }
 
         $path = $_FILES['import_file']['tmp_name'];
         if (!is_readable($path)) {
-            wp_send_json_error('ফাইল পড়া যাচ্ছে না');
+            wp_send_json_error(__('ফাইল পড়া যাচ্ছে না', 'guardify-pro'));
         }
 
         $handle = fopen($path, 'r');
         if (!$handle) {
-            wp_send_json_error('ফাইল খোলা যাচ্ছে না');
+            wp_send_json_error(__('ফাইল খোলা যাচ্ছে না', 'guardify-pro'));
         }
 
         // Skip header
@@ -980,8 +1096,10 @@ class Guardify_Fraud_Detection {
         }
         fclose($handle);
 
+        self::flush_block_cache();
+
         wp_send_json_success([
-            'message' => sprintf('ইম্পোর্ট সম্পন্ন। যোগ: %d, বাদ: %d', $imported, $skipped),
+            'message' => sprintf(__('ইম্পোর্ট সম্পন্ন। যোগ: %d, বাদ: %d', 'guardify-pro'), $imported, $skipped),
         ]);
     }
 
@@ -1042,17 +1160,17 @@ class Guardify_Fraud_Detection {
         }
 
         if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
-            wp_send_json_error('ফাইল আপলোড ব্যর্থ');
+            wp_send_json_error(__('ফাইল আপলোড ব্যর্থ', 'guardify-pro'));
         }
 
         $path = $_FILES['import_file']['tmp_name'];
         if (!is_readable($path)) {
-            wp_send_json_error('ফাইল পড়া যাচ্ছে না');
+            wp_send_json_error(__('ফাইল পড়া যাচ্ছে না', 'guardify-pro'));
         }
 
         $handle = fopen($path, 'r');
         if (!$handle) {
-            wp_send_json_error('ফাইল খোলা যাচ্ছে না');
+            wp_send_json_error(__('ফাইল খোলা যাচ্ছে না', 'guardify-pro'));
         }
 
         $section     = '';
@@ -1103,7 +1221,7 @@ class Guardify_Fraud_Detection {
             } elseif ($section === 'users') {
                 if (count($data) < 1) { $skipped++; continue; }
                 $phone  = sanitize_text_field($data[0]);
-                $reason = isset($data[2]) ? sanitize_textarea_field($data[2]) : 'CSV ইম্পোর্ট';
+                $reason = isset($data[2]) ? sanitize_textarea_field($data[2]) : __('CSV ইম্পোর্ট', 'guardify-pro');
 
                 if (empty($phone)) { $skipped++; continue; }
                 $phone = preg_replace('/[\s\-]/', '', $phone);
@@ -1115,9 +1233,11 @@ class Guardify_Fraud_Detection {
         }
         fclose($handle);
 
+        self::flush_block_cache();
+
         wp_send_json_success([
             'message' => sprintf(
-                'ইম্পোর্ট সম্পন্ন। ব্লক রুল: %d, ব্যবহারকারী: %d, বাদ: %d',
+                __('ইম্পোর্ট সম্পন্ন। ব্লক রুল: %d, ব্যবহারকারী: %d, বাদ: %d', 'guardify-pro'),
                 $rules_count, $users_count, $skipped
             ),
         ]);
@@ -1151,19 +1271,15 @@ class Guardify_Fraud_Detection {
     /**
      * Get client IP address.
      */
+    /**
+     * The visitor's address, from the one helper that decides what may be believed.
+     *
+     * This used to trust CF-Connecting-IP, X-Real-IP and X-Forwarded-For from any request.
+     * Both halves of this class read it: blocking, which anyone could then step around with
+     * one header, and tracking, which recorded whatever address the visitor claimed — so a
+     * merchant could be led into blocking somebody who had never been to their shop.
+     */
     private function get_client_ip() {
-        $headers = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
-        foreach ($headers as $header) {
-            if (!empty($_SERVER[$header])) {
-                $ip = sanitize_text_field(wp_unslash($_SERVER[$header]));
-                if (strpos($ip, ',') !== false) {
-                    $ip = trim(explode(',', $ip)[0]);
-                }
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    return $ip;
-                }
-            }
-        }
-        return '';
+        return Guardify_Client_IP::get();
     }
 }

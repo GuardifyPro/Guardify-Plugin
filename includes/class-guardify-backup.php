@@ -92,15 +92,15 @@ class Guardify_Backup {
     public function add_cron_schedules($schedules) {
         $schedules['guardify_every_5min'] = [
             'interval' => 5 * MINUTE_IN_SECONDS,
-            'display'  => 'প্রতি ৫ মিনিটে',
+            'display'  => __('প্রতি ৫ মিনিটে', 'guardify-pro'),
         ];
         $schedules['guardify_every_6h'] = [
             'interval' => 6 * HOUR_IN_SECONDS,
-            'display'  => 'প্রতি ৬ ঘণ্টায়',
+            'display'  => __('প্রতি ৬ ঘণ্টায়', 'guardify-pro'),
         ];
         $schedules['guardify_every_12h'] = [
             'interval' => 12 * HOUR_IN_SECONDS,
-            'display'  => 'প্রতি ১২ ঘণ্টায়',
+            'display'  => __('প্রতি ১২ ঘণ্টায়', 'guardify-pro'),
         ];
         return $schedules;
     }
@@ -148,7 +148,7 @@ class Guardify_Backup {
      * WP Cron callback — enqueue the nightly backup.
      */
     public function run_scheduled_backup() {
-        $started = $this->start_backup('স্বয়ংক্রিয় ব্যাকআপ');
+        $started = $this->start_backup(__('স্বয়ংক্রিয় ব্যাকআপ', 'guardify-pro'));
         if (is_wp_error($started)) {
             error_log('Guardify Backup: ' . $started->get_error_message());
         }
@@ -189,7 +189,7 @@ class Guardify_Backup {
 
         $request    = $result['pending'][0];
         $request_id = isset($request['id']) ? sanitize_text_field($request['id']) : '';
-        $note       = isset($request['note']) ? sanitize_text_field($request['note']) : 'রিমোট ব্যাকআপ';
+        $note       = isset($request['note']) ? sanitize_text_field($request['note']) : __('রিমোট ব্যাকআপ', 'guardify-pro');
 
         if ($request_id === '') {
             return;
@@ -218,7 +218,7 @@ class Guardify_Backup {
         // A job whose worker died — a fatal, a host restart mid-slice — would otherwise
         // block every future backup forever, which is a silent failure of the whole feature.
         if (time() - (int) $job['started'] > self::JOB_MAX_AGE) {
-            $this->finish_job(new WP_Error('stalled', 'ব্যাকআপ সময়সীমা পার হয়েছে।'));
+            $this->finish_job(new WP_Error('stalled', __('ব্যাকআপ সময়সীমা পার হয়েছে।', 'guardify-pro')));
             return false;
         }
         return true;
@@ -234,20 +234,20 @@ class Guardify_Backup {
     public function start_backup($note = '', $ack_id = '', $spawn = true) {
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            return new WP_Error('not_connected', 'প্লাগইন সংযুক্ত নয়।');
+            return new WP_Error('not_connected', __('প্লাগইন সংযুক্ত নয়।', 'guardify-pro'));
         }
         if ($this->job_active()) {
-            return new WP_Error('already_running', 'আরেকটি ব্যাকআপ চলছে।');
+            return new WP_Error('already_running', __('আরেকটি ব্যাকআপ চলছে।', 'guardify-pro'));
         }
 
         $tables = $this->site_tables();
         if (empty($tables)) {
-            return new WP_Error('no_tables', 'কোনো ডাটাবেইজ টেবিল পাওয়া যায়নি।');
+            return new WP_Error('no_tables', __('কোনো ডাটাবেইজ টেবিল পাওয়া যায়নি।', 'guardify-pro'));
         }
 
         $path = wp_tempnam('guardify_backup_');
         if (!$path) {
-            return new WP_Error('temp_file', 'টেম্প ফাইল তৈরি করা যায়নি।');
+            return new WP_Error('temp_file', __('টেম্প ফাইল তৈরি করা যায়নি।', 'guardify-pro'));
         }
 
         // Level 6, not 9. Level 9 spends several times the CPU of level 6 to save a low
@@ -256,7 +256,7 @@ class Guardify_Backup {
         $gz = gzopen($path, 'wb6');
         if (!$gz) {
             wp_delete_file($path);
-            return new WP_Error('gz_open', 'কম্প্রেশন শুরু করা যায়নি।');
+            return new WP_Error('gz_open', __('কম্প্রেশন শুরু করা যায়নি।', 'guardify-pro'));
         }
 
         $header  = "-- Guardify Pro Database Backup\n";
@@ -334,7 +334,7 @@ class Guardify_Backup {
             // Some hosts sweep the temp directory. Better to fail loudly than to upload a
             // truncated archive.
             delete_transient(self::SLICE_LOCK);
-            return $this->finish_job(new WP_Error('temp_lost', 'অসম্পূর্ণ ব্যাকআপ ফাইল হারিয়ে গেছে।'));
+            return $this->finish_job(new WP_Error('temp_lost', __('অসম্পূর্ণ ব্যাকআপ ফাইল হারিয়ে গেছে।', 'guardify-pro')));
         }
 
         // Append mode. Each slice adds a gzip member; concatenated members are a valid
@@ -343,7 +343,7 @@ class Guardify_Backup {
         $gz = gzopen($job['path'], 'ab6');
         if (!$gz) {
             delete_transient(self::SLICE_LOCK);
-            return $this->finish_job(new WP_Error('gz_open', 'কম্প্রেশন চালিয়ে যাওয়া যায়নি।'));
+            return $this->finish_job(new WP_Error('gz_open', __('কম্প্রেশন চালিয়ে যাওয়া যায়নি।', 'guardify-pro')));
         }
 
         $budget   = (int) apply_filters('guardify_backup_slice_budget', self::SLICE_BUDGET);
@@ -648,7 +648,7 @@ class Guardify_Backup {
 
         update_option(self::LAST_RESULT, [
             'ok'      => true,
-            'message' => 'ব্যাকআপ সফলভাবে সম্পন্ন হয়েছে।',
+            'message' => __('ব্যাকআপ সফলভাবে সম্পন্ন হয়েছে।', 'guardify-pro'),
             'rows'    => is_array($job) ? (int) $job['rows'] : 0,
             'time'    => time(),
         ], false);
@@ -665,7 +665,7 @@ class Guardify_Backup {
     private function upload_to_engine($file_path, $note = '', $raw_size = 0) {
         $file_size = @filesize($file_path);
         if ($file_size === false || $file_size <= 0) {
-            return new WP_Error('bad_file', 'ব্যাকআপ ফাইল পড়া যায়নি।');
+            return new WP_Error('bad_file', __('ব্যাকআপ ফাইল পড়া যায়নি।', 'guardify-pro'));
         }
 
         // Routed through Guardify_API so the request is signed. Calling wp_remote_get
@@ -674,7 +674,7 @@ class Guardify_Backup {
         // restore for every signed install.
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            return new WP_Error('not_connected', 'প্লাগইন সংযুক্ত নয়।');
+            return new WP_Error('not_connected', __('প্লাগইন সংযুক্ত নয়।', 'guardify-pro'));
         }
 
         $presign = $api->get('/api/v1/backup/presign-upload');
@@ -690,7 +690,7 @@ class Guardify_Backup {
 
         $fh = fopen($file_path, 'rb');
         if (!$fh) {
-            return new WP_Error('file_open', 'ব্যাকআপ ফাইল খোলা যায়নি।');
+            return new WP_Error('file_open', __('ব্যাকআপ ফাইল খোলা যায়নি।', 'guardify-pro'));
         }
 
         $ch = curl_init($upload_url);
@@ -711,7 +711,7 @@ class Guardify_Backup {
 
         if ($curl_result === false || $curl_code < 200 || $curl_code >= 300) {
             $detail = $curl_error !== '' ? $curl_error : 'HTTP ' . $curl_code;
-            return new WP_Error('r2_upload_failed', 'R2 আপলোড ব্যর্থ: ' . $detail);
+            return new WP_Error('r2_upload_failed', __('R2 আপলোড ব্যর্থ: ', 'guardify-pro') . $detail);
         }
 
         // Guardify_API unwraps the {success, data} envelope, so a successful confirm comes
@@ -759,14 +759,14 @@ class Guardify_Backup {
             wp_send_json_error('Unauthorized');
         }
 
-        $started = $this->start_backup('ম্যানুয়াল ব্যাকআপ');
+        $started = $this->start_backup(__('ম্যানুয়াল ব্যাকআপ', 'guardify-pro'));
         if (is_wp_error($started)) {
             wp_send_json_error($started->get_error_message());
         }
 
         wp_send_json_success([
             'queued'  => true,
-            'message' => 'ব্যাকআপ শুরু হয়েছে। এটি পটভূমিতে চলবে।',
+            'message' => __('ব্যাকআপ শুরু হয়েছে। এটি পটভূমিতে চলবে।', 'guardify-pro'),
         ]);
     }
 
@@ -790,7 +790,7 @@ class Guardify_Backup {
                 'percent'  => (int) round((($total - $left) / $total) * 100),
                 'rows'     => (int) $job['rows'],
                 'table'    => (string) $job['table'],
-                'message'  => 'ব্যাকআপ চলছে…',
+                'message'  => __('ব্যাকআপ চলছে…', 'guardify-pro'),
             ]);
         }
 
@@ -856,7 +856,7 @@ class Guardify_Backup {
 
         $this->schedule_backup();
 
-        wp_send_json_success(['message' => 'ব্যাকআপ শিডিউল সেভ হয়েছে।']);
+        wp_send_json_success(['message' => __('ব্যাকআপ শিডিউল সেভ হয়েছে।', 'guardify-pro')]);
     }
 
     /**

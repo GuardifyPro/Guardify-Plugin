@@ -232,7 +232,7 @@ class Guardify_Media {
         // A worker that died — a fatal, a host restart mid-slice — would otherwise block
         // every future sync forever, which presents as a feature that worked once.
         if (time() - (int) $job['touched'] > self::JOB_MAX_AGE) {
-            $this->finish_job(new WP_Error('stalled', 'মিডিয়া সিঙ্কের সময়সীমা পার হয়েছে।'));
+            $this->finish_job(new WP_Error('stalled', __('মিডিয়া সিঙ্কের সময়সীমা পার হয়েছে।', 'guardify-pro')));
             return false;
         }
         return true;
@@ -262,7 +262,7 @@ class Guardify_Media {
             return;
         }
 
-        $started = $this->start_sync('Guardify ড্যাশবোর্ড থেকে অনুরোধ');
+        $started = $this->start_sync(__('Guardify ড্যাশবোর্ড থেকে অনুরোধ', 'guardify-pro'));
         if (is_wp_error($started)) {
             error_log('Guardify Media: ' . $started->get_error_message());
         }
@@ -275,30 +275,30 @@ class Guardify_Media {
      */
     public function start_sync($note = '', $spawn = true) {
         if (!$this->is_enabled()) {
-            return new WP_Error('disabled', 'মিডিয়া ব্যাকআপ চালু নেই।');
+            return new WP_Error('disabled', __('মিডিয়া ব্যাকআপ চালু নেই।', 'guardify-pro'));
         }
         if ($this->job_active()) {
-            return new WP_Error('already_running', 'আরেকটি মিডিয়া সিঙ্ক চলছে।');
+            return new WP_Error('already_running', __('আরেকটি মিডিয়া সিঙ্ক চলছে।', 'guardify-pro'));
         }
         if ($this->restore_active()) {
-            return new WP_Error('restore_running', 'মিডিয়া রিস্টোর চলছে — শেষ হওয়া পর্যন্ত অপেক্ষা করুন।');
+            return new WP_Error('restore_running', __('মিডিয়া রিস্টোর চলছে — শেষ হওয়া পর্যন্ত অপেক্ষা করুন।', 'guardify-pro'));
         }
 
         $base = $this->uploads_dir();
         if ($base === '') {
-            return new WP_Error('no_uploads', 'আপলোড ফোল্ডার পাওয়া যায়নি।');
+            return new WP_Error('no_uploads', __('আপলোড ফোল্ডার পাওয়া যায়নি।', 'guardify-pro'));
         }
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            return new WP_Error('not_connected', 'প্লাগইন সংযুক্ত নয়।');
+            return new WP_Error('not_connected', __('প্লাগইন সংযুক্ত নয়।', 'guardify-pro'));
         }
 
         $started = $api->post('/api/v1/media/sync/start', ['note' => (string) $note]);
         if (!is_array($started) || empty($started['sync_id'])) {
             $message = isset($started['error'])
                 ? $started['error']
-                : 'মিডিয়া সিঙ্ক শুরু করা যায়নি।';
+                : __('মিডিয়া সিঙ্ক শুরু করা যায়নি।', 'guardify-pro');
             return new WP_Error('start_failed', $message);
         }
 
@@ -367,7 +367,7 @@ class Guardify_Media {
 
         if (!$api->is_connected()) {
             delete_transient(self::SLICE_LOCK);
-            return $this->finish_job(new WP_Error('not_connected', 'প্লাগইন সংযুক্ত নয়।'));
+            return $this->finish_job(new WP_Error('not_connected', __('প্লাগইন সংযুক্ত নয়।', 'guardify-pro')));
         }
 
         $budget   = (int) apply_filters('guardify_media_slice_budget', self::SLICE_BUDGET);
@@ -424,7 +424,7 @@ class Guardify_Media {
         delete_transient(self::SLICE_LOCK);
 
         if (!is_array($completed)) {
-            return $this->finish_job(new WP_Error('complete_failed', 'সিঙ্ক শেষ করা নিশ্চিত হয়নি।'));
+            return $this->finish_job(new WP_Error('complete_failed', __('সিঙ্ক শেষ করা নিশ্চিত হয়নি।', 'guardify-pro')));
         }
 
         return $this->finish_job(true);
@@ -607,7 +607,7 @@ class Guardify_Media {
         ]);
 
         if (!is_array($page) || (isset($page['success']) && $page['success'] === false)) {
-            $message = isset($page['error']) ? $page['error'] : 'ম্যানিফেস্ট পাঠানো যায়নি।';
+            $message = isset($page['error']) ? $page['error'] : __('ম্যানিফেস্ট পাঠানো যায়নি।', 'guardify-pro');
             return new WP_Error('page_failed', $message);
         }
 
@@ -706,7 +706,7 @@ class Guardify_Media {
                 // The bytes are in R2 but unconfirmed. Their rows stay pending and the files
                 // are offered again on the next sync, which is a wasted upload rather than a
                 // missing file — the right way round for a failure of this kind.
-                return new WP_Error('confirm_failed', 'আপলোড নিশ্চিত করা যায়নি।');
+                return new WP_Error('confirm_failed', __('আপলোড নিশ্চিত করা যায়নি।', 'guardify-pro'));
             }
 
             $job['uploaded'] += count($confirmed);
@@ -810,7 +810,7 @@ class Guardify_Media {
 
         update_option(self::LAST_RESULT, [
             'ok'       => true,
-            'message'  => 'মিডিয়া ব্যাকআপ সম্পন্ন হয়েছে।',
+            'message'  => __('মিডিয়া ব্যাকআপ সম্পন্ন হয়েছে।', 'guardify-pro'),
             'seen'     => is_array($job) ? (int) $job['seen'] : 0,
             'uploaded' => is_array($job) ? (int) $job['uploaded'] : 0,
             'skipped'  => is_array($job) ? (int) $job['skipped'] : 0,
@@ -843,23 +843,23 @@ class Guardify_Media {
      */
     public function start_restore() {
         if ($this->restore_active()) {
-            return new WP_Error('already_running', 'মিডিয়া রিস্টোর ইতিমধ্যে চলছে।');
+            return new WP_Error('already_running', __('মিডিয়া রিস্টোর ইতিমধ্যে চলছে।', 'guardify-pro'));
         }
         if ($this->job_active()) {
-            return new WP_Error('sync_running', 'মিডিয়া সিঙ্ক চলছে — শেষ হওয়া পর্যন্ত অপেক্ষা করুন।');
+            return new WP_Error('sync_running', __('মিডিয়া সিঙ্ক চলছে — শেষ হওয়া পর্যন্ত অপেক্ষা করুন।', 'guardify-pro'));
         }
 
         $base = $this->uploads_dir();
         if ($base === '') {
-            return new WP_Error('no_uploads', 'আপলোড ফোল্ডার পাওয়া যায়নি।');
+            return new WP_Error('no_uploads', __('আপলোড ফোল্ডার পাওয়া যায়নি।', 'guardify-pro'));
         }
         if (!wp_is_writable($base)) {
-            return new WP_Error('not_writable', 'আপলোড ফোল্ডারে লেখার অনুমতি নেই।');
+            return new WP_Error('not_writable', __('আপলোড ফোল্ডারে লেখার অনুমতি নেই।', 'guardify-pro'));
         }
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            return new WP_Error('not_connected', 'প্লাগইন সংযুক্ত নয়।');
+            return new WP_Error('not_connected', __('প্লাগইন সংযুক্ত নয়।', 'guardify-pro'));
         }
 
         update_option(self::RESTORE_OPTION, [
@@ -907,7 +907,7 @@ class Guardify_Media {
 
         if (!$api->is_connected()) {
             delete_transient(self::SLICE_LOCK);
-            return $this->finish_restore(new WP_Error('not_connected', 'প্লাগইন সংযুক্ত নয়।'));
+            return $this->finish_restore(new WP_Error('not_connected', __('প্লাগইন সংযুক্ত নয়।', 'guardify-pro')));
         }
 
         $budget   = (int) apply_filters('guardify_media_slice_budget', self::SLICE_BUDGET);
@@ -920,7 +920,7 @@ class Guardify_Media {
 
         if (!is_array($page) || !isset($page['files'])) {
             delete_transient(self::SLICE_LOCK);
-            return $this->finish_restore(new WP_Error('page_failed', 'মিডিয়া তালিকা পাওয়া যায়নি।'));
+            return $this->finish_restore(new WP_Error('page_failed', __('মিডিয়া তালিকা পাওয়া যায়নি।', 'guardify-pro')));
         }
 
         $handled   = 0;
@@ -1062,8 +1062,8 @@ class Guardify_Media {
         update_option(self::LAST_RESULT, [
             'ok'      => $failed === 0,
             'message' => $failed === 0
-                ? 'মিডিয়া রিস্টোর সম্পন্ন হয়েছে।'
-                : $failed . 'টি ফাইল নামানো যায়নি — আবার চালালে বাকিগুলো নামবে।',
+                ? __('মিডিয়া রিস্টোর সম্পন্ন হয়েছে।', 'guardify-pro')
+                : $failed . __('টি ফাইল নামানো যায়নি — আবার চালালে বাকিগুলো নামবে।', 'guardify-pro'),
             'written' => $written,
             'present' => is_array($job) ? (int) $job['present'] : 0,
             'failed'  => $failed,
@@ -1093,14 +1093,14 @@ class Guardify_Media {
 
         delete_option('guardify_media_skips');
 
-        $started = $this->start_sync('ম্যানুয়াল মিডিয়া ব্যাকআপ');
+        $started = $this->start_sync(__('ম্যানুয়াল মিডিয়া ব্যাকআপ', 'guardify-pro'));
         if (is_wp_error($started)) {
             wp_send_json_error($started->get_error_message());
         }
 
         wp_send_json_success([
             'queued'  => true,
-            'message' => 'মিডিয়া ব্যাকআপ শুরু হয়েছে। এটি পটভূমিতে চলবে।',
+            'message' => __('মিডিয়া ব্যাকআপ শুরু হয়েছে। এটি পটভূমিতে চলবে।', 'guardify-pro'),
         ]);
     }
 
@@ -1114,7 +1114,7 @@ class Guardify_Media {
 
         wp_send_json_success([
             'queued'  => true,
-            'message' => 'মিডিয়া রিস্টোর শুরু হয়েছে। বর্তমান ফাইলগুলো মুছে ফেলা হবে না।',
+            'message' => __('মিডিয়া রিস্টোর শুরু হয়েছে। বর্তমান ফাইলগুলো মুছে ফেলা হবে না।', 'guardify-pro'),
         ]);
     }
 
@@ -1122,12 +1122,12 @@ class Guardify_Media {
         $this->guard();
 
         if ($this->job_active()) {
-            $this->finish_job(new WP_Error('cancelled', 'মিডিয়া সিঙ্ক বাতিল করা হয়েছে।'));
+            $this->finish_job(new WP_Error('cancelled', __('মিডিয়া সিঙ্ক বাতিল করা হয়েছে।', 'guardify-pro')));
         } elseif ($this->restore_active()) {
-            $this->finish_restore(new WP_Error('cancelled', 'মিডিয়া রিস্টোর বাতিল করা হয়েছে।'));
+            $this->finish_restore(new WP_Error('cancelled', __('মিডিয়া রিস্টোর বাতিল করা হয়েছে।', 'guardify-pro')));
         }
 
-        wp_send_json_success(['message' => 'বাতিল করা হয়েছে।']);
+        wp_send_json_success(['message' => __('বাতিল করা হয়েছে।', 'guardify-pro')]);
     }
 
     public function ajax_status() {
@@ -1145,8 +1145,8 @@ class Guardify_Media {
                 'bytes'    => (int) $job['bytes'],
                 'walking'  => !$job['walk_done'],
                 'message'  => $job['walk_done']
-                    ? 'ফাইল আপলোড হচ্ছে…'
-                    : 'ফাইল খোঁজা ও আপলোড হচ্ছে…',
+                    ? __('ফাইল আপলোড হচ্ছে…', 'guardify-pro')
+                    : __('ফাইল খোঁজা ও আপলোড হচ্ছে…', 'guardify-pro'),
             ]);
         }
 
@@ -1156,7 +1156,7 @@ class Guardify_Media {
                 'written' => (int) $restore['written'],
                 'present' => (int) $restore['present'],
                 'failed'  => (int) $restore['failed'],
-                'message' => 'মিডিয়া ফাইল নামানো হচ্ছে…',
+                'message' => __('মিডিয়া ফাইল নামানো হচ্ছে…', 'guardify-pro'),
             ]);
         }
 
@@ -1226,8 +1226,8 @@ class Guardify_Media {
         wp_send_json_success([
             'enabled' => $enabled === 'yes',
             'message' => $enabled === 'yes'
-                ? 'মিডিয়া ব্যাকআপ চালু হয়েছে।'
-                : 'মিডিয়া ব্যাকআপ বন্ধ হয়েছে।',
+                ? __('মিডিয়া ব্যাকআপ চালু হয়েছে।', 'guardify-pro')
+                : __('মিডিয়া ব্যাকআপ বন্ধ হয়েছে।', 'guardify-pro'),
         ]);
     }
 }

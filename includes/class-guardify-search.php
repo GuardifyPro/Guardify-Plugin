@@ -281,7 +281,7 @@ class Guardify_Search {
         $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
         $phone = Guardify_Phone_Util::normalize($phone);
         if (!Guardify_Phone_Util::validate($phone)) {
-            wp_send_json_error('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)');
+            wp_send_json_error(__('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)', 'guardify-pro'));
         }
 
         $api = new Guardify_API();
@@ -293,7 +293,7 @@ class Guardify_Search {
             wp_send_json_success($result);
         }
 
-        $error = isset($result['error']) ? $result['error'] : 'সার্চ ব্যর্থ।';
+        $error = isset($result['error']) ? $result['error'] : __('সার্চ ব্যর্থ।', 'guardify-pro');
         wp_send_json_error($error);
     }
 }

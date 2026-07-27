@@ -41,15 +41,15 @@ if ($result['success']) {
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             </div>
             <div>
-                <h1 class="gf-page-title">SMS লগস</h1>
-                <p class="gf-page-desc">পাঠানো সব SMS-এর তালিকা, স্ট্যাটাস ও খরচ।</p>
+                <h1 class="gf-page-title"><?php esc_html_e('SMS লগস', 'guardify-pro'); ?></h1>
+                <p class="gf-page-desc"><?php esc_html_e('পাঠানো সব SMS-এর তালিকা, স্ট্যাটাস ও খরচ।', 'guardify-pro'); ?></p>
             </div>
         </div>
         <div class="gf-page-header-actions">
-            <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-pro')); ?>" class="gf-btn gf-btn-ghost gf-btn-sm">সেটিংস ↗</a>
+            <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-pro')); ?>" class="gf-btn gf-btn-ghost gf-btn-sm"><?php esc_html_e('সেটিংস ↗', 'guardify-pro'); ?></a>
             <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-sms-logs')); ?>" class="gf-btn gf-btn-secondary gf-btn-sm">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
-                রিফ্রেশ
+                <?php esc_html_e('রিফ্রেশ', 'guardify-pro'); ?>
             </a>
         </div>
     </div>
@@ -58,7 +58,7 @@ if ($result['success']) {
     <div class="gf-alert gf-alert-error gf-mb-3" role="alert">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4m0 4h.01"/></svg>
         <div>
-            <strong class="gf-alert-title">লগ আনা যায়নি</strong>
+            <strong class="gf-alert-title"><?php esc_html_e('লগ আনা যায়নি', 'guardify-pro'); ?></strong>
             <?php echo esc_html($error); ?>
         </div>
     </div>
@@ -73,11 +73,11 @@ if ($result['success']) {
                         <span class="gf-count-pill"><?php echo esc_html(number_format_i18n($total)); ?></span>
                     <?php endif; ?>
                 </h2>
-                <p class="gf-card-desc">সময় বাংলাদেশ (ঢাকা) সময় অনুযায়ী দেখানো হয়েছে।</p>
+                <p class="gf-card-desc"><?php esc_html_e('সময় বাংলাদেশ (ঢাকা) সময় অনুযায়ী দেখানো হয়েছে।', 'guardify-pro'); ?></p>
             </div>
             <div class="gf-card-header-actions">
-                <label class="gf-sr-only" for="gf-sms-search">SMS সার্চ</label>
-                <input type="search" id="gf-sms-search" class="gf-input" placeholder="ফোন বা মেসেজ খুঁজুন…" style="width: min(100%, 260px);" />
+                <label class="gf-sr-only" for="gf-sms-search"><?php esc_html_e('SMS সার্চ', 'guardify-pro'); ?></label>
+                <input type="search" id="gf-sms-search" class="gf-input" placeholder="<?php echo esc_attr__('ফোন বা মেসেজ খুঁজুন…', 'guardify-pro'); ?>" style="width: min(100%, 260px);" />
             </div>
         </div>
         <div class="gf-card-body gf-flush">
@@ -86,28 +86,28 @@ if ($result['success']) {
                 <div class="gf-empty-state-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v12H7l-3 3z"/></svg>
                 </div>
-                <p class="gf-empty-state-title">কোনো SMS লগ নেই</p>
-                <p class="gf-empty-state-desc">এখনো কোনো SMS পাঠানো হয়নি। SMS নোটিফিকেশন ও OTP সেটিংস পেজ থেকে চালু করুন।</p>
+                <p class="gf-empty-state-title"><?php esc_html_e('কোনো SMS লগ নেই', 'guardify-pro'); ?></p>
+                <p class="gf-empty-state-desc"><?php esc_html_e('এখনো কোনো SMS পাঠানো হয়নি। SMS নোটিফিকেশন ও OTP সেটিংস পেজ থেকে চালু করুন।', 'guardify-pro'); ?></p>
                 <div class="gf-empty-state-actions">
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-pro')); ?>" class="gf-btn gf-btn-primary gf-btn-sm">সেটিংসে যান</a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-pro')); ?>" class="gf-btn gf-btn-primary gf-btn-sm"><?php esc_html_e('সেটিংসে যান', 'guardify-pro'); ?></a>
                 </div>
             </div>
             <?php elseif (!empty($logs)) : ?>
             <div id="gf-sms-no-results" class="gf-no-data" style="display:none;">
-                <p class="gf-text-strong">কোনো ফলাফল পাওয়া যায়নি</p>
-                <p class="gf-help">আপনার সার্চের সাথে কোনো SMS মেলেনি।</p>
+                <p class="gf-text-strong"><?php esc_html_e('কোনো ফলাফল পাওয়া যায়নি', 'guardify-pro'); ?></p>
+                <p class="gf-help"><?php esc_html_e('আপনার সার্চের সাথে কোনো SMS মেলেনি।', 'guardify-pro'); ?></p>
             </div>
             <div class="gf-table-wrap">
                 <table class="gf-table gf-table-stack" id="gf-sms-table">
                     <thead>
                         <tr>
                             <th style="width:56px;">#</th>
-                            <th style="width:140px;">ফোন</th>
-                            <th>মেসেজ</th>
-                            <th style="width:100px;">স্ট্যাটাস</th>
-                            <th style="width:170px;">সময়</th>
-                            <th class="gf-table-center" style="width:70px;">পার্টস</th>
-                            <th class="gf-table-num" style="width:90px;">খরচ</th>
+                            <th style="width:140px;"><?php esc_html_e('ফোন', 'guardify-pro'); ?></th>
+                            <th><?php esc_html_e('মেসেজ', 'guardify-pro'); ?></th>
+                            <th style="width:100px;"><?php esc_html_e('স্ট্যাটাস', 'guardify-pro'); ?></th>
+                            <th style="width:170px;"><?php esc_html_e('সময়', 'guardify-pro'); ?></th>
+                            <th class="gf-table-center" style="width:70px;"><?php esc_html_e('পার্টস', 'guardify-pro'); ?></th>
+                            <th class="gf-table-num" style="width:90px;"><?php esc_html_e('খরচ', 'guardify-pro'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -121,7 +121,7 @@ if ($result['success']) {
                                     ? mb_substr($clean, 0, 55, 'UTF-8') . '…'
                                     : $clean;
                             } else {
-                                $preview = '[মেসেজ নেই]';
+                                $preview = __('[মেসেজ নেই]', 'guardify-pro');
                             }
 
                             $status = strtolower(isset($log['status']) ? $log['status'] : 'unknown');
@@ -140,7 +140,7 @@ if ($result['success']) {
                             <td>
                                 <span class="gf-sms-preview" title="<?php echo esc_attr($clean !== '' ? $clean : 'N/A'); ?>"><?php echo esc_html($preview); ?></span>
                                 <?php if (!empty($raw_msg)) : ?>
-                                    <button type="button" class="gf-sms-view-btn" data-msg="<?php echo esc_attr($raw_msg); ?>">দেখুন</button>
+                                    <button type="button" class="gf-sms-view-btn" data-msg="<?php echo esc_attr($raw_msg); ?>"><?php esc_html_e('দেখুন', 'guardify-pro'); ?></button>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -150,7 +150,7 @@ if ($result['success']) {
                                 <?php if ($dt instanceof DateTime) : ?>
                                     <?php echo esc_html($dt->format('M j, Y g:i A')); ?>
                                     <br />
-                                    <small class="gf-text-muted"><?php echo esc_html(human_time_diff($dt->getTimestamp()) . ' আগে'); ?></small>
+                                    <small class="gf-text-muted"><?php echo esc_html(human_time_diff($dt->getTimestamp()) . __(' আগে', 'guardify-pro')); ?></small>
                                 <?php else : ?>
                                     <?php echo esc_html(isset($log['timestamp']) ? $log['timestamp'] : '—'); ?>
                                 <?php endif; ?>
@@ -171,11 +171,11 @@ if ($result['success']) {
     </div>
 
     <?php if ($total_pages > 1) : ?>
-    <nav class="gf-pagination" aria-label="পেজ নেভিগেশন">
+    <nav class="gf-pagination" aria-label="<?php echo esc_attr__('পেজ নেভিগেশন', 'guardify-pro'); ?>">
         <?php
         $sms_base = admin_url('admin.php?page=guardify-sms-logs');
         if ($current_page > 1) :
-            echo '<a href="' . esc_url($sms_base . '&gf_page=' . ($current_page - 1)) . '" aria-label="আগের পেজ">&laquo;</a>';
+            echo '<a href="' . esc_url($sms_base . '&gf_page=' . ($current_page - 1)) . __('" aria-label="আগের পেজ">&laquo;</a>', 'guardify-pro');
         else :
             echo '<span class="gf-page-disabled">&laquo;</span>';
         endif;
@@ -189,7 +189,7 @@ if ($result['success']) {
             endif;
         endfor;
         if ($current_page < $total_pages) :
-            echo '<a href="' . esc_url($sms_base . '&gf_page=' . ($current_page + 1)) . '" aria-label="পরের পেজ">&raquo;</a>';
+            echo '<a href="' . esc_url($sms_base . '&gf_page=' . ($current_page + 1)) . __('" aria-label="পরের পেজ">&raquo;</a>', 'guardify-pro');
         else :
             echo '<span class="gf-page-disabled">&raquo;</span>';
         endif;
@@ -200,14 +200,14 @@ if ($result['success']) {
     <div id="gf-sms-modal" class="gf-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gf-sms-modal-title" style="display:none;">
         <div class="gf-modal">
             <div class="gf-modal-header">
-                <h2 class="gf-modal-title" id="gf-sms-modal-title">সম্পূর্ণ SMS</h2>
-                <button type="button" class="gf-modal-close" id="gf-sms-modal-close" data-gf-close aria-label="বন্ধ করুন">&times;</button>
+                <h2 class="gf-modal-title" id="gf-sms-modal-title"><?php esc_html_e('সম্পূর্ণ SMS', 'guardify-pro'); ?></h2>
+                <button type="button" class="gf-modal-close" id="gf-sms-modal-close" data-gf-close aria-label="<?php echo esc_attr__('বন্ধ করুন', 'guardify-pro'); ?>">&times;</button>
             </div>
             <div class="gf-modal-body">
                 <pre id="gf-sms-modal-body" class="gf-text-sm" style="white-space:pre-wrap;word-wrap:break-word;margin:0;font-family:inherit;line-height:1.65;"></pre>
             </div>
             <div class="gf-modal-footer">
-                <button type="button" class="gf-btn gf-btn-secondary gf-sms-modal-close-btn" data-gf-close>বন্ধ করুন</button>
+                <button type="button" class="gf-btn gf-btn-secondary gf-sms-modal-close-btn" data-gf-close><?php esc_html_e('বন্ধ করুন', 'guardify-pro'); ?></button>
             </div>
         </div>
     </div>

@@ -217,8 +217,23 @@ class Guardify_Quick_View {
             return;
         }
 
+        // Its own handles rather than riding on someone else's.
+        //
+        // These were attached to `woocommerce_admin_styles` and `jquery`. Both are usually
+        // present on the orders screen, and "usually" is the problem: on a WooCommerce build
+        // or an HPOS screen where that style handle is not enqueued, wp_add_inline_style
+        // silently attaches to nothing and the modal renders unstyled — a broken-looking
+        // panel with no error anywhere to explain it. Attaching script to `jquery` has the
+        // same shape of failure and additionally runs our code inside a handle every other
+        // plugin also touches.
+        wp_register_style('guardify-quick-view', false, [], GUARDIFY_VERSION);
+        wp_enqueue_style('guardify-quick-view');
+
+        wp_register_script('guardify-quick-view', false, ['jquery'], GUARDIFY_VERSION, true);
+        wp_enqueue_script('guardify-quick-view');
+
         // CSS
-        wp_add_inline_style('woocommerce_admin_styles', '
+        wp_add_inline_style('guardify-quick-view', '
             .gf-preview-section {
                 border-top: 1px solid #e5e7eb;
                 padding: 16px;
@@ -301,7 +316,7 @@ class Guardify_Quick_View {
         ');
 
         // JS for lazy-loading DP data in preview modal
-        wp_add_inline_script('jquery', "
+        wp_add_inline_script('guardify-quick-view', "
             jQuery(function($){
                 $(document).on('click', '.gf-qv-dp-btn', function(){
                     var btn = $(this);

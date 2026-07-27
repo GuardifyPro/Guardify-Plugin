@@ -28,7 +28,7 @@ class Guardify_SMS_Logs {
         if (!$api->is_connected()) {
             return [
                 'success' => false,
-                'message' => 'Plugin connected নয়। সেটিংস থেকে সংযুক্ত করুন।',
+                'message' => __('Plugin connected নয়। সেটিংস থেকে সংযুক্ত করুন।', 'guardify-pro'),
             ];
         }
 
