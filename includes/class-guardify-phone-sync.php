@@ -13,6 +13,15 @@ class Guardify_Phone_Sync {
 
     private static $instance = null;
 
+    /**
+     * The id this sync is paging past, while its own order query is in flight.
+     *
+     * The HPOS clause filter is handed clauses with no query variables, so there is nothing
+     * in its arguments that identifies the query as ours. This is how it tells — and it is
+     * why the filter must be detached the moment the query returns.
+     */
+    private $sync_after_id = null;
+
     /** WP option: highest order ID that has been synced */
     const LAST_ORDER_KEY = 'guardify_phone_sync_last_order_id';
     /** WP option: total orders count at last check */
@@ -170,6 +179,39 @@ class Guardify_Phone_Sync {
     }
 
     /**
+     * Restrict the legacy post-storage order query to ids past the sync cursor.
+     *
+     * Keyed off the query variable Guardify adds, so another plugin's order query passing
+     * through this filter in the same instant is left alone.
+     */
+    public function filter_orders_after_id_cpt($query, $query_vars) {
+        global $wpdb;
+
+        if (!empty($query_vars['guardify_after_id'])) {
+            $query['where'] .= $wpdb->prepare(' AND ID > %d', (int) $query_vars['guardify_after_id']);
+        }
+
+        return $query;
+    }
+
+    /**
+     * The same restriction for HPOS.
+     *
+     * HPOS passes the clauses and the query object but not the custom argument, so this
+     * checks the property set immediately before the call instead. Without that check the
+     * filter would rewrite every order query made while it was attached, not only ours.
+     */
+    public function filter_orders_after_id_hpos($clauses, $query = null) {
+        global $wpdb;
+
+        if ($this->sync_after_id !== null) {
+            $clauses['where'] .= $wpdb->prepare(' AND wc_orders.id > %d', (int) $this->sync_after_id);
+        }
+
+        return $clauses;
+    }
+
+    /**
      * Sync a single batch of orders with ID > $after_id.
      *
      * @param Guardify_API $api
@@ -186,34 +228,36 @@ class Guardify_Phone_Sync {
             'return'  => 'objects',
         ];
 
-        // Use ID comparison for efficient pagination
+        // Keyset pagination by order id, for both the legacy post storage and HPOS.
+        //
+        // The filters are attached only around this one wc_get_orders() call and detached
+        // immediately after, by reference to the exact callbacks added.
+        //
+        // What was here before called remove_all_filters() on both hooks. That does not
+        // remove Guardify's callbacks — it removes *everyone's*, including WooCommerce's own
+        // and those of every other plugin, for the remainder of the request. A subscription
+        // plugin, a multi-vendor plugin or an analytics plugin querying orders after the
+        // sync had run would silently get unfiltered results, and nothing anywhere would
+        // report a problem. This method also runs from the manual-sync button in wp-admin,
+        // where a great deal of other code queries orders in the same request.
         if ($after_id > 0) {
-            // WC HPOS-compatible: use date_created filter with a small overlap
-            // But more reliably, we can just use the 'exclude' or custom query
-            // For HPOS compatibility, best approach: custom query via 'field_query'
-            add_filter('woocommerce_order_data_store_cpt_get_orders_query', function ($query, $query_vars) use ($after_id) {
-                global $wpdb;
-                if (!empty($query_vars['guardify_after_id'])) {
-                    // Works with both CPT and HPOS
-                    $query['where'] .= $wpdb->prepare(' AND ID > %d', $after_id);
-                }
-                return $query;
-            }, 10, 2);
             $args['guardify_after_id'] = $after_id;
+            $this->sync_after_id       = $after_id;
 
-            // Also register HPOS-compatible filter
-            add_filter('woocommerce_orders_table_query_clauses', function ($clauses) use ($after_id) {
-                global $wpdb;
-                $clauses['where'] .= $wpdb->prepare(' AND wc_orders.id > %d', $after_id);
-                return $clauses;
-            }, 10, 1);
+            $cpt_filter  = [$this, 'filter_orders_after_id_cpt'];
+            $hpos_filter = [$this, 'filter_orders_after_id_hpos'];
+
+            add_filter('woocommerce_order_data_store_cpt_get_orders_query', $cpt_filter, 10, 2);
+            add_filter('woocommerce_orders_table_query_clauses', $hpos_filter, 10, 2);
         }
 
         $orders = wc_get_orders($args);
 
-        // Remove filters to avoid side effects
-        remove_all_filters('woocommerce_order_data_store_cpt_get_orders_query');
-        remove_all_filters('woocommerce_orders_table_query_clauses');
+        if ($after_id > 0) {
+            remove_filter('woocommerce_order_data_store_cpt_get_orders_query', $cpt_filter, 10);
+            remove_filter('woocommerce_orders_table_query_clauses', $hpos_filter, 10);
+            $this->sync_after_id = null;
+        }
 
         if (empty($orders)) {
             return 0; // No more orders

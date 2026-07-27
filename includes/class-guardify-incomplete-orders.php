@@ -8,6 +8,9 @@ defined('ABSPATH') || exit;
 class Guardify_Incomplete_Orders {
 
     private static $instance = null;
+
+    /** Transient prefix for the per-number capture cooldown. */
+    const COOLDOWN_PREFIX = 'gf_cool_';
     private $table_name;
 
     public static function get_instance() {
@@ -127,7 +130,15 @@ class Guardify_Incomplete_Orders {
         $minutes = max(5, (int) get_option('guardify_incomplete_cooldown', 30));
         $phone_hash = md5($phone);
 
-        // Check cookie
+        // A cooldown started when this number's last order completed. Held server-side,
+        // because the customer's browser is not reliably the one making the request that
+        // starts it — see start_cooldown().
+        if (get_transient(self::COOLDOWN_PREFIX . $phone_hash) !== false) {
+            return true;
+        }
+
+        // The cookie this used to rely on. Still honoured so a customer who is mid-cooldown
+        // when the site updates is not suddenly captured again.
         if (isset($_COOKIE['gf_completed_' . $phone_hash])) {
             return true;
         }
@@ -171,18 +182,31 @@ class Guardify_Incomplete_Orders {
         return $recovered > 0;
     }
 
-    private function set_cooldown_cookie($phone) {
+    /**
+     * Stop capturing abandoned carts for a number that has just ordered.
+     *
+     * Server-side, keyed by the phone number, and deliberately not a cookie.
+     *
+     * The cookie version was wrong in three ways at once. It called setcookie() from
+     * `woocommerce_thankyou`, which runs while the order-received page is being printed —
+     * headers are long gone, so PHP emitted "Cannot modify header information" into the one
+     * page a customer most needs to look trustworthy, and on a host that displays warnings
+     * they saw it. It also ran on `woocommerce_order_status_changed`, which fires when a
+     * shop owner changes a status in wp-admin, so the cooldown cookie was set on the owner's
+     * browser rather than the customer's. And a customer who cleared their cookies, or
+     * ordered from their phone and returned on a laptop, had no cooldown at all.
+     *
+     * A transient has none of those problems: it does not care whose browser made the
+     * request, and it expires by itself.
+     */
+    private function start_cooldown($phone) {
         if (get_option('guardify_incomplete_cooldown_enabled', 'yes') !== 'yes') {
             return;
         }
-        $minutes    = max(5, (int) get_option('guardify_incomplete_cooldown', 30));
-        $expiration = time() + ($minutes * 60);
-        $phone_hash = md5($phone);
-        $secure     = is_ssl();
 
-        setcookie('gf_completed_' . $phone_hash, '1', $expiration, COOKIEPATH, COOKIE_DOMAIN, $secure, true);
-        $_COOKIE['gf_completed_' . $phone_hash] = '1';
-        setcookie('gf_completed_' . $phone_hash, '1', $expiration, '/', COOKIE_DOMAIN, $secure, true);
+        $minutes = max(5, (int) get_option('guardify_incomplete_cooldown', 30));
+
+        set_transient(self::COOLDOWN_PREFIX . md5($phone), 1, $minutes * MINUTE_IN_SECONDS);
     }
 
     /* --- Cart Data Collection -------------------------------------- */
@@ -464,15 +488,7 @@ class Guardify_Incomplete_Orders {
             ['%s', '%s']
         );
 
-        $this->set_cooldown_cookie($phone);
-
-        // Also set cookie via JavaScript as a fallback (like OrderGuard)
-        $phone_hash = md5($phone);
-        $minutes    = max(5, (int) get_option('guardify_incomplete_cooldown', 30));
-        add_action('wp_footer', function () use ($phone_hash, $minutes) {
-            $expiry_ms = $minutes * 60 * 1000;
-            echo '<script>document.cookie="gf_completed_' . esc_js($phone_hash) . '=1;max-age=' . intval($minutes * 60) . ';path=/";</script>';
-        });
+        $this->start_cooldown($phone);
     }
 
     public function handle_status_change($order_id, $old_status, $new_status) {

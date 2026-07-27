@@ -112,6 +112,7 @@ class Guardify_Activator {
         wp_clear_scheduled_hook('guardify_restore_worker');
         wp_clear_scheduled_hook('guardify_media_worker');
         wp_clear_scheduled_hook('guardify_media_restore_worker');
+        wp_clear_scheduled_hook('guardify_site_manager_poll');
 
         // A dump interrupted by deactivation leaves a temp file and a job row behind. The
         // file is the larger problem: it is a full copy of the database sitting in the

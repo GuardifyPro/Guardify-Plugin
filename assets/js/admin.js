@@ -37,6 +37,19 @@
         return toastStack;
     }
 
+    /**
+     * Bengali numerals.
+     *
+     * The product shows every other number in Bengali, so a count rendered in Latin digits
+     * beside one that is not reads as a bug. On the shared object rather than copied into
+     * each screen — there is already one local copy on the backup page, which is one more
+     * than there should be.
+     */
+    Guardify.bn = function (value) {
+        var digits = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+        return String(value).replace(/[0-9]/g, function (d) { return digits[+d]; });
+    };
+
     Guardify.toast = function (message, options) {
         var opts = options || {};
         var type = opts.type || 'info';
@@ -634,6 +647,80 @@
             GF.setLoading($btn, false);
         });
     });
+
+    /* ── Site management ─────────────────────────────────────────────── */
+
+    /*
+     * Saved on its own action rather than with the rest of the settings. Everything in the
+     * main save is gated on manage_woocommerce; this pair grants Guardify the ability to
+     * install code on the site, which is not a decision for whoever manages orders — so it
+     * goes through a handler that checks manage_options.
+     */
+    $(document).on('click', '#gf-sm-save', function () {
+        var $btn     = $(this);
+        var enabled  = $('#gf-sm-enabled').is(':checked') ? 'yes' : 'no';
+        var updates  = $('#gf-sm-updates').is(':checked') ? 'yes' : 'no';
+        var $status  = $('#gf-sm-status');
+
+        GF.setLoading($btn, true);
+
+        $.post(data.ajaxUrl, {
+            action: 'guardify_site_manager_save',
+            _wpnonce: data.nonce,
+            guardify_site_manager_enabled: enabled,
+            guardify_site_manager_updates: updates
+        })
+        .done(function (res) {
+            if (!res.success) {
+                GF.toast(res.data || 'সেভ করা যায়নি।', { type: 'error' });
+                return;
+            }
+
+            GF.toast(res.data.message, { type: 'success' });
+
+            // Permission to install cannot stay on when the whole feature is off; the server
+            // enforces that, and the checkbox has to follow or the screen disagrees with what
+            // was actually saved.
+            $('#gf-sm-updates').prop('checked', !!res.data.updates);
+
+            $status.empty();
+            loadSiteManagerStatus();
+        })
+        .fail(function () {
+            GF.toast('সার্ভারে সংযোগ করা যায়নি।', { type: 'error' });
+        })
+        .always(function () {
+            GF.setLoading($btn, false);
+        });
+    });
+
+    function loadSiteManagerStatus() {
+        if (!$('#gf-sm-save').length) { return; }
+
+        $.post(data.ajaxUrl, { action: 'guardify_site_manager_status', _wpnonce: data.nonce })
+        .done(function (res) {
+            if (!res.success) { return; }
+
+            var $badge = $('#gf-sm-summary');
+
+            if (!res.data.enabled) {
+                $badge.addClass('gf-hidden').text('');
+                return;
+            }
+
+            var parts = [];
+            if (res.data.outdated > 0) {
+                parts.push(GF.bn(res.data.outdated) + 'টি আপডেট বাকি');
+            } else {
+                parts.push('সব হালনাগাদ');
+            }
+            parts.push(GF.bn(res.data.admins) + ' জন অ্যাডমিন');
+
+            $badge.removeClass('gf-hidden').text(parts.join('  ·  '));
+        });
+    }
+
+    loadSiteManagerStatus();
 
     /* ── Support Ticket ──────────────────────────────────────────────── */
 

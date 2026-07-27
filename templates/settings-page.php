@@ -75,6 +75,12 @@ $settings = [
     'fraud_blocked_user_title'    => get_option('guardify_blocked_user_title', __('অর্ডার ব্লক করা হয়েছে', 'guardify-pro')),
     'fraud_blocked_user_message'  => get_option('guardify_blocked_user_message', __('নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।', 'guardify-pro')),
     'fraud_support_number'        => get_option('guardify_fraud_support_number', ''),
+    'guard_enabled'               => get_option('guardify_checkout_guard_enabled', 'yes'),
+    'guard_action'                => get_option('guardify_checkout_guard_action', 'flag'),
+    'guard_threshold'             => get_option('guardify_checkout_guard_threshold', 60),
+    'guard_dry_run'               => get_option('guardify_checkout_guard_dry_run', 'yes'),
+    'site_manager_enabled'        => get_option('guardify_site_manager_enabled', 'no'),
+    'site_manager_updates'        => get_option('guardify_site_manager_updates', 'no'),
     'trusted_proxy_header'        => get_option('guardify_trusted_proxy_header', ''),
     'sms_notifications_enabled'   => get_option('guardify_sms_notifications_enabled', 'no'),
     'notification_statuses'       => get_option('guardify_notification_statuses', []),
@@ -508,6 +514,59 @@ endif;
             <div class="gf-card">
                 <div class="gf-card-header">
                     <div class="gf-card-heading">
+                        <h2 class="gf-card-title"><?php esc_html_e('ভুয়া অর্ডার গার্ড', 'guardify-pro'); ?></h2>
+                        <p class="gf-card-desc"><?php esc_html_e('গ্রাহকের রেকর্ড নয় — অর্ডারটি কীভাবে দেওয়া হলো তা দেখে ভুয়া ও স্বয়ংক্রিয় অর্ডার ধরে।', 'guardify-pro'); ?></p>
+                    </div>
+                </div>
+                <div class="gf-card-body gf-stack">
+                    <div class="gf-alert gf-alert-info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <div>
+                            <strong class="gf-alert-title"><?php esc_html_e('নতুন নম্বরের ভুয়া অর্ডার এভাবেই ধরা পড়ে', 'guardify-pro'); ?></strong>
+                            <?php esc_html_e('স্মার্ট ফিল্টার গ্রাহকের ডেলিভারি রেকর্ড দেখে — কিন্তু দশ সেকেন্ড আগে বানানো নম্বরের কোনো রেকর্ডই থাকে না। এই গার্ড দেখে ফর্মটি কত দ্রুত পূরণ হলো, লুকানো ঘরে কিছু লেখা হলো কি না, নামটি আসল মনে হয় কি না, আর একই সংযোগ থেকে কতগুলো অর্ডার আসছে।', 'guardify-pro'); ?>
+                        </div>
+                    </div>
+
+                    <div class="gf-settings-list">
+                        <?php
+                        guardify_render_toggle_row(
+                            'guardify_checkout_guard_enabled',
+                            __('ভুয়া অর্ডার গার্ড চালু করুন', 'guardify-pro'),
+                            __('গ্রাহকের চেকআউটে কোনো অতিরিক্ত ধাপ যোগ হয় না, আর সার্ভারে কোনো বাড়তি কোয়েরি চলে না।', 'guardify-pro'),
+                            $settings['guard_enabled']
+                        );
+                        guardify_render_toggle_row(
+                            'guardify_checkout_guard_dry_run',
+                            __('আপাতত শুধু রিপোর্ট করুন', 'guardify-pro'),
+                            __('চালু থাকলে কোনো অর্ডার আটকাবে না — শুধু অর্ডার নোটে লিখে রাখবে কোনটি ধরা পড়ত। কয়েক দিন দেখে তারপর বন্ধ করুন।', 'guardify-pro'),
+                            $settings['guard_dry_run']
+                        );
+                        ?>
+                    </div>
+
+                    <div class="gf-form-grid">
+                        <div class="gf-field">
+                            <label class="gf-label" for="gf-guard-action"><?php esc_html_e('ধরা পড়লে কী হবে', 'guardify-pro'); ?></label>
+                            <select id="gf-guard-action" name="guardify_checkout_guard_action" class="gf-select gf-setting-input">
+                                <option value="flag" <?php selected($settings['guard_action'], 'flag'); ?>><?php esc_html_e('শুধু অর্ডার নোটে লিখে রাখবে', 'guardify-pro'); ?></option>
+                                <option value="hold" <?php selected($settings['guard_action'], 'hold'); ?>><?php esc_html_e('অর্ডারটি হোল্ডে রাখবে', 'guardify-pro'); ?></option>
+                                <option value="block" <?php selected($settings['guard_action'], 'block'); ?>><?php esc_html_e('অর্ডারটি নিতে দেবে না', 'guardify-pro'); ?></option>
+                            </select>
+                            <span class="gf-help"><?php esc_html_e('হোল্ড সবচেয়ে নিরাপদ — অর্ডারটি আসে, কিন্তু পাঠানোর আগে আপনি একবার দেখে নিতে পারেন।', 'guardify-pro'); ?></span>
+                        </div>
+
+                        <div class="gf-field gf-field-narrow">
+                            <label class="gf-label" for="gf-guard-threshold"><?php esc_html_e('স্কোর সীমা', 'guardify-pro'); ?></label>
+                            <input type="number" id="gf-guard-threshold" name="guardify_checkout_guard_threshold" class="gf-input gf-setting-input" value="<?php echo esc_attr($settings['guard_threshold']); ?>" min="10" max="100" step="5" />
+                            <span class="gf-help"><?php esc_html_e('এর সমান বা বেশি হলে ব্যবস্থা নেওয়া হবে। ৬০ রাখলে একটি শক্ত প্রমাণেই ধরা পড়ে, দুটি দুর্বল ইঙ্গিতে নয়।', 'guardify-pro'); ?></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="gf-card">
+                <div class="gf-card-header">
+                    <div class="gf-card-heading">
                         <h2 class="gf-card-title"><?php esc_html_e('রিপিট অর্ডার ব্লকার', 'guardify-pro'); ?></h2>
                         <p class="gf-card-desc"><?php esc_html_e('একই ফোন নম্বর থেকে অল্প সময়ে আবার অর্ডার এলে কী হবে।', 'guardify-pro'); ?></p>
                     </div>
@@ -733,6 +792,58 @@ endif;
                     </div>
                 </div>
             </div>
+
+            <?php if (current_user_can('manage_options')) : ?>
+            <div class="gf-card">
+                <div class="gf-card-header">
+                    <div class="gf-card-heading">
+                        <h2 class="gf-card-title"><?php esc_html_e('সাইট ম্যানেজমেন্ট', 'guardify-pro'); ?></h2>
+                        <p class="gf-card-desc"><?php esc_html_e('Guardify ড্যাশবোর্ড থেকে এই সাইটের প্লাগইন, থিম ও ইউজার দেখুন — একাধিক দোকান থাকলে সবগুলো এক জায়গায়।', 'guardify-pro'); ?></p>
+                    </div>
+                    <div class="gf-card-header-actions">
+                        <span id="gf-sm-summary" class="gf-badge gf-badge-muted gf-hidden"></span>
+                    </div>
+                </div>
+                <div class="gf-card-body gf-stack">
+                    <div class="gf-alert gf-alert-info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <div>
+                            <strong class="gf-alert-title"><?php esc_html_e('Guardify আপনার সাইটে ঢোকে না — সাইটই জিজ্ঞেস করে', 'guardify-pro'); ?></strong>
+                            <?php esc_html_e('আপনার সাইট ঘণ্টায় একবার Guardify-কে জিজ্ঞেস করে "আমার জন্য কোনো কাজ আছে?" — আর আপনি ড্যাশবোর্ডে যা বলেছেন সেটাই উত্তর হিসেবে পায়। বাইরে থেকে আপনার সার্ভারে কিছু করার কোনো পথ খোলা থাকে না।', 'guardify-pro'); ?>
+                        </div>
+                    </div>
+
+                    <div class="gf-settings-list">
+                        <label class="gf-toggle-row">
+                            <span class="gf-toggle-info">
+                                <span class="gf-toggle-label"><?php esc_html_e('সাইটের তথ্য Guardify-তে পাঠান', 'guardify-pro'); ?></span>
+                                <span class="gf-toggle-desc"><?php esc_html_e('কোন প্লাগইন ও থিমের কোন ভার্সন চলছে, কোনটির আপডেট আছে, আর কারা অ্যাডমিন — শুধু এটুকু। গ্রাহকের কোনো তথ্য যায় না।', 'guardify-pro'); ?></span>
+                            </span>
+                            <span class="gf-switch">
+                                <input type="checkbox" id="gf-sm-enabled" <?php checked($settings['site_manager_enabled'], 'yes'); ?> />
+                                <span class="gf-switch-slider"></span>
+                            </span>
+                        </label>
+
+                        <label class="gf-toggle-row">
+                            <span class="gf-toggle-info">
+                                <span class="gf-toggle-label"><?php esc_html_e('ড্যাশবোর্ড থেকে আপডেট করার অনুমতি দিন', 'guardify-pro'); ?></span>
+                                <span class="gf-toggle-desc"><?php esc_html_e('বন্ধ থাকলে Guardify শুধু দেখাবে কী কী পুরোনো — কিছু ইনস্টল করবে না। WordPress-এর বড় ভার্সন আপডেট কখনোই এখান থেকে হবে না, আর Guardify নিজেকেও এখান থেকে আপডেট করে না।', 'guardify-pro'); ?></span>
+                            </span>
+                            <span class="gf-switch">
+                                <input type="checkbox" id="gf-sm-updates" <?php checked($settings['site_manager_updates'], 'yes'); ?> />
+                                <span class="gf-switch-slider"></span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div id="gf-sm-status"></div>
+                </div>
+                <div class="gf-card-footer">
+                    <button type="button" id="gf-sm-save" class="gf-btn gf-btn-primary"><?php esc_html_e('সেভ করুন', 'guardify-pro'); ?></button>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <div class="gf-card gf-card-danger">
                 <div class="gf-card-header">
