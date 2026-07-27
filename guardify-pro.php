@@ -51,6 +51,7 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-restore.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-domain.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-media.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-client-ip.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-checkout-guard.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-onboarding.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
@@ -156,6 +157,7 @@ final class Guardify_Pro {
         Guardify_Restore::get_instance();
         Guardify_Domain::get_instance();
         Guardify_Media::get_instance();
+        Guardify_Checkout_Guard::get_instance();
         Guardify_Onboarding::get_instance();
 
         // Admin menu
@@ -811,6 +813,7 @@ final class Guardify_Pro {
             'guardify_incomplete_orders_enabled',
             'guardify_phone_history_enabled',
             'guardify_report_column_enabled',
+            'guardify_checkout_guard_enabled',
         ];
 
         foreach ($toggles as $key) {
@@ -837,6 +840,9 @@ final class Guardify_Pro {
             // about the same abandoned cart 29 more times than they asked for.
             'guardify_incomplete_cooldown'              => ['type' => 'int', 'min' => 5, 'max' => 43200, 'default' => 30],
             'guardify_default_courier'                 => ['type' => 'enum', 'values' => ['steadfast', 'pathao'], 'default' => 'steadfast'],
+            'guardify_checkout_guard_action'           => ['type' => 'enum', 'values' => ['flag', 'hold', 'block'], 'default' => 'flag'],
+            'guardify_checkout_guard_threshold'        => ['type' => 'int', 'min' => 10, 'max' => 100, 'default' => 60],
+            'guardify_checkout_guard_dry_run'          => ['type' => 'yesno', 'default' => 'yes'],
             // Which proxy header, if any, may be believed about a visitor's address. An
             // allow-list rather than free text: the value is used as a $_SERVER key, and the
             // whole point of the setting is that it names something a proxy sets rather than
