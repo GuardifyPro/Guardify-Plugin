@@ -273,7 +273,7 @@ class Guardify_OTP {
                     <p class="gf-otp-info">আপনার ফোনে একটি OTP কোড পাঠানো হয়েছে। অর্ডার নিশ্চিত করতে কোডটি নিচে লিখুন।</p>
                     <div class="gf-otp-message"></div>
                     <div class="gf-otp-input-wrap">
-                        <input type="text" id="gf-otp-input" class="gf-otp-input" placeholder="OTP কোড" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+                        <input type="text" id="gf-otp-input" class="gf-otp-input" placeholder="<?php echo esc_attr__('OTP কোড', 'guardify-pro'); ?>" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
                     </div>
                     <button type="button" id="gf-otp-verify-btn" class="gf-otp-btn gf-otp-btn-primary">ভেরিফাই করুন</button>
                     <div class="gf-otp-footer">

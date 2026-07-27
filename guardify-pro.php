@@ -286,8 +286,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'সেটিংস',
-            'সেটিংস',
+            __('সেটিংস', 'guardify-pro'),
+            __('সেটিংস', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-pro',
             [$this, 'render_settings_page']
@@ -295,8 +295,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'ফোন সার্চ',
-            'ফোন সার্চ',
+            __('ফোন সার্চ', 'guardify-pro'),
+            __('ফোন সার্চ', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-search',
             [Guardify_Search::get_instance(), 'render_search_page']
@@ -304,8 +304,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'ফ্রড ম্যানেজমেন্ট',
-            'ফ্রড ম্যানেজমেন্ট',
+            __('ফ্রড ম্যানেজমেন্ট', 'guardify-pro'),
+            __('ফ্রড ম্যানেজমেন্ট', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-fraud',
             [$this, 'render_fraud_page']
@@ -313,7 +313,7 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'ইনকমপ্লিট অর্ডার',
+            __('ইনকমপ্লিট অর্ডার', 'guardify-pro'),
             __('ইনকমপ্লিট অর্ডার <span class="awaiting-mod">', 'guardify-pro') . Guardify_Incomplete_Orders::get_pending_count() . '</span>',
             'manage_woocommerce',
             'guardify-incomplete',
@@ -322,8 +322,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'SMS লগস',
-            'SMS লগস',
+            __('SMS লগস', 'guardify-pro'),
+            __('SMS লগস', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-sms-logs',
             [$this, 'render_sms_logs_page']
@@ -331,8 +331,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'ব্যাকআপ',
-            'ব্যাকআপ',
+            __('ব্যাকআপ', 'guardify-pro'),
+            __('ব্যাকআপ', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-backup',
             [$this, 'render_backup_page']
@@ -345,8 +345,8 @@ final class Guardify_Pro {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             add_submenu_page(
                 'guardify-pro',
-                'ডিজাইন সিস্টেম',
-                'ডিজাইন সিস্টেম',
+                __('ডিজাইন সিস্টেম', 'guardify-pro'),
+                __('ডিজাইন সিস্টেম', 'guardify-pro'),
                 'manage_woocommerce',
                 'guardify-design-system',
                 [$this, 'render_design_system_page']

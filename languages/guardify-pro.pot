@@ -38,8 +38,36 @@ msgstr ""
 msgid "ইঞ্জিনের সাথে সর্বশেষ সংযোগ ব্যর্থ হয়েছে।"
 msgstr ""
 
+#: guardify-pro.php:289 guardify-pro.php:290
+msgid "সেটিংস"
+msgstr ""
+
+#: guardify-pro.php:298 guardify-pro.php:299
+msgid "ফোন সার্চ"
+msgstr ""
+
+#: guardify-pro.php:307 guardify-pro.php:308 templates/fraud-detection-page.php:46
+msgid "ফ্রড ম্যানেজমেন্ট"
+msgstr ""
+
+#: guardify-pro.php:316 templates/incomplete-orders-page.php:36 templates/settings-page.php:376
+msgid "ইনকমপ্লিট অর্ডার"
+msgstr ""
+
 #: guardify-pro.php:317
 msgid "ইনকমপ্লিট অর্ডার <span class=\"awaiting-mod\">"
+msgstr ""
+
+#: guardify-pro.php:325 guardify-pro.php:326 templates/sms-logs-page.php:44
+msgid "SMS লগস"
+msgstr ""
+
+#: guardify-pro.php:334 guardify-pro.php:335 templates/onboarding-page.php:23
+msgid "ব্যাকআপ"
+msgstr ""
+
+#: guardify-pro.php:348 guardify-pro.php:349
+msgid "ডিজাইন সিস্টেম"
 msgstr ""
 
 #: guardify-pro.php:359 guardify-pro.php:366 guardify-pro.php:373 guardify-pro.php:380 guardify-pro.php:387 guardify-pro.php:394 includes/class-guardify-onboarding.php:98 includes/class-guardify-search.php:27 templates/backup-page.php:12 templates/design-system-page.php:17 templates/fraud-detection-page.php:13 templates/incomplete-orders-page.php:13 templates/onboarding-page.php:12 templates/settings-page.php:16 templates/sms-logs-page.php:13
@@ -262,6 +290,10 @@ msgstr ""
 msgid "ব্যাকআপ শুরু করা যায়নি: "
 msgstr ""
 
+#: includes/class-guardify-domain.php:194
+msgid "অজানা ধাপ।"
+msgstr ""
+
 #: includes/class-guardify-domain.php:201
 msgid "ডোমেইন পরিবর্তন সম্পন্ন হয়েছে।"
 msgstr ""
@@ -272,6 +304,10 @@ msgstr ""
 
 #: includes/class-guardify-domain.php:218 includes/class-guardify-domain.php:268
 msgid "অজানা কারণ"
+msgstr ""
+
+#: includes/class-guardify-domain.php:225 includes/class-guardify-domain.php:232
+msgid "ব্যাকআপটি খুঁজে পাওয়া যায়নি।"
 msgstr ""
 
 #: includes/class-guardify-domain.php:238
@@ -318,12 +354,16 @@ msgstr ""
 msgid "IP ব্লক করা হয়েছে"
 msgstr ""
 
-#: includes/class-guardify-fraud-detection.php:343
+#: includes/class-guardify-fraud-detection.php:343 templates/settings-page.php:75
 msgid "অর্ডার ব্লক করা হয়েছে"
 msgstr ""
 
-#: includes/class-guardify-fraud-detection.php:344
+#: includes/class-guardify-fraud-detection.php:344 templates/settings-page.php:76
 msgid "নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।"
+msgstr ""
+
+#: includes/class-guardify-fraud-detection.php:422
+msgid "ব্লক করা ডিভাইস থেকে অর্ডার"
 msgstr ""
 
 #: includes/class-guardify-fraud-detection.php:475
@@ -352,6 +392,10 @@ msgstr ""
 
 #: includes/class-guardify-fraud-detection.php:661
 msgid "Guardify: ব্লক ব্যর্থ — ফোন নম্বর পাওয়া যায়নি।"
+msgstr ""
+
+#: includes/class-guardify-fraud-detection.php:665
+msgid "অ্যাডমিন কর্তৃক অর্ডার অ্যাকশন থেকে ব্লক"
 msgstr ""
 
 #: includes/class-guardify-fraud-detection.php:674 includes/class-guardify-incomplete-orders.php:628
@@ -426,6 +470,10 @@ msgstr ""
 msgid "ভুল ফরম্যাট"
 msgstr ""
 
+#: includes/class-guardify-fraud-detection.php:997 includes/class-guardify-fraud-detection.php:1224
+msgid "CSV ইম্পোর্ট"
+msgstr ""
+
 #: includes/class-guardify-fraud-detection.php:1004 includes/class-guardify-fraud-detection.php:1102
 msgid "ইম্পোর্ট সম্পন্ন। যোগ: %d, বাদ: %d"
 msgstr ""
@@ -442,8 +490,12 @@ msgstr ""
 msgid "ফাইল খোলা যাচ্ছে না"
 msgstr ""
 
-#: includes/class-guardify-fraud-detection.php:1224
-msgid "CSV ইম্পোর্ট"
+#: includes/class-guardify-fraud-detection.php:1132
+msgid "=== ব্লক রুল ==="
+msgstr ""
+
+#: includes/class-guardify-fraud-detection.php:1139
+msgid "=== ব্লক করা ব্যবহারকারী ==="
 msgstr ""
 
 #: includes/class-guardify-fraud-detection.php:1240
@@ -478,7 +530,7 @@ msgstr ""
 msgid "আসসালামু আলাইকুম %s,\\nআপনি %s থেকে অর্ডার সম্পন্ন করেননি। আপনার কার্টে পণ্য অপেক্ষা করছে!\\nএখনই অর্ডার করুন: %s\\nধন্যবাদ"
 msgstr ""
 
-#: includes/class-guardify-incomplete-orders.php:571 includes/class-guardify-incomplete-orders.php:595 templates/incomplete-orders-page.php:456
+#: includes/class-guardify-incomplete-orders.php:571 includes/class-guardify-incomplete-orders.php:595 templates/incomplete-orders-page.php:466
 msgid "গ্রাহক"
 msgstr ""
 
@@ -494,12 +546,16 @@ msgstr ""
 msgid " টি অর্ডার তৈরি হয়েছে"
 msgstr ""
 
-#: includes/class-guardify-incomplete-orders.php:664 templates/incomplete-orders-page.php:459
+#: includes/class-guardify-incomplete-orders.php:664 templates/incomplete-orders-page.php:469
 msgid " টি ব্যর্থ"
 msgstr ""
 
 #: includes/class-guardify-incomplete-orders.php:673
 msgid "কার্ট ডেটা নেই"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:710 includes/class-guardify-incomplete-orders.php:758 templates/incomplete-orders-page.php:432
+msgid "পণ্য"
 msgstr ""
 
 #: includes/class-guardify-incomplete-orders.php:732
@@ -508,6 +564,34 @@ msgstr ""
 
 #: includes/class-guardify-incomplete-orders.php:750
 msgid "কোনো ডেটা নেই"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:758 templates/incomplete-orders-page.php:133
+msgid "নাম"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:758 templates/fraud-detection-page.php:128 templates/fraud-detection-page.php:208 templates/fraud-detection-page.php:256 templates/incomplete-orders-page.php:134 templates/onboarding-page.php:254 templates/sms-logs-page.php:105
+msgid "ফোন"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:758 templates/settings-page.php:179
+msgid "ইমেইল"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:758
+msgid "ঠিকানা"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:758 templates/incomplete-orders-page.php:135
+msgid "শহর"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:758 templates/incomplete-orders-page.php:137
+msgid "মোট"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:758 templates/incomplete-orders-page.php:138 templates/sms-logs-page.php:108
+msgid "সময়"
 msgstr ""
 
 #: includes/class-guardify-incomplete-orders.php:881
@@ -564,6 +648,10 @@ msgstr ""
 
 #: includes/class-guardify-incomplete-orders.php:1043
 msgid "<p style=\"text-align:center;color:#999;\">কোনো ডেলিভারি রেকর্ড নেই</p>"
+msgstr ""
+
+#: includes/class-guardify-incomplete-orders.php:1100
+msgid "ডেটা লোড করা যায়নি"
 msgstr ""
 
 #: includes/class-guardify-media.php:235
@@ -678,6 +766,14 @@ msgstr ""
 msgid "মিডিয়া ব্যাকআপ বন্ধ হয়েছে।"
 msgstr ""
 
+#: includes/class-guardify-onboarding.php:88 templates/onboarding-page.php:36
+msgid "Guardify সেটআপ"
+msgstr ""
+
+#: includes/class-guardify-onboarding.php:89
+msgid "সেটআপ"
+msgstr ""
+
 #: includes/class-guardify-onboarding.php:140
 msgid "Guardify চালু হয়েছে।"
 msgstr ""
@@ -790,7 +886,7 @@ msgstr ""
 msgid "ফোন নম্বর পরিবর্তন হয়েছে। আবার OTP ভেরিফাই করুন।"
 msgstr ""
 
-#: includes/class-guardify-otp.php:133 includes/class-guardify-search.php:284
+#: includes/class-guardify-otp.php:133 includes/class-guardify-search.php:151 includes/class-guardify-search.php:301
 msgid "সঠিক ফোন নম্বর দিন (01XXXXXXXXX)"
 msgstr ""
 
@@ -822,6 +918,10 @@ msgstr ""
 msgid "ভুল OTP।"
 msgstr ""
 
+#: includes/class-guardify-otp.php:276
+msgid "OTP কোড"
+msgstr ""
+
 #: includes/class-guardify-phone-sync.php:66
 msgid "প্রতি ২ মিনিটে"
 msgstr ""
@@ -850,7 +950,7 @@ msgstr ""
 msgid "সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)।"
 msgstr ""
 
-#: includes/class-guardify-repeat-blocker.php:56
+#: includes/class-guardify-repeat-blocker.php:56 templates/settings-page.php:68
 msgid "এই ফোন নম্বর থেকে ইতিমধ্যে অর্ডার করা হয়েছে। অনুগ্রহ করে %d ঘণ্টা পর আবার চেষ্টা করুন।"
 msgstr ""
 
@@ -886,7 +986,7 @@ msgstr ""
 msgid "সতর্কতা"
 msgstr ""
 
-#: includes/class-guardify-report-column.php:42
+#: includes/class-guardify-report-column.php:42 includes/class-guardify-search.php:150
 msgid "উচ্চ ঝুঁকি"
 msgstr ""
 
@@ -996,6 +1096,10 @@ msgstr ""
 
 #: includes/class-guardify-report-column.php:400
 msgid "সংযোগ ব্যর্থ"
+msgstr ""
+
+#: includes/class-guardify-restore.php:88
+msgid "রিস্টোর সময়সীমা পার হয়েছে।"
 msgstr ""
 
 #: includes/class-guardify-restore.php:102
@@ -1134,7 +1238,39 @@ msgstr ""
 msgid "রিস্টোর বাতিল করা হয়েছে।"
 msgstr ""
 
-#: includes/class-guardify-search.php:296
+#: includes/class-guardify-search.php:49
+msgid "01XXXXXXXXX বা +880..."
+msgstr ""
+
+#: includes/class-guardify-search.php:147
+msgid "মাঝারি ঝুঁকি"
+msgstr ""
+
+#: includes/class-guardify-search.php:148
+msgid "<span class=\"gf-spinner\"></span> সার্চ হচ্ছে..."
+msgstr ""
+
+#: includes/class-guardify-search.php:149
+msgid "<svg width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\" style=\"margin-right:6px;\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"M21 21l-4.35-4.35\"/></svg> সার্চ করুন"
+msgstr ""
+
+#: includes/class-guardify-search.php:152
+msgid "সার্চ ব্যর্থ হয়েছে।"
+msgstr ""
+
+#: includes/class-guardify-search.php:153
+msgid "নিম্ন ঝুঁকি"
+msgstr ""
+
+#: includes/class-guardify-search.php:154 templates/fraud-detection-page.php:360
+msgid "সার্ভারে সংযোগ করা যায়নি।"
+msgstr ""
+
+#: includes/class-guardify-search.php:155
+msgid "<th>ট্র্যাকিং</th><th>স্ট্যাটাস</th><th>COD</th><th>তারিখ</th>"
+msgstr ""
+
+#: includes/class-guardify-search.php:313
 msgid "সার্চ ব্যর্থ।"
 msgstr ""
 
@@ -1526,10 +1662,6 @@ msgstr ""
 msgid " টি ব্যাকআপ আছে। কোনটি ফেরাবেন তা Guardify ড্যাশবোর্ড থেকে বেছে নিন।"
 msgstr ""
 
-#: templates/fraud-detection-page.php:46
-msgid "ফ্রড ম্যানেজমেন্ট"
-msgstr ""
-
 #: templates/fraud-detection-page.php:47
 msgid "ব্লক করা গ্রাহক, ম্যানুয়াল ব্লক রুল ও ফ্রড ট্র্যাকিং।"
 msgstr ""
@@ -1584,10 +1716,6 @@ msgstr ""
 
 #: templates/fraud-detection-page.php:126 templates/incomplete-orders-page.php:131
 msgid "সব সিলেক্ট করুন"
-msgstr ""
-
-#: templates/fraud-detection-page.php:128 templates/fraud-detection-page.php:208 templates/fraud-detection-page.php:256 templates/incomplete-orders-page.php:134 templates/onboarding-page.php:254 templates/sms-logs-page.php:105
-msgid "ফোন"
 msgstr ""
 
 #: templates/fraud-detection-page.php:130 templates/fraud-detection-page.php:217 templates/fraud-detection-page.php:246 templates/fraud-detection-page.php:329
@@ -1714,7 +1842,7 @@ msgstr ""
 msgid "ফোন নম্বর ব্লক করুন"
 msgstr ""
 
-#: templates/fraud-detection-page.php:320 templates/incomplete-orders-page.php:264 templates/incomplete-orders-page.php:312 templates/incomplete-orders-page.php:349 templates/settings-page.php:851 templates/sms-logs-page.php:204 templates/sms-logs-page.php:210
+#: templates/fraud-detection-page.php:320 templates/incomplete-orders-page.php:264 templates/incomplete-orders-page.php:322 templates/incomplete-orders-page.php:359 templates/settings-page.php:851 templates/sms-logs-page.php:204 templates/sms-logs-page.php:210
 msgid "বন্ধ করুন"
 msgstr ""
 
@@ -1730,7 +1858,7 @@ msgstr ""
 msgid "ম্যানুয়াল ব্লক"
 msgstr ""
 
-#: templates/fraud-detection-page.php:334 templates/incomplete-orders-page.php:301 templates/incomplete-orders-page.php:338
+#: templates/fraud-detection-page.php:334 templates/incomplete-orders-page.php:311 templates/incomplete-orders-page.php:348
 msgid "বাতিল"
 msgstr ""
 
@@ -1782,10 +1910,6 @@ msgstr ""
 msgid " আনব্লক করতে চান? এই নম্বর আবার অর্ডার করতে পারবে।"
 msgstr ""
 
-#: templates/fraud-detection-page.php:360
-msgid "সার্ভারে সংযোগ করা যায়নি।"
-msgstr ""
-
 #: templates/fraud-detection-page.php:361
 msgid "ফাইলে কোনো ফোন নম্বর পাওয়া যায়নি।"
 msgstr ""
@@ -1796,10 +1920,6 @@ msgstr ""
 
 #: templates/fraud-detection-page.php:364
 msgid "ইম্পোর্ট ব্যর্থ"
-msgstr ""
-
-#: templates/incomplete-orders-page.php:36 templates/settings-page.php:376
-msgid "ইনকমপ্লিট অর্ডার"
 msgstr ""
 
 #: templates/incomplete-orders-page.php:37
@@ -1818,11 +1938,11 @@ msgstr ""
 msgid "পেন্ডিং"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:64 templates/incomplete-orders-page.php:363
+#: templates/incomplete-orders-page.php:64 templates/incomplete-orders-page.php:373
 msgid "রিকভার্ড"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:73 templates/incomplete-orders-page.php:369
+#: templates/incomplete-orders-page.php:73 templates/incomplete-orders-page.php:379
 msgid "রিকভারি রেট"
 msgstr ""
 
@@ -1874,24 +1994,8 @@ msgstr ""
 msgid "এই মুহূর্তে সবাই চেকআউট শেষ করছেন। ফিচারটি চালু আছে কি না সেটিংস পেজ থেকে দেখে নিন।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:133
-msgid "নাম"
-msgstr ""
-
-#: templates/incomplete-orders-page.php:135
-msgid "শহর"
-msgstr ""
-
 #: templates/incomplete-orders-page.php:136
 msgid "কার্ট"
-msgstr ""
-
-#: templates/incomplete-orders-page.php:137
-msgid "মোট"
-msgstr ""
-
-#: templates/incomplete-orders-page.php:138 templates/sms-logs-page.php:108
-msgid "সময়"
 msgstr ""
 
 #: templates/incomplete-orders-page.php:139
@@ -1906,7 +2010,7 @@ msgstr ""
 msgid "কল করুন"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:204 templates/incomplete-orders-page.php:311
+#: templates/incomplete-orders-page.php:204 templates/incomplete-orders-page.php:321
 msgid "WooCommerce অর্ডার তৈরি করুন"
 msgstr ""
 
@@ -1922,119 +2026,119 @@ msgstr ""
 msgid "মেসেজ"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:291
+#: templates/incomplete-orders-page.php:292
+msgid "আসসালামু আলাইকুম {customer_name},\\n\\nআপনার কার্টে {product_name} রয়েছে, যা এখনও আপনার জন্য সংরক্ষিত আছে।\\n\\nমোট মূল্য: {order_total}\\n\\nঅর্ডার সম্পন্ন করতে এখানে যান: %1\\$s\\n\\nধন্যবাদ,\\n%2\\$s"
+msgstr ""
+
+#: templates/incomplete-orders-page.php:301
 msgid "প্লেসহোল্ডার: %s — প্রতিটি গ্রাহকের তথ্য দিয়ে আপনা-আপনি বসে যাবে।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:302
+#: templates/incomplete-orders-page.php:312
 msgid "পাঠান"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:316
+#: templates/incomplete-orders-page.php:326
 msgid "অর্ডার স্ট্যাটাস"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:323
+#: templates/incomplete-orders-page.php:333
 msgid "গ্রাহকের সাথে ফোনে কথা বলে নিশ্চিত হলে Processing দিন; এখনো নিশ্চিত না হলে Pending।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:331
+#: templates/incomplete-orders-page.php:341
 msgid "আপনি %s টি ইনকমপ্লিট অর্ডার WooCommerce অর্ডারে রূপান্তর করতে যাচ্ছেন।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:339
+#: templates/incomplete-orders-page.php:349
 msgid "তৈরি করুন"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:348
+#: templates/incomplete-orders-page.php:358
 msgid "ইনকমপ্লিট অর্ডার পরিসংখ্যান"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:357
+#: templates/incomplete-orders-page.php:367
 msgid "মোট ইনকমপ্লিট"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:375
+#: templates/incomplete-orders-page.php:385
 msgid "রিকভার্ড রেভিনিউ"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:382
+#: templates/incomplete-orders-page.php:392
 msgid "সাম্প্রতিক কার্যকলাপ"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:387
+#: templates/incomplete-orders-page.php:397
 msgid "সময়কাল"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:388
+#: templates/incomplete-orders-page.php:398
 msgid "নতুন"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:389
+#: templates/incomplete-orders-page.php:399
 msgid "কনভার্টেড"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:394
+#: templates/incomplete-orders-page.php:404
 msgid "আজ"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:399
+#: templates/incomplete-orders-page.php:409
 msgid "গতকাল"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:404
+#: templates/incomplete-orders-page.php:414
 msgid "এই সপ্তাহ"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:415
+#: templates/incomplete-orders-page.php:425
 msgid "সবচেয়ে বেশি পরিত্যক্ত পণ্য"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:416
+#: templates/incomplete-orders-page.php:426
 msgid "একই পণ্য বারবার কার্টে ফেলে রাখা হলে দাম, ডেলিভারি চার্জ বা স্টক তথ্য দেখে নিন।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:422
-msgid "পণ্য"
-msgstr ""
-
-#: templates/incomplete-orders-page.php:423
+#: templates/incomplete-orders-page.php:433
 msgid "বার"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:441
+#: templates/incomplete-orders-page.php:451
 msgid "বন্ধ"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:454
+#: templates/incomplete-orders-page.php:464
 msgid " টি সিলেক্টেড"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:455
+#: templates/incomplete-orders-page.php:465
 msgid " টি SMS পাঠানো হয়েছে"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:457
+#: templates/incomplete-orders-page.php:467
 msgid "এই রেকর্ড মুছে ফেলতে চান? গ্রাহকের ফোন নম্বর ও কার্ট তথ্য আর ফেরানো যাবে না।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:458
+#: templates/incomplete-orders-page.php:468
 msgid " টি রেকর্ড মুছে ফেলতে চান?"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:460
+#: templates/incomplete-orders-page.php:470
 msgid "মোছা যায়নি।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:461
+#: templates/incomplete-orders-page.php:471
 msgid "SMS পাঠানো হয়েছে।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:462
+#: templates/incomplete-orders-page.php:472
 msgid "SMS পাঠানো যায়নি।"
 msgstr ""
 
-#: templates/incomplete-orders-page.php:463
+#: templates/incomplete-orders-page.php:473
 msgid "কনভার্ট করা যায়নি।"
 msgstr ""
 
@@ -2055,10 +2159,6 @@ msgid "লেভেল বাছাই"
 msgstr ""
 
 #: templates/onboarding-page.php:23
-msgid "ব্যাকআপ"
-msgstr ""
-
-#: templates/onboarding-page.php:23
 msgid "দৈনিক কপি"
 msgstr ""
 
@@ -2068,10 +2168,6 @@ msgstr ""
 
 #: templates/onboarding-page.php:24
 msgid "পুরোনো অর্ডার"
-msgstr ""
-
-#: templates/onboarding-page.php:36
-msgid "Guardify সেটআপ"
 msgstr ""
 
 #: templates/onboarding-page.php:37
@@ -2266,10 +2362,6 @@ msgstr ""
 msgid "আপনার %s অ্যাকাউন্ট দিয়ে লগইন করুন — API কী স্বয়ংক্রিয়ভাবে তৈরি ও সেটআপ হয়ে যাবে। বেশিরভাগ ক্ষেত্রে এটাই সহজ পথ।"
 msgstr ""
 
-#: templates/settings-page.php:179
-msgid "ইমেইল"
-msgstr ""
-
 #: templates/settings-page.php:183
 msgid "পাসওয়ার্ড"
 msgstr ""
@@ -2442,6 +2534,14 @@ msgstr ""
 msgid "এই দিন পার হলে পুরনো পেন্ডিং রেকর্ড অটো-ডিলিট হবে। ডাটাবেইজ হালকা রাখতে ৩০ দিনই যথেষ্ট।"
 msgstr ""
 
+#: templates/settings-page.php:419
+msgid "কুলডাউন সক্রিয়"
+msgstr ""
+
+#: templates/settings-page.php:420
+msgid "একজন গ্রাহক অর্ডার সম্পন্ন করার পর নির্দিষ্ট সময় পর্যন্ত তার নতুন অসম্পূর্ণ চেকআউট আর ক্যাপচার হবে না। এতে একই গ্রাহকের একই কার্ট বারবার লিস্টে আসে না।"
+msgstr ""
+
 #: templates/settings-page.php:427
 msgid "কুলডাউন সময় (মিনিট)"
 msgstr ""
@@ -2510,6 +2610,14 @@ msgstr ""
 msgid "নিশ্চিত না হলে ফ্ল্যাগ বেছে নিন — কোনো অর্ডার হারাবে না।"
 msgstr ""
 
+#: templates/settings-page.php:499
+msgid "নতুন গ্রাহক বাদ দিন"
+msgstr ""
+
+#: templates/settings-page.php:500
+msgid "যার কোনো কুরিয়ার হিস্ট্রি নেই তার উপর ফিল্টার চলবে না। বন্ধ রাখলে প্রথমবার অর্ডার করা গ্রাহকও আটকে যেতে পারে — সাধারণত চালু রাখাই ভালো।"
+msgstr ""
+
 #: templates/settings-page.php:512
 msgid "একই ফোন নম্বর থেকে অল্প সময়ে আবার অর্ডার এলে কী হবে।"
 msgstr ""
@@ -2576,6 +2684,14 @@ msgstr ""
 
 #: templates/settings-page.php:572
 msgid "এর নিচে DP হলে নম্বর স্থায়ীভাবে ব্লক হবে — স্মার্ট ফিল্টারের চেয়ে কঠিন ব্যবস্থা, তাই কম মান (যেমন ৩০) দিন।"
+msgstr ""
+
+#: templates/settings-page.php:580
+msgid "অর্ডার সংখ্যা অনুযায়ী অটো-ব্লক"
+msgstr ""
+
+#: templates/settings-page.php:581
+msgid "অল্প সময়ে একই নম্বর থেকে অনেক অর্ডার এলে সেটি বট বা স্প্যাম হওয়ার সম্ভাবনা বেশি — তখন নম্বরটি ব্লক হবে।"
 msgstr ""
 
 #: templates/settings-page.php:588
@@ -2836,10 +2952,6 @@ msgstr ""
 
 #: templates/settings-page.php:868
 msgid "ঠিক আছে"
-msgstr ""
-
-#: templates/sms-logs-page.php:44
-msgid "SMS লগস"
 msgstr ""
 
 #: templates/sms-logs-page.php:45

@@ -85,7 +85,7 @@ class Guardify_Restore {
             return false;
         }
         if (time() - (int) $job['started'] > self::JOB_MAX_AGE) {
-            $this->fail($job, 'রিস্টোর সময়সীমা পার হয়েছে।');
+            $this->fail($job, __('রিস্টোর সময়সীমা পার হয়েছে।', 'guardify-pro'));
             return false;
         }
         return true;

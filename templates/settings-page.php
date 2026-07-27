@@ -65,15 +65,15 @@ $settings = [
     'vpn_block_enabled'           => get_option('guardify_vpn_block_enabled', 'no'),
     'repeat_blocker_enabled'      => get_option('guardify_repeat_blocker_enabled', 'no'),
     'repeat_blocker_hours'        => get_option('guardify_repeat_blocker_hours', 24),
-    'repeat_blocker_message'      => get_option('guardify_repeat_blocker_message', 'এই ফোন নম্বর থেকে ইতিমধ্যে অর্ডার করা হয়েছে। অনুগ্রহ করে %d ঘণ্টা পর আবার চেষ্টা করুন।'),
+    'repeat_blocker_message'      => get_option('guardify_repeat_blocker_message', __('এই ফোন নম্বর থেকে ইতিমধ্যে অর্ডার করা হয়েছে। অনুগ্রহ করে %d ঘণ্টা পর আবার চেষ্টা করুন।', 'guardify-pro')),
     'repeat_blocker_support'      => get_option('guardify_repeat_blocker_support', ''),
     'fraud_detection_enabled'     => get_option('guardify_fraud_detection_enabled', 'no'),
     'fraud_auto_block_dp'         => get_option('guardify_fraud_auto_block_dp', 0),
     'fraud_auto_block_count_enabled' => get_option('guardify_fraud_auto_block_count_enabled', 'no'),
     'fraud_auto_block_order_limit'   => get_option('guardify_fraud_auto_block_order_limit', 3),
     'fraud_auto_block_time_limit'    => get_option('guardify_fraud_auto_block_time_limit', 24),
-    'fraud_blocked_user_title'    => get_option('guardify_blocked_user_title', 'অর্ডার ব্লক করা হয়েছে'),
-    'fraud_blocked_user_message'  => get_option('guardify_blocked_user_message', 'নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।'),
+    'fraud_blocked_user_title'    => get_option('guardify_blocked_user_title', __('অর্ডার ব্লক করা হয়েছে', 'guardify-pro')),
+    'fraud_blocked_user_message'  => get_option('guardify_blocked_user_message', __('নিরাপত্তার কারণে এই ডিভাইস/IP থেকে অর্ডার প্লেস করা ব্লক করা হয়েছে। সমস্যা থাকলে গ্রাহকসেবায় যোগাযোগ করুন।', 'guardify-pro')),
     'fraud_support_number'        => get_option('guardify_fraud_support_number', ''),
     'trusted_proxy_header'        => get_option('guardify_trusted_proxy_header', ''),
     'sms_notifications_enabled'   => get_option('guardify_sms_notifications_enabled', 'no'),
@@ -416,8 +416,8 @@ endif;
                         <?php
                         guardify_render_toggle_row(
                             'guardify_incomplete_cooldown_enabled',
-                            'কুলডাউন সক্রিয়',
-                            'একজন গ্রাহক অর্ডার সম্পন্ন করার পর নির্দিষ্ট সময় পর্যন্ত তার নতুন অসম্পূর্ণ চেকআউট আর ক্যাপচার হবে না। এতে একই গ্রাহকের একই কার্ট বারবার লিস্টে আসে না।',
+                            __('কুলডাউন সক্রিয়', 'guardify-pro'),
+                            __('একজন গ্রাহক অর্ডার সম্পন্ন করার পর নির্দিষ্ট সময় পর্যন্ত তার নতুন অসম্পূর্ণ চেকআউট আর ক্যাপচার হবে না। এতে একই গ্রাহকের একই কার্ট বারবার লিস্টে আসে না।', 'guardify-pro'),
                             $settings['incomplete_cooldown_enabled']
                         );
                         ?>
@@ -496,8 +496,8 @@ endif;
                         <?php
                         guardify_render_toggle_row(
                             'guardify_smart_filter_skip_new',
-                            'নতুন গ্রাহক বাদ দিন',
-                            'যার কোনো কুরিয়ার হিস্ট্রি নেই তার উপর ফিল্টার চলবে না। বন্ধ রাখলে প্রথমবার অর্ডার করা গ্রাহকও আটকে যেতে পারে — সাধারণত চালু রাখাই ভালো।',
+                            __('নতুন গ্রাহক বাদ দিন', 'guardify-pro'),
+                            __('যার কোনো কুরিয়ার হিস্ট্রি নেই তার উপর ফিল্টার চলবে না। বন্ধ রাখলে প্রথমবার অর্ডার করা গ্রাহকও আটকে যেতে পারে — সাধারণত চালু রাখাই ভালো।', 'guardify-pro'),
                             $settings['smart_filter_skip_new']
                         );
                         ?>
@@ -577,8 +577,8 @@ endif;
                             <?php
                             guardify_render_toggle_row(
                                 'guardify_fraud_auto_block_count_enabled',
-                                'অর্ডার সংখ্যা অনুযায়ী অটো-ব্লক',
-                                'অল্প সময়ে একই নম্বর থেকে অনেক অর্ডার এলে সেটি বট বা স্প্যাম হওয়ার সম্ভাবনা বেশি — তখন নম্বরটি ব্লক হবে।',
+                                __('অর্ডার সংখ্যা অনুযায়ী অটো-ব্লক', 'guardify-pro'),
+                                __('অল্প সময়ে একই নম্বর থেকে অনেক অর্ডার এলে সেটি বট বা স্প্যাম হওয়ার সম্ভাবনা বেশি — তখন নম্বরটি ব্লক হবে।', 'guardify-pro'),
                                 $settings['fraud_auto_block_count_enabled']
                             );
                             ?>

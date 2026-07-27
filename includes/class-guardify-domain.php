@@ -191,7 +191,7 @@ class Guardify_Domain {
                 $this->advance_from_restore($state);
                 break;
             default:
-                $this->fail($state, 'অজানা ধাপ।');
+                $this->fail($state, __('অজানা ধাপ।', 'guardify-pro'));
         }
 
         $state = $this->state();
@@ -222,14 +222,14 @@ class Guardify_Domain {
         $api = new Guardify_API();
         $list = $api->get('/api/v1/backup/list');
         if (!is_array($list) || empty($list['backups'])) {
-            $this->fail($state, 'ব্যাকআপটি খুঁজে পাওয়া যায়নি।');
+            $this->fail($state, __('ব্যাকআপটি খুঁজে পাওয়া যায়নি।', 'guardify-pro'));
             return;
         }
 
         // The newest archive is the one just uploaded. The list comes back newest-first.
         $backup_id = isset($list['backups'][0]['id']) ? $list['backups'][0]['id'] : '';
         if ($backup_id === '') {
-            $this->fail($state, 'ব্যাকআপটি খুঁজে পাওয়া যায়নি।');
+            $this->fail($state, __('ব্যাকআপটি খুঁজে পাওয়া যায়নি।', 'guardify-pro'));
             return;
         }
 

@@ -707,7 +707,7 @@ class Guardify_Incomplete_Orders {
                     $order->add_product($product, $quantity);
                 } else {
                     $fee = new WC_Order_Item_Fee();
-                    $fee->set_name($item['name'] ?? 'পণ্য');
+                    $fee->set_name($item['name'] ?? __('পণ্য', 'guardify-pro'));
                     $fee->set_total(($item['price'] ?? 0) * $quantity);
                     $order->add_item($fee);
                 }
@@ -755,7 +755,7 @@ class Guardify_Incomplete_Orders {
         $out = fopen('php://output', 'w');
         fwrite($out, "\xEF\xBB\xBF");
 
-        fputcsv($out, ['ID', 'নাম', 'ফোন', 'ইমেইল', 'ঠিকানা', 'শহর', 'পণ্য', 'মোট', 'সময়']);
+        fputcsv($out, ['ID', __('নাম', 'guardify-pro'), __('ফোন', 'guardify-pro'), __('ইমেইল', 'guardify-pro'), __('ঠিকানা', 'guardify-pro'), __('শহর', 'guardify-pro'), __('পণ্য', 'guardify-pro'), __('মোট', 'guardify-pro'), __('সময়', 'guardify-pro')]);
 
         foreach ($rows as $row) {
             $products = '';
@@ -1092,7 +1092,18 @@ class Guardify_Incomplete_Orders {
             return;
         }
 
+        // This script is emitted from inside a PHP string rather than written as literal
+        // markup, so its strings are concatenated in rather than handed over in a GF_I18N
+        // object — opening a PHP tag inside a PHP string produces nothing useful.
+        $gf_load_error = wp_json_encode(
+            '<p style="text-align:center;color:#999;">'
+            . esc_html__('ডেটা লোড করা যায়নি', 'guardify-pro')
+            . '</p>'
+        );
+
         echo '<script>
+var GF_I18N = { s2f40e26d: ' . $gf_load_error . ' };
+
         jQuery(document).ready(function($) {
             window.gf_report = {
                 nonce: "' . wp_create_nonce('guardify_report_nonce') . '",
@@ -1117,7 +1128,7 @@ class Guardify_Incomplete_Orders {
                             nonce: gf_report.nonce,
                             phone: phone
                         }, function(r) {
-                            $container.html(r.success ? r.data : "<p style=\'text-align:center;color:#999;\'>ডেটা লোড করা যায়নি</p>");
+                            $container.html(r.success ? r.data : GF_I18N.s2f40e26d);
                         });
                     }
                 }

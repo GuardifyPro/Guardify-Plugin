@@ -85,8 +85,8 @@ class Guardify_Onboarding {
     public function register_page() {
         add_submenu_page(
             null,
-            'Guardify সেটআপ',
-            'সেটআপ',
+            __('Guardify সেটআপ', 'guardify-pro'),
+            __('সেটআপ', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-setup',
             [$this, 'render_page']

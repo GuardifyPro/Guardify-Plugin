@@ -273,16 +273,26 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                     <label class="gf-label" for="gf-sms-message"><?php esc_html_e('মেসেজ', 'guardify-pro'); ?></label>
                     <textarea id="gf-sms-message" class="gf-input" rows="7"><?php
                         $site_host = wp_parse_url(get_site_url(), PHP_URL_HOST);
-                        echo esc_textarea("আসসালামু আলাইকুম {customer_name},
 
-আপনার কার্টে {product_name} রয়েছে, যা এখনও আপনার জন্য সংরক্ষিত আছে।
-
-মোট মূল্য: {order_total}
-
-অর্ডার সম্পন্ন করতে এখানে যান: " . get_permalink(wc_get_page_id('checkout')) . __("
-
-ধন্যবাদ,
-{$site_host}", 'guardify-pro'));
+                        // One string with two placeholders rather than three concatenated
+                        // pieces. A translator needs the whole message to reorder it, and the
+                        // checkout URL and the shop's own hostname must stay *outside* the
+                        // msgid — a msgid containing this site's hostname is a key no
+                        // catalogue could ever match, so the message would silently never
+                        // translate on any site but the one it was extracted from.
+                        //
+                        // {customer_name}, {product_name} and {order_total} are the plugin's
+                        // own merge tags, filled per recipient when the SMS is sent, and are
+                        // deliberately left in the text for the merchant to move around.
+                        printf(
+                            /* translators: 1: checkout URL, 2: the shop's domain name */
+                            // On one line, unattractive as that is: bin/make-pot.php scans
+                            // line by line, and a msgid built by concatenation across lines
+                            // is one the catalogue never learns about.
+                            esc_textarea(__("আসসালামু আলাইকুম {customer_name},\n\nআপনার কার্টে {product_name} রয়েছে, যা এখনও আপনার জন্য সংরক্ষিত আছে।\n\nমোট মূল্য: {order_total}\n\nঅর্ডার সম্পন্ন করতে এখানে যান: %1\$s\n\nধন্যবাদ,\n%2\$s", 'guardify-pro')),
+                            esc_textarea(get_permalink(wc_get_page_id('checkout'))),
+                            esc_textarea($site_host)
+                        );
                     ?></textarea>
                     <span class="gf-help">
                         <?php

@@ -419,7 +419,7 @@ class Guardify_Fraud_Detection {
             ));
             if ($device_record && $device_record->is_blocked) {
                 // If device was previously blocked, block this phone too
-                $this->block_phone($phone, 'ব্লক করা ডিভাইস থেকে অর্ডার');
+                $this->block_phone($phone, __('ব্লক করা ডিভাইস থেকে অর্ডার', 'guardify-pro'));
             }
         }
 
@@ -662,7 +662,7 @@ class Guardify_Fraud_Detection {
             return;
         }
 
-        $this->block_phone($phone, 'অ্যাডমিন কর্তৃক অর্ডার অ্যাকশন থেকে ব্লক');
+        $this->block_phone($phone, __('অ্যাডমিন কর্তৃক অর্ডার অ্যাকশন থেকে ব্লক', 'guardify-pro'));
 
         // Also block the IP if available
         $ip = $order->get_meta('_guardify_ip_address');
@@ -994,7 +994,7 @@ class Guardify_Fraud_Detection {
                 continue;
             }
 
-            $this->block_phone($phone, 'CSV ইম্পোর্ট');
+            $this->block_phone($phone, __('CSV ইম্পোর্ট', 'guardify-pro'));
             $imported++;
         }
 
@@ -1129,14 +1129,14 @@ class Guardify_Fraud_Detection {
 
         $out = fopen('php://memory', 'r+');
 
-        fputcsv($out, ['=== ব্লক রুল ===']);
+        fputcsv($out, [__('=== ব্লক রুল ===', 'guardify-pro')]);
         fputcsv($out, ['block_type', 'block_value', 'reason', 'is_active', 'created_at']);
         foreach ($block_rules as $r) {
             fputcsv($out, $r);
         }
 
         fputcsv($out, ['']);
-        fputcsv($out, ['=== ব্লক করা ব্যবহারকারী ===']);
+        fputcsv($out, [__('=== ব্লক করা ব্যবহারকারী ===', 'guardify-pro')]);
         fputcsv($out, ['phone', 'ip_address', 'block_reason', 'order_ids', 'created_at', 'last_seen']);
         foreach ($blocked_users as $r) {
             fputcsv($out, $r);
