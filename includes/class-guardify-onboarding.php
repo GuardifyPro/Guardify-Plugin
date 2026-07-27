@@ -85,8 +85,8 @@ class Guardify_Onboarding {
     public function register_page() {
         add_submenu_page(
             null,
-            'Guardify সেটআপ',
-            'সেটআপ',
+            __('Guardify সেটআপ', 'guardify-pro'),
+            __('সেটআপ', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-setup',
             [$this, 'render_page']
@@ -136,7 +136,7 @@ class Guardify_Onboarding {
         }
 
         printf(
-            '<div class="notice notice-info"><p><strong>%s</strong> %s <a href="%s" class="button button-primary" style="margin-left:8px">%s</a></p></div>',
+            '<div class="notice notice-info guardify-notice"><p><strong>%s</strong> %s <a href="%s" class="button button-primary" style="margin-left:8px">%s</a></p></div>',
             esc_html__('Guardify চালু হয়েছে।', 'guardify-pro'),
             esc_html__('৩ মিনিটের সেটআপ শেষ করলে আপনার দোকান সুরক্ষিত হবে।', 'guardify-pro'),
             esc_url(admin_url('admin.php?page=guardify-setup')),
@@ -163,9 +163,9 @@ class Guardify_Onboarding {
     public static function presets() {
         return [
             'observe' => [
-                'label'       => 'শুধু পর্যবেক্ষণ',
-                'summary'     => 'কোনো অর্ডারে হাত দেওয়া হবে না। শুধু ঝুঁকির স্কোর ও রিপোর্ট দেখতে পাবেন।',
-                'best_for'    => 'নতুন দোকান, অথবা আগে দেখে নিতে চাইলে',
+                'label'       => __('শুধু পর্যবেক্ষণ', 'guardify-pro'),
+                'summary'     => __('কোনো অর্ডারে হাত দেওয়া হবে না। শুধু ঝুঁকির স্কোর ও রিপোর্ট দেখতে পাবেন।', 'guardify-pro'),
+                'best_for'    => __('নতুন দোকান, অথবা আগে দেখে নিতে চাইলে', 'guardify-pro'),
                 'options'     => [
                     'guardify_smart_filter_enabled'  => 'yes',
                     'guardify_smart_filter_dry_run'  => 'yes',
@@ -180,9 +180,9 @@ class Guardify_Onboarding {
                 ],
             ],
             'balanced' => [
-                'label'    => 'সুপারিশকৃত',
-                'summary'  => 'ঝুঁকিপূর্ণ অর্ডার চিহ্নিত হবে ও ফ্রড রেকর্ড রাখা হবে। অর্ডার বাতিল হবে না।',
-                'best_for' => 'বেশিরভাগ দোকানের জন্য',
+                'label'    => __('সুপারিশকৃত', 'guardify-pro'),
+                'summary'  => __('ঝুঁকিপূর্ণ অর্ডার চিহ্নিত হবে ও ফ্রড রেকর্ড রাখা হবে। অর্ডার বাতিল হবে না।', 'guardify-pro'),
+                'best_for' => __('বেশিরভাগ দোকানের জন্য', 'guardify-pro'),
                 'options'  => [
                     'guardify_smart_filter_enabled'  => 'yes',
                     'guardify_smart_filter_dry_run'  => 'yes',
@@ -200,9 +200,9 @@ class Guardify_Onboarding {
                 ],
             ],
             'strict' => [
-                'label'    => 'কড়া',
-                'summary'  => 'ঝুঁকিপূর্ণ অর্ডারে OTP যাচাই চাওয়া হবে। এখনো কোনো অর্ডার বাতিল হবে না।',
-                'best_for' => 'বেশি COD ফেরত আসে এমন দোকান',
+                'label'    => __('কড়া', 'guardify-pro'),
+                'summary'  => __('ঝুঁকিপূর্ণ অর্ডারে OTP যাচাই চাওয়া হবে। এখনো কোনো অর্ডার বাতিল হবে না।', 'guardify-pro'),
+                'best_for' => __('বেশি COD ফেরত আসে এমন দোকান', 'guardify-pro'),
                 'options'  => [
                     'guardify_smart_filter_enabled'  => 'yes',
                     'guardify_smart_filter_dry_run'  => 'yes',
@@ -242,7 +242,7 @@ class Guardify_Onboarding {
 
         $key = isset($_POST['api_key']) ? sanitize_text_field(wp_unslash($_POST['api_key'])) : '';
         if ($key === '') {
-            wp_send_json_error('API কী দিন।');
+            wp_send_json_error(__('API কী দিন।', 'guardify-pro'));
         }
 
         $api = new Guardify_API();
@@ -258,7 +258,7 @@ class Guardify_Onboarding {
 
         if (!is_array($status) || (isset($status['success']) && $status['success'] === false)) {
             $api->clear_credentials();
-            $message = isset($status['error']) ? $status['error'] : 'কী যাচাই করা যায়নি। কী-টি আবার দেখুন।';
+            $message = isset($status['error']) ? $status['error'] : __('কী যাচাই করা যায়নি। কী-টি আবার দেখুন।', 'guardify-pro');
             wp_send_json_error($message);
         }
 
@@ -266,7 +266,7 @@ class Guardify_Onboarding {
             'plan'    => isset($status['plan']) ? sanitize_text_field($status['plan']) : '',
             'state'   => isset($status['status']) ? sanitize_text_field($status['status']) : '',
             'signed'  => $api->is_signed(),
-            'message' => 'সংযোগ সফল হয়েছে।',
+            'message' => __('সংযোগ সফল হয়েছে।', 'guardify-pro'),
         ]);
     }
 
@@ -280,7 +280,7 @@ class Guardify_Onboarding {
         $presets = self::presets();
 
         if (!isset($presets[$name])) {
-            wp_send_json_error('অজানা সুরক্ষা লেভেল।');
+            wp_send_json_error(__('অজানা সুরক্ষা লেভেল।', 'guardify-pro'));
         }
 
         foreach ($presets[$name]['options'] as $option => $value) {
@@ -288,7 +288,7 @@ class Guardify_Onboarding {
         }
         update_option('guardify_onboarding_preset', $name);
 
-        wp_send_json_success(['message' => $presets[$name]['label'] . ' চালু হয়েছে।']);
+        wp_send_json_success(['message' => $presets[$name]['label'] . __(' চালু হয়েছে।', 'guardify-pro')]);
     }
 
     /**
@@ -312,8 +312,8 @@ class Guardify_Onboarding {
 
         wp_send_json_success([
             'message' => $enabled
-                ? 'প্রতিদিন রাত ৪টায় স্বয়ংক্রিয় ব্যাকআপ চালু হয়েছে।'
-                : 'ব্যাকআপ বন্ধ রাখা হয়েছে।',
+                ? __('প্রতিদিন রাত ৪টায় স্বয়ংক্রিয় ব্যাকআপ চালু হয়েছে।', 'guardify-pro')
+                : __('ব্যাকআপ বন্ধ রাখা হয়েছে।', 'guardify-pro'),
         ]);
     }
 
@@ -334,7 +334,7 @@ class Guardify_Onboarding {
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error('সংযুক্ত নয়।');
+            wp_send_json_error(__('সংযুক্ত নয়।', 'guardify-pro'));
         }
 
         $orders = wc_get_orders([

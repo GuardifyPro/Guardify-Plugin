@@ -48,7 +48,7 @@ class Guardify_OTP {
         if (!WC()->session) {
             $api = new Guardify_API();
             if ($api->is_connected()) {
-                wc_add_notice('ফোন ভেরিফিকেশন সম্ভব হয়নি। অনুগ্রহ করে ব্রাউজার চেকআউট ব্যবহার করুন।', 'error');
+                wc_add_notice(__('ফোন ভেরিফিকেশন সম্ভব হয়নি। অনুগ্রহ করে ব্রাউজার চেকআউট ব্যবহার করুন।', 'guardify-pro'), 'error');
             }
             return;
         }
@@ -95,7 +95,7 @@ class Guardify_OTP {
         if ($verified_phone !== $billing_phone) {
             WC()->session->set($this->session_key, null);
             WC()->session->set($this->session_phone_key, null);
-            wc_add_notice('ফোন নম্বর পরিবর্তন হয়েছে। আবার OTP ভেরিফাই করুন।', 'error');
+            wc_add_notice(__('ফোন নম্বর পরিবর্তন হয়েছে। আবার OTP ভেরিফাই করুন।', 'guardify-pro'), 'error');
         }
     }
 
@@ -130,14 +130,14 @@ class Guardify_OTP {
         $phone = preg_replace('/^\+?88/', '', $phone);
 
         if (empty($phone) || !preg_match('/^01[3-9]\d{8}$/', $phone)) {
-            wp_send_json_error(['message' => 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)']);
+            wp_send_json_error(['message' => __('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)', 'guardify-pro')]);
         }
 
         // Rate limit: max 3 OTP requests per phone per 5 minutes
         $throttle_key = 'gf_otp_' . md5($phone);
         $attempts = (int) get_transient($throttle_key);
         if ($attempts >= 3) {
-            wp_send_json_error(['message' => 'অনেক বেশি চেষ্টা। ৫ মিনিট পর আবার চেষ্টা করুন।']);
+            wp_send_json_error(['message' => __('অনেক বেশি চেষ্টা। ৫ মিনিট পর আবার চেষ্টা করুন।', 'guardify-pro')]);
         }
 
         $api = new Guardify_API();
@@ -202,7 +202,7 @@ class Guardify_OTP {
         $otp   = isset($_POST['otp']) ? sanitize_text_field(wp_unslash($_POST['otp'])) : '';
 
         if (empty($phone) || empty($otp)) {
-            wp_send_json_error(['message' => 'ফোন নম্বর ও OTP প্রয়োজন।']);
+            wp_send_json_error(['message' => __('ফোন নম্বর ও OTP প্রয়োজন।', 'guardify-pro')]);
         }
 
         $api = new Guardify_API();
@@ -215,14 +215,14 @@ class Guardify_OTP {
         if (!empty($result['success']) && $result['success'] === true) {
             // Mark verified in WC session with the specific phone
             if (!WC()->session) {
-                wp_send_json_error(['message' => 'সেশন পাওয়া যায়নি। পেজ রিলোড করে আবার চেষ্টা করুন।']);
+                wp_send_json_error(['message' => __('সেশন পাওয়া যায়নি। পেজ রিলোড করে আবার চেষ্টা করুন।', 'guardify-pro')]);
             }
             WC()->session->set($this->session_key, true);
             WC()->session->set($this->session_phone_key, $phone);
-            wp_send_json_success(['message' => 'ফোন নম্বর ভেরিফাই হয়েছে!']);
+            wp_send_json_success(['message' => __('ফোন নম্বর ভেরিফাই হয়েছে!', 'guardify-pro')]);
         }
 
-        $msg = isset($result['error']) ? $result['error'] : 'ভুল OTP।';
+        $msg = isset($result['error']) ? $result['error'] : __('ভুল OTP।', 'guardify-pro');
         wp_send_json_error(['message' => $msg]);
     }
 
@@ -273,7 +273,7 @@ class Guardify_OTP {
                     <p class="gf-otp-info">আপনার ফোনে একটি OTP কোড পাঠানো হয়েছে। অর্ডার নিশ্চিত করতে কোডটি নিচে লিখুন।</p>
                     <div class="gf-otp-message"></div>
                     <div class="gf-otp-input-wrap">
-                        <input type="text" id="gf-otp-input" class="gf-otp-input" placeholder="OTP কোড" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
+                        <input type="text" id="gf-otp-input" class="gf-otp-input" placeholder="<?php echo esc_attr__('OTP কোড', 'guardify-pro'); ?>" maxlength="6" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code">
                     </div>
                     <button type="button" id="gf-otp-verify-btn" class="gf-otp-btn gf-otp-btn-primary">ভেরিফাই করুন</button>
                     <div class="gf-otp-footer">

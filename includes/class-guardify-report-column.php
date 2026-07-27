@@ -24,31 +24,46 @@ class Guardify_Report_Column {
 
     private static $instance = null;
 
-    /** Bands, in the order they degrade. */
-    const BANDS = [
-        'excellent' => ['label' => 'চমৎকার',      'tone' => 'excellent'],
-        'good'      => ['label' => 'ভালো',        'tone' => 'good'],
-        'caution'   => ['label' => 'সতর্কতা',      'tone' => 'caution'],
-        'high_risk' => ['label' => 'উচ্চ ঝুঁকি',    'tone' => 'risk'],
-        'unknown'   => ['label' => 'তথ্য নেই',     'tone' => 'unknown'],
-    ];
+    /**
+     * Bands, in the order they degrade.
+     *
+     * A method rather than a const, and not only because PHP will not put a function call in
+     * one. Anything evaluated while the class file is being read runs on `plugins_loaded`,
+     * and the text domain is loaded on `init` — so a translated string captured at class-load
+     * time would be resolved before any catalogue existed and would come out in the source
+     * language no matter what the site had installed. Labels have to be built when they are
+     * about to be shown.
+     */
+    public static function bands() {
+        return [
+            'excellent' => ['label' => __('চমৎকার', 'guardify-pro'), 'tone' => 'excellent'],
+            'good'      => ['label' => __('ভালো', 'guardify-pro'), 'tone' => 'good'],
+            'caution'   => ['label' => __('সতর্কতা', 'guardify-pro'), 'tone' => 'caution'],
+            'high_risk' => ['label' => __('উচ্চ ঝুঁকি', 'guardify-pro'), 'tone' => 'risk'],
+            'unknown'   => ['label' => __('তথ্য নেই', 'guardify-pro'), 'tone' => 'unknown'],
+        ];
+    }
 
     /** How much evidence the score rests on. */
-    const CONFIDENCE = [
-        'high'   => 'যথেষ্ট তথ্য',
-        'medium' => 'মোটামুটি তথ্য',
-        'low'    => 'অল্প তথ্য',
-        'none'   => 'কোনো তথ্য নেই',
-    ];
+    public static function confidence_labels() {
+        return [
+            'high'   => __('যথেষ্ট তথ্য', 'guardify-pro'),
+            'medium' => __('মোটামুটি তথ্য', 'guardify-pro'),
+            'low'    => __('অল্প তথ্য', 'guardify-pro'),
+            'none'   => __('কোনো তথ্য নেই', 'guardify-pro'),
+        ];
+    }
 
     /** What the engine recommends doing with the order. */
-    const ACTIONS = [
-        'block'           => 'বাতিল করার পরামর্শ',
-        'advance_payment' => 'অগ্রিম নিন',
-        'otp'             => 'OTP যাচাই করুন',
-        'flag'            => 'যাচাই করে পাঠান',
-        'allow'           => 'নিরাপদ',
-    ];
+    public static function action_labels() {
+        return [
+            'block'           => __('বাতিল করার পরামর্শ', 'guardify-pro'),
+            'advance_payment' => __('অগ্রিম নিন', 'guardify-pro'),
+            'otp'             => __('OTP যাচাই করুন', 'guardify-pro'),
+            'flag'            => __('যাচাই করে পাঠান', 'guardify-pro'),
+            'allow'           => __('নিরাপদ', 'guardify-pro'),
+        ];
+    }
 
     public static function get_instance() {
         if (null === self::$instance) {
@@ -83,11 +98,11 @@ class Guardify_Report_Column {
         foreach ($columns as $key => $label) {
             $new[$key] = $label;
             if ($key === 'order_total') {
-                $new['gf_report'] = 'কুরিয়ার রিপোর্ট';
+                $new['gf_report'] = __('কুরিয়ার রিপোর্ট', 'guardify-pro');
             }
         }
         if (!isset($new['gf_report'])) {
-            $new['gf_report'] = 'কুরিয়ার রিপোর্ট';
+            $new['gf_report'] = __('কুরিয়ার রিপোর্ট', 'guardify-pro');
         }
         return $new;
     }
@@ -149,7 +164,7 @@ class Guardify_Report_Column {
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error('সংযুক্ত নয়');
+            wp_send_json_error(__('সংযুক্ত নয়', 'guardify-pro'));
         }
 
         // Map each order to its normalised phone, keeping the reverse mapping so several
@@ -180,7 +195,7 @@ class Guardify_Report_Column {
         $result = $api->post('/api/v1/courier/summary/batch', ['phones' => array_keys($phones)]);
 
         if (!is_array($result) || empty($result['results'])) {
-            wp_send_json_error('রিপোর্ট পাওয়া যায়নি');
+            wp_send_json_error(__('রিপোর্ট পাওয়া যায়নি', 'guardify-pro'));
         }
 
         $reports = [];
@@ -200,7 +215,7 @@ class Guardify_Report_Column {
      */
     protected function render_summary($summary) {
         if (!is_array($summary)) {
-            return '<span class="gf-rc-new">নতুন কাস্টমার</span>';
+            return __('<span class="gf-rc-new">নতুন কাস্টমার</span>', 'guardify-pro');
         }
 
         $risk  = isset($summary['risk']) && is_array($summary['risk']) ? $summary['risk'] : [];
@@ -218,7 +233,7 @@ class Guardify_Report_Column {
         // evidence — which is what the baseline produces — reads as a measurement when it is
         // really an assumption, and a merchant acting on it is acting on nothing.
         if ($evidence === 0) {
-            return '<span class="gf-rc-new">নতুন কাস্টমার</span>';
+            return __('<span class="gf-rc-new">নতুন কাস্টমার</span>', 'guardify-pro');
         }
 
         $delivered = (int) ($summary['total_delivered'] ?? 0);
@@ -232,7 +247,8 @@ class Guardify_Report_Column {
         $conf  = isset($risk['confidence']) ? (string) $risk['confidence'] : 'none';
         $action = isset($risk['action']) ? (string) $risk['action'] : '';
 
-        $meta = isset(self::BANDS[$band]) ? self::BANDS[$band] : self::BANDS['unknown'];
+        $bands = self::bands();
+        $meta  = isset($bands[$band]) ? $bands[$band] : $bands['unknown'];
         $tone = $meta['tone'];
 
         $html = '<div class="gf-rc-report gf-rc-tone-' . esc_attr($tone) . '">';
@@ -250,8 +266,9 @@ class Guardify_Report_Column {
         // Confidence is stated, not implied. A score of 60 from two parcels and a score of
         // 60 from two hundred are different claims, and hiding the difference is how a
         // merchant ends up refusing a good customer over one unlucky delivery.
-        if (isset(self::CONFIDENCE[$conf])) {
-            $html .= '<div class="gf-rc-conf">' . esc_html(self::CONFIDENCE[$conf]) . '</div>';
+        $confidence = self::confidence_labels();
+        if (isset($confidence[$conf])) {
+            $html .= '<div class="gf-rc-conf">' . esc_html($confidence[$conf]) . '</div>';
         }
 
         // Fraud gets its own line and its own colour. A courier flagging a customer is not
@@ -260,7 +277,7 @@ class Guardify_Report_Column {
         if ($fraud > 0) {
             $html .= '<div class="gf-rc-fraud" title="' . esc_attr__('কুরিয়ার এই নম্বরের বিরুদ্ধে অভিযোগ জমা দিয়েছে', 'guardify-pro') . '">'
                 . '<span class="gf-rc-fraud-dot"></span>'
-                . esc_html(Guardify_Format::count($fraud)) . ' টি ফ্রড রিপোর্ট'
+                . esc_html(Guardify_Format::count($fraud)) . __(' টি ফ্রড রিপোর্ট', 'guardify-pro')
                 . '</div>';
         }
 
@@ -270,7 +287,7 @@ class Guardify_Report_Column {
         if (!empty($summary['partial'])) {
             $html .= '<div class="gf-rc-partial" title="'
                 . esc_attr__('একটি কুরিয়ার সাড়া দেয়নি — কিছু পার্সেল এই হিসাবে নেই', 'guardify-pro')
-                . '">অসম্পূর্ণ তথ্য</div>';
+                . __('">অসম্পূর্ণ তথ্য</div>', 'guardify-pro');
         }
 
         // The consortium line. This is the part a merchant cannot get anywhere else — a
@@ -278,14 +295,14 @@ class Guardify_Report_Column {
         // record across other Guardify shops — so it is worth stating rather than leaving
         // buried inside a score nobody can decompose.
         if ($stores > 1) {
-            $html .= '<div class="gf-rc-network">Guardify নেটওয়ার্কে '
-                . esc_html(Guardify_Format::count($stores)) . ' দোকানে রেকর্ড</div>';
+            $html .= __('<div class="gf-rc-network">Guardify নেটওয়ার্কে ', 'guardify-pro')
+                . esc_html(Guardify_Format::count($stores)) . __(' দোকানে রেকর্ড</div>', 'guardify-pro');
         }
 
         $html .= '<div class="gf-rc-stats">';
-        $html .= '<span>মোট ' . esc_html(Guardify_Format::count($total)) . '</span>';
+        $html .= __('<span>মোট ', 'guardify-pro') . esc_html(Guardify_Format::count($total)) . '</span>';
         $html .= '<span class="gf-rc-divider">·</span>';
-        $html .= '<span class="gf-rc-stat-ok">সফল ' . esc_html(Guardify_Format::count($delivered));
+        $html .= __('<span class="gf-rc-stat-ok">সফল ', 'guardify-pro') . esc_html(Guardify_Format::count($delivered));
 
         // The delivery ratio, but only once there is enough history for it to mean
         // something. Merchants recognise this figure and look for it, so it is worth
@@ -300,16 +317,17 @@ class Guardify_Report_Column {
 
         if ($failed > 0) {
             $html .= '<span class="gf-rc-divider">·</span>';
-            $html .= '<span class="gf-rc-stat-fail">ব্যর্থ ' . esc_html(Guardify_Format::count($failed)) . '</span>';
+            $html .= __('<span class="gf-rc-stat-fail">ব্যর্থ ', 'guardify-pro') . esc_html(Guardify_Format::count($failed)) . '</span>';
         }
         $html .= '</div>';
 
         // The recommendation, only when it is not "allow" — a badge on every safe order is
         // noise, and noise is what stops merchants reading the badges that matter.
-        if ($action !== '' && $action !== 'allow' && isset(self::ACTIONS[$action])) {
-            $label = self::ACTIONS[$action];
+        $actions = self::action_labels();
+        if ($action !== '' && $action !== 'allow' && isset($actions[$action])) {
+            $label = $actions[$action];
             if ($action === 'advance_payment' && !empty($risk['recommended_advance_pct'])) {
-                $label = 'অগ্রিম ' . Guardify_Format::percent((int) $risk['recommended_advance_pct']) . ' নিন';
+                $label = __('অগ্রিম ', 'guardify-pro') . Guardify_Format::percent((int) $risk['recommended_advance_pct']) . __(' নিন', 'guardify-pro');
             }
             $html .= '<div class="gf-rc-action gf-rc-action-' . esc_attr($action) . '">' . esc_html($label) . '</div>';
         }
@@ -375,6 +393,12 @@ class Guardify_Report_Column {
     private function get_column_js() {
         $nonce = wp_create_nonce('guardify_nonce');
 
+        // The two strings this script can show. Translated here and interpolated into the
+        // heredoc, because JavaScript cannot call __() and a heredoc is not a place a PHP
+        // tag can be opened. esc_js escapes them for a single-quoted JS literal.
+        $t_error   = esc_js(__('ত্রুটি', 'guardify-pro'));
+        $t_offline = esc_js(__('সংযোগ ব্যর্থ', 'guardify-pro'));
+
         return <<<JS
 jQuery(function ($) {
     var nonce = '{$nonce}';
@@ -394,7 +418,7 @@ jQuery(function ($) {
     function fetch(ids) {
         \$.post(ajaxurl, { action: 'guardify_fetch_reports', order_ids: ids, _ajax_nonce: nonce })
             .done(function (res) {
-                if (!res.success) { fail(ids, res.data || 'ত্রুটি'); return; }
+                if (!res.success) { fail(ids, res.data || '{$t_error}'); return; }
                 var reports = res.data.reports || {};
                 \$.each(ids, function (_, id) {
                     var \$cell = \$('.gf-rc-wrap[data-order-id="' + id + '"]');
@@ -403,7 +427,7 @@ jQuery(function ($) {
                     \$cell.html(reports[id] || '<span class="gf-rc-muted">—</span>');
                 });
             })
-            .fail(function () { fail(ids, 'সংযোগ ব্যর্থ'); });
+            .fail(function () { fail(ids, '{$t_offline}'); });
     }
 
     for (var i = 0; i < pending.length; i += CHUNK) {

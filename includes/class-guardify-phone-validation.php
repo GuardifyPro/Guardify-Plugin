@@ -49,7 +49,7 @@ class Guardify_Phone_Validation {
 
         wp_localize_script('guardify-phone-validation', 'guardifyPhoneVal', [
             'enabled' => get_option('guardify_phone_validation_enabled', '1'),
-            'message' => 'সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)',
+            'message' => __('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)', 'guardify-pro'),
         ]);
     }
 
@@ -128,12 +128,12 @@ class Guardify_Phone_Validation {
         $phone = preg_replace('/^\+?88/', '', $phone);
 
         if (empty($phone)) {
-            wc_add_notice('ফোন নম্বর দিন।', 'error');
+            wc_add_notice(__('ফোন নম্বর দিন।', 'guardify-pro'), 'error');
             return;
         }
 
         if (!$this->is_valid_bd_phone($phone)) {
-            wc_add_notice('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)।', 'error', ['class' => 'gf-phone-error']);
+            wc_add_notice(__('সঠিক বাংলাদেশী মোবাইল নম্বর দিন (01XXXXXXXXX)।', 'guardify-pro'), 'error', ['class' => 'gf-phone-error']);
         }
     }
 

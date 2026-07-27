@@ -50,6 +50,7 @@ require_once GUARDIFY_PATH . 'includes/class-guardify-backup.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-restore.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-domain.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-media.php';
+require_once GUARDIFY_PATH . 'includes/class-guardify-client-ip.php';
 require_once GUARDIFY_PATH . 'includes/class-guardify-onboarding.php';
 
 // ─── Auto-Update via GitHub Releases ─────────────────────────────
@@ -129,7 +130,7 @@ final class Guardify_Pro {
         // Check WooCommerce
         if (!class_exists('WooCommerce')) {
             add_action('admin_notices', function () {
-                echo '<div class="notice notice-error"><p><strong>Guardify Pro</strong> এর জন্য WooCommerce প্রয়োজন।</p></div>';
+                echo '<div class="notice notice-error guardify-notice"><p><strong>Guardify Pro</strong> এর জন্য WooCommerce প্রয়োজন।</p></div>';
             });
             return;
         }
@@ -175,6 +176,10 @@ final class Guardify_Pro {
         // Operational warnings the merchant has to see, since these are states where the
         // plugin has stopped enforcing something they are paying for.
         add_action('admin_notices', [$this, 'render_degraded_notices']);
+
+        // Bring the schema forward on an existing install. Cheap enough to run on every
+        // admin request: an autoloaded option read and an integer comparison.
+        add_action('admin_init', ['Guardify_Activator', 'maybe_upgrade']);
 
         // REST API
         add_action('rest_api_init', [$this, 'register_rest_routes']);
@@ -233,16 +238,34 @@ final class Guardify_Pro {
             && class_exists('Guardify_OTP')
             && Guardify_OTP::delivery_broken()) {
             printf(
-                '<div class="notice notice-warning"><p><strong>%s</strong> %s</p></div>',
+                '<div class="notice notice-warning guardify-notice"><p><strong>%s</strong> %s</p></div>',
                 esc_html__('Guardify:', 'guardify-pro'),
                 esc_html__('OTP পাঠানো যাচ্ছে না, তাই চেকআউটে ভেরিফিকেশন সাময়িকভাবে বন্ধ রাখা হয়েছে — নইলে কোনো অর্ডারই সম্পন্ন হতো না। SMS ব্যালেন্স ও সংযোগ পরীক্ষা করুন।', 'guardify-pro')
+            );
+        }
+
+        // A site behind Cloudflare or a load balancer sees its proxy's address on every
+        // request, so REMOTE_ADDR is a private or shared IP and none of the IP features can
+        // work. They do not error — they simply never match anybody, which is the worst way
+        // for a blocking feature to fail: the merchant sees the rules listed, believes they
+        // are in force, and finds out otherwise from an order that should have been refused.
+        if (class_exists('Guardify_Client_IP')
+            && Guardify_Client_IP::needs_proxy_setup()
+            && (get_option('guardify_vpn_block_enabled', 'no') === 'yes'
+                || get_option('guardify_fraud_detection_enabled', 'no') === 'yes')) {
+            printf(
+                '<div class="notice notice-warning guardify-notice"><p><strong>%s</strong> %s <a href="%s">%s</a></p></div>',
+                esc_html__('Guardify:', 'guardify-pro'),
+                esc_html__('আপনার সাইট একটি প্রক্সি বা Cloudflare-এর পেছনে আছে, তাই ভিজিটরের আসল IP পাওয়া যাচ্ছে না — IP ব্লক ও VPN ব্লক কাজ করছে না।', 'guardify-pro'),
+                esc_url(admin_url('admin.php?page=guardify-pro')),
+                esc_html__('সেটিংসে গিয়ে ঠিক করুন', 'guardify-pro')
             );
         }
 
         $err = get_transient('guardify_last_api_error');
         if (is_array($err) && !empty($err['message'])) {
             printf(
-                '<div class="notice notice-warning"><p><strong>%s</strong> %s <code>%s</code></p></div>',
+                '<div class="notice notice-warning guardify-notice"><p><strong>%s</strong> %s <code>%s</code></p></div>',
                 esc_html__('Guardify:', 'guardify-pro'),
                 esc_html__('ইঞ্জিনের সাথে সর্বশেষ সংযোগ ব্যর্থ হয়েছে।', 'guardify-pro'),
                 esc_html($err['message'])
@@ -263,8 +286,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'সেটিংস',
-            'সেটিংস',
+            __('সেটিংস', 'guardify-pro'),
+            __('সেটিংস', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-pro',
             [$this, 'render_settings_page']
@@ -272,8 +295,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'ফোন সার্চ',
-            'ফোন সার্চ',
+            __('ফোন সার্চ', 'guardify-pro'),
+            __('ফোন সার্চ', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-search',
             [Guardify_Search::get_instance(), 'render_search_page']
@@ -281,8 +304,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'ফ্রড ম্যানেজমেন্ট',
-            'ফ্রড ম্যানেজমেন্ট',
+            __('ফ্রড ম্যানেজমেন্ট', 'guardify-pro'),
+            __('ফ্রড ম্যানেজমেন্ট', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-fraud',
             [$this, 'render_fraud_page']
@@ -290,8 +313,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'ইনকমপ্লিট অর্ডার',
-            'ইনকমপ্লিট অর্ডার <span class="awaiting-mod">' . Guardify_Incomplete_Orders::get_pending_count() . '</span>',
+            __('ইনকমপ্লিট অর্ডার', 'guardify-pro'),
+            __('ইনকমপ্লিট অর্ডার <span class="awaiting-mod">', 'guardify-pro') . Guardify_Incomplete_Orders::get_pending_count() . '</span>',
             'manage_woocommerce',
             'guardify-incomplete',
             [$this, 'render_incomplete_page']
@@ -299,8 +322,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'SMS লগস',
-            'SMS লগস',
+            __('SMS লগস', 'guardify-pro'),
+            __('SMS লগস', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-sms-logs',
             [$this, 'render_sms_logs_page']
@@ -308,8 +331,8 @@ final class Guardify_Pro {
 
         add_submenu_page(
             'guardify-pro',
-            'ব্যাকআপ',
-            'ব্যাকআপ',
+            __('ব্যাকআপ', 'guardify-pro'),
+            __('ব্যাকআপ', 'guardify-pro'),
             'manage_woocommerce',
             'guardify-backup',
             [$this, 'render_backup_page']
@@ -322,8 +345,8 @@ final class Guardify_Pro {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             add_submenu_page(
                 'guardify-pro',
-                'ডিজাইন সিস্টেম',
-                'ডিজাইন সিস্টেম',
+                __('ডিজাইন সিস্টেম', 'guardify-pro'),
+                __('ডিজাইন সিস্টেম', 'guardify-pro'),
                 'manage_woocommerce',
                 'guardify-design-system',
                 [$this, 'render_design_system_page']
@@ -401,9 +424,26 @@ final class Guardify_Pro {
             true
         );
 
-        // Hide non-Guardify admin notices on our pages
+        // Keep Guardify's pages free of other plugins' promotional notices — but never of
+        // anything that reports a problem.
+        //
+        // This used to be `.notice:not(.guardify-notice) { display: none }`, which hid every
+        // notice on the page from every source. Two things were wrong with that. It hid
+        // WordPress's own "your site has a critical issue" and WooCommerce's database-update
+        // prompt, which are not ours to suppress and are expensive for a merchant to miss.
+        // And nothing in this plugin ever carried the `guardify-notice` class, so it also hid
+        // Guardify's own degraded-mode warnings — "OTP is not sending", "the engine is
+        // unreachable" — on precisely the pages a merchant opens to deal with them.
+        //
+        // Severity is the line. Info and success notices are where upgrade nags and
+        // "thanks for installing" live, and hiding those on our own screens is fair. Errors
+        // and warnings stay, whoever raised them.
         add_action('admin_notices', function () {
-            echo '<style>.notice:not(.guardify-notice) { display: none !important; }</style>';
+            echo '<style>
+                .notice-info:not(.guardify-notice),
+                .notice-success:not(.guardify-notice),
+                .update-nag { display: none !important; }
+            </style>';
         }, 0);
 
         wp_localize_script('guardify-admin', 'guardifyData', [
@@ -443,7 +483,7 @@ final class Guardify_Pro {
         $api_key = isset($_POST['api_key']) ? sanitize_text_field(wp_unslash($_POST['api_key'])) : '';
 
         if (empty($api_key) || !preg_match('/^gp_[a-f0-9]+$/i', $api_key)) {
-            wp_send_json_error('সঠিক API কী দিন। ফরম্যাট: gp_xxxx');
+            wp_send_json_error(__('সঠিক API কী দিন। ফরম্যাট: gp_xxxx', 'guardify-pro'));
         }
 
         $api = new Guardify_API();
@@ -474,7 +514,7 @@ final class Guardify_Pro {
 
         // Verification failed — clear credentials
         $api->clear_credentials();
-        $error = isset($result['error']) ? $result['error'] : 'API কী যাচাই ব্যর্থ হয়েছে।';
+        $error = isset($result['error']) ? $result['error'] : __('API কী যাচাই ব্যর্থ হয়েছে।', 'guardify-pro');
         wp_send_json_error($error);
     }
 
@@ -492,7 +532,7 @@ final class Guardify_Pro {
         $password = isset($_POST['password']) ? wp_unslash($_POST['password']) : '';
 
         if (empty($email) || empty($password)) {
-            wp_send_json_error('ইমেইল ও পাসওয়ার্ড আবশ্যক।');
+            wp_send_json_error(__('ইমেইল ও পাসওয়ার্ড আবশ্যক।', 'guardify-pro'));
         }
 
         $engine_url = GUARDIFY_ENGINE_URL;
@@ -511,14 +551,14 @@ final class Guardify_Pro {
         ]);
 
         if (is_wp_error($login_response)) {
-            wp_send_json_error('সার্ভারে সংযোগ করা যায়নি: ' . $login_response->get_error_message());
+            wp_send_json_error(__('সার্ভারে সংযোগ করা যায়নি: ', 'guardify-pro') . $login_response->get_error_message());
         }
 
         $login_body = json_decode(wp_remote_retrieve_body($login_response), true);
         $login_code = wp_remote_retrieve_response_code($login_response);
 
         if ($login_code !== 200 || empty($login_body['success'])) {
-            $err_msg = 'লগইন ব্যর্থ।';
+            $err_msg = __('লগইন ব্যর্থ।', 'guardify-pro');
             if (!empty($login_body['error']['message'])) {
                 $err_msg = $login_body['error']['message'];
             }
@@ -527,7 +567,7 @@ final class Guardify_Pro {
 
         $access_token = isset($login_body['data']['access_token']) ? $login_body['data']['access_token'] : '';
         if (empty($access_token)) {
-            wp_send_json_error('অ্যাক্সেস টোকেন পাওয়া যায়নি।');
+            wp_send_json_error(__('অ্যাক্সেস টোকেন পাওয়া যায়নি।', 'guardify-pro'));
         }
 
         // Step 2: List existing API keys
@@ -540,7 +580,7 @@ final class Guardify_Pro {
         ]);
 
         if (is_wp_error($keys_response)) {
-            wp_send_json_error('API কী লোড করা যায়নি।');
+            wp_send_json_error(__('API কী লোড করা যায়নি।', 'guardify-pro'));
         }
 
         $keys_body = json_decode(wp_remote_retrieve_body($keys_response), true);
@@ -571,14 +611,14 @@ final class Guardify_Pro {
             ]);
 
             if (is_wp_error($create_response)) {
-                wp_send_json_error('API কী তৈরি করা যায়নি।');
+                wp_send_json_error(__('API কী তৈরি করা যায়নি।', 'guardify-pro'));
             }
 
             $create_body = json_decode(wp_remote_retrieve_body($create_response), true);
             if (!empty($create_body['data']['key'])) {
                 $api_key_value = $create_body['data']['key'];
             } else {
-                wp_send_json_error('API কী তৈরি ব্যর্থ হয়েছে।');
+                wp_send_json_error(__('API কী তৈরি ব্যর্থ হয়েছে।', 'guardify-pro'));
             }
         }
 
@@ -589,7 +629,7 @@ final class Guardify_Pro {
         $result = $api->check_key();
         if (empty($result['success']) || $result['success'] !== true) {
             $api->clear_credentials();
-            wp_send_json_error('কী যাচাই ব্যর্থ হয়েছে।');
+            wp_send_json_error(__('কী যাচাই ব্যর্থ হয়েছে।', 'guardify-pro'));
         }
 
         // Report domain
@@ -638,7 +678,7 @@ final class Guardify_Pro {
         $ticket_type = isset($_POST['ticket_type']) ? sanitize_text_field(wp_unslash($_POST['ticket_type'])) : '';
 
         if (empty($subject) || empty($message)) {
-            wp_send_json_error('বিষয় ও বিস্তারিত আবশ্যক।');
+            wp_send_json_error(__('বিষয় ও বিস্তারিত আবশ্যক।', 'guardify-pro'));
         }
 
         // Gather environment metadata
@@ -664,29 +704,20 @@ final class Guardify_Pro {
         $ticket_id = !empty($result['data']['id']) ? $result['data']['id'] : (!empty($result['id']) ? $result['id'] : '');
         if (!empty($ticket_id)) {
             wp_send_json_success([
-                'message'   => 'টিকেট সফলভাবে পাঠানো হয়েছে।',
+                'message'   => __('টিকেট সফলভাবে পাঠানো হয়েছে।', 'guardify-pro'),
                 'ticket_id' => $ticket_id,
             ]);
         }
 
-        $error = isset($result['error']) ? $result['error'] : 'টিকেট পাঠানো যায়নি।';
+        $error = isset($result['error']) ? $result['error'] : __('টিকেট পাঠানো যায়নি।', 'guardify-pro');
         wp_send_json_error($error);
     }
 
     /**
-     * Get the client's real IP address.
+     * The client's address, from the one helper that decides what may be believed.
      */
     private function get_client_ip() {
-        $headers = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR'];
-        foreach ($headers as $header) {
-            if (!empty($_SERVER[$header])) {
-                $ip = trim(explode(',', sanitize_text_field(wp_unslash($_SERVER[$header])))[0]);
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
-            }
-        }
-        return isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+        return Guardify_Client_IP::get();
     }
 
     public function ajax_status() {
@@ -737,7 +768,7 @@ final class Guardify_Pro {
 
         global $guardify_update_checker;
         if (!$guardify_update_checker) {
-            wp_send_json_error('আপডেট চেকার পাওয়া যায়নি।');
+            wp_send_json_error(__('আপডেট চেকার পাওয়া যায়নি।', 'guardify-pro'));
         }
 
         // Force-check ignoring cache
@@ -748,12 +779,12 @@ final class Guardify_Pro {
             wp_send_json_success([
                 'has_update'  => true,
                 'new_version' => $update->version,
-                'message'     => 'নতুন ভার্সন পাওয়া গেছে: ' . esc_html($update->version),
+                'message'     => __('নতুন ভার্সন পাওয়া গেছে: ', 'guardify-pro') . esc_html($update->version),
             ]);
         } else {
             wp_send_json_success([
                 'has_update' => false,
-                'message'    => 'আপনার প্লাগইন আপ-টু-ডেট আছে। (ভার্সন ' . GUARDIFY_VERSION . ')',
+                'message'    => __('আপনার প্লাগইন আপ-টু-ডেট আছে। (ভার্সন ', 'guardify-pro') . GUARDIFY_VERSION . ')',
             ]);
         }
     }
@@ -806,6 +837,19 @@ final class Guardify_Pro {
             // about the same abandoned cart 29 more times than they asked for.
             'guardify_incomplete_cooldown'              => ['type' => 'int', 'min' => 5, 'max' => 43200, 'default' => 30],
             'guardify_default_courier'                 => ['type' => 'enum', 'values' => ['steadfast', 'pathao'], 'default' => 'steadfast'],
+            // Which proxy header, if any, may be believed about a visitor's address. An
+            // allow-list rather than free text: the value is used as a $_SERVER key, and the
+            // whole point of the setting is that it names something a proxy sets rather than
+            // something a visitor can claim.
+            'guardify_trusted_proxy_header'            => [
+                'type'    => 'enum',
+                // Derived from the class rather than repeated here. A second copy of this
+                // list is a second thing to forget to update, and the way it would fail is
+                // that a header the class knows about becomes unsettable — or worse, one it
+                // does not know about becomes settable.
+                'values'  => array_merge([''], array_keys(Guardify_Client_IP::allowed())),
+                'default' => '',
+            ],
         ];
 
         foreach ($safe_options as $key => $rule) {
@@ -869,7 +913,7 @@ final class Guardify_Pro {
         }
         update_option('guardify_notification_templates', $templates);
 
-        wp_send_json_success(['message' => 'সেটিংস সংরক্ষিত হয়েছে।']);
+        wp_send_json_success(['message' => __('সেটিংস সংরক্ষিত হয়েছে।', 'guardify-pro')]);
     }
 }
 

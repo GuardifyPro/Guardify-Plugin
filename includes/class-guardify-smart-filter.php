@@ -266,7 +266,7 @@ class Guardify_Smart_Filter {
                 $order->update_meta_data('_guardify_dp_total_parcels', $flag['total']);
                 $order->add_order_note(
                     sprintf(
-                        'Guardify: কম DP রেশিও (%.1f%%, মোট %d পার্সেল) — ফ্ল্যাগ করা হয়েছে।',
+                        __('Guardify: কম DP রেশিও (%.1f%%, মোট %d পার্সেল) — ফ্ল্যাগ করা হয়েছে।', 'guardify-pro'),
                         $flag['dp_ratio'],
                         $flag['total']
                     )

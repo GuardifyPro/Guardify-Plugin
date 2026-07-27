@@ -46,7 +46,7 @@ class Guardify_Search {
                     <form id="gf-search-form" style="display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap;">
                         <div class="gf-form-group" style="flex:1; min-width:0;">
                             <label class="gf-label">ফোন নম্বর</label>
-                            <input type="tel" id="gf-search-phone" class="gf-input" placeholder="01XXXXXXXXX বা +880..." maxlength="20" required style="font-size:1.0625rem; height:46px;" />
+                            <input type="tel" id="gf-search-phone" class="gf-input" placeholder="<?php echo esc_attr__('01XXXXXXXXX বা +880...', 'guardify-pro'); ?>" maxlength="20" required style="font-size:1.0625rem; height:46px;" />
                         </div>
                         <button type="submit" class="gf-btn gf-btn-primary" id="gf-search-btn" style="height:46px; white-space:nowrap; padding:0 1.5rem;">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
@@ -138,6 +138,23 @@ class Guardify_Search {
         </div>
 
         <script>
+/* Every Bengali string on this page, translated by PHP and handed to the
+   script as one object. Inline JavaScript cannot call __() itself, and opening
+   a PHP tag inside a JS string literal produces something neither PHP nor the
+   browser can parse — so the strings are lifted out rather than wrapped where
+   they sit. wp_json_encode does the escaping, once. */
+var GF_I18N = <?php echo wp_json_encode([
+        's10c13f15' => __('মাঝারি ঝুঁকি', 'guardify-pro'),
+        's1c3a6bbb' => __('<span class="gf-spinner"></span> সার্চ হচ্ছে...', 'guardify-pro'),
+        's33e41109' => __('<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> সার্চ করুন', 'guardify-pro'),
+        's49e52ab0' => __('উচ্চ ঝুঁকি', 'guardify-pro'),
+        's824a4602' => __('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)', 'guardify-pro'),
+        'sa9833b9e' => __('সার্চ ব্যর্থ হয়েছে।', 'guardify-pro'),
+        'scdd39ab1' => __('নিম্ন ঝুঁকি', 'guardify-pro'),
+        'sce6be67d' => __('সার্ভারে সংযোগ করা যায়নি।', 'guardify-pro'),
+        'sf2006b43' => __('<th>ট্র্যাকিং</th><th>স্ট্যাটাস</th><th>COD</th><th>তারিখ</th>', 'guardify-pro'),
+    ]); ?>;
+
         jQuery(function($) {
             var nonce = '<?php echo esc_js($nonce); ?>';
 
@@ -160,12 +177,12 @@ class Guardify_Search {
                 e.preventDefault();
                 var phone = normalizeBDPhone($('#gf-search-phone').val());
                 if (!/^01[3-9]\d{8}$/.test(phone)) {
-                    showMsg('error', 'সঠিক ফোন নম্বর দিন (01XXXXXXXXX)');
+                    showMsg('error', GF_I18N.s824a4602);
                     return;
                 }
 
                 var $btn = $('#gf-search-btn');
-                $btn.prop('disabled', true).html('<span class="gf-spinner"></span> সার্চ হচ্ছে...');
+                $btn.prop('disabled', true).html(GF_I18N.s1c3a6bbb);
                 $('#gf-search-msg').hide();
                 $('#gf-search-results').hide();
 
@@ -174,15 +191,15 @@ class Guardify_Search {
                     _wpnonce: nonce,
                     phone: phone
                 }, function(res) {
-                    $btn.prop('disabled', false).html('<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> সার্চ করুন');
+                    $btn.prop('disabled', false).html(GF_I18N.s33e41109);
                     if (res.success && res.data) {
                         renderResults(res.data);
                     } else {
-                        showMsg('error', res.data || 'সার্চ ব্যর্থ হয়েছে।');
+                        showMsg('error', res.data || GF_I18N.sa9833b9e);
                     }
                 }).fail(function() {
-                    $btn.prop('disabled', false).html('<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:6px;"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg> সার্চ করুন');
-                    showMsg('error', 'সার্ভারে সংযোগ করা যায়নি।');
+                    $btn.prop('disabled', false).html(GF_I18N.s33e41109);
+                    showMsg('error', GF_I18N.sce6be67d);
                 });
             });
 
@@ -197,7 +214,7 @@ class Guardify_Search {
                 $('#gf-r-dp-icon').css('background', dpColor.replace(')', ', 0.1)').replace('var(', 'color-mix(in oklch, ')).css('color', dpColor);
                 $('#gf-r-dp-bar').css({ width: Math.min(dp, 100) + '%', background: dpColor });
 
-                var riskBn = { low: 'নিম্ন ঝুঁকি', medium: 'মাঝারি ঝুঁকি', high: 'উচ্চ ঝুঁকি' };
+                var riskBn = { low: GF_I18N.scdd39ab1, medium: GF_I18N.s10c13f15, high: GF_I18N.s49e52ab0 };
                 var riskCls = { low: 'gf-badge-success', medium: 'gf-badge-warning', high: 'gf-badge-danger' };
                 var risk = d.risk_level || 'high';
                 $('#gf-r-risk-badge').text(riskBn[risk] || risk).attr('class', 'gf-badge ' + (riskCls[risk] || 'gf-badge-danger'));
@@ -226,7 +243,7 @@ class Guardify_Search {
                         if (hasDetails) {
                             var detailRows = '<tr id="' + toggleId + '" style="display:none;"><td colspan="6" style="padding:0;">' +
                                 '<table class="gf-table" style="background:var(--gf-muted);margin:0;"><thead><tr>' +
-                                '<th>ট্র্যাকিং</th><th>স্ট্যাটাস</th><th>COD</th><th>তারিখ</th>' +
+                                GF_I18N.sf2006b43 +
                                 '</tr></thead><tbody>';
                             p.details.forEach(function(det, di) {
                                 var statusCls = det.status === 'DELIVERED' ? 'gf-badge-success' : (det.status === 'CANCELLED' || det.status === 'RETURNED' ? 'gf-badge-danger' : 'gf-badge-secondary');
@@ -281,7 +298,7 @@ class Guardify_Search {
         $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
         $phone = Guardify_Phone_Util::normalize($phone);
         if (!Guardify_Phone_Util::validate($phone)) {
-            wp_send_json_error('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)');
+            wp_send_json_error(__('সঠিক ফোন নম্বর দিন (01XXXXXXXXX)', 'guardify-pro'));
         }
 
         $api = new Guardify_API();
@@ -293,7 +310,7 @@ class Guardify_Search {
             wp_send_json_success($result);
         }
 
-        $error = isset($result['error']) ? $result['error'] : 'সার্চ ব্যর্থ।';
+        $error = isset($result['error']) ? $result['error'] : __('সার্চ ব্যর্থ।', 'guardify-pro');
         wp_send_json_error($error);
     }
 }

@@ -606,7 +606,7 @@ jQuery(function($){
         }
 
         $label = ucfirst(str_replace('_', ' ', $courier_status));
-        $order->update_status($wc_status, sprintf('Guardify: কুরিয়ার স্ট্যাটাস "%s" → অর্ডার স্ট্যাটাস আপডেট।', $label));
+        $order->update_status($wc_status, sprintf(__('Guardify: কুরিয়ার স্ট্যাটাস "%s" → অর্ডার স্ট্যাটাস আপডেট।', 'guardify-pro'), $label));
     }
 
     // --- Helpers ---

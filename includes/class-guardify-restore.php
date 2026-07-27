@@ -85,7 +85,7 @@ class Guardify_Restore {
             return false;
         }
         if (time() - (int) $job['started'] > self::JOB_MAX_AGE) {
-            $this->fail($job, 'রিস্টোর সময়সীমা পার হয়েছে।');
+            $this->fail($job, __('রিস্টোর সময়সীমা পার হয়েছে।', 'guardify-pro'));
             return false;
         }
         return true;
@@ -99,15 +99,15 @@ class Guardify_Restore {
      */
     public function start(array $auth) {
         if ($this->job_active()) {
-            return new WP_Error('already_running', 'আরেকটি রিস্টোর চলছে।');
+            return new WP_Error('already_running', __('আরেকটি রিস্টোর চলছে।', 'guardify-pro'));
         }
         if (empty($auth['token'])) {
-            return new WP_Error('no_token', 'রিস্টোর অনুমোদন পাওয়া যায়নি।');
+            return new WP_Error('no_token', __('রিস্টোর অনুমোদন পাওয়া যায়নি।', 'guardify-pro'));
         }
 
         $archive = wp_tempnam('guardify_restore_');
         if (!$archive) {
-            return new WP_Error('temp_file', 'টেম্প ফাইল তৈরি করা যায়নি।');
+            return new WP_Error('temp_file', __('টেম্প ফাইল তৈরি করা যায়নি।', 'guardify-pro'));
         }
         // wp_tempnam creates the file; the download appends to it, so it starts empty.
         file_put_contents($archive, '');
@@ -180,7 +180,7 @@ class Guardify_Restore {
                 $result = $this->step_swap($job);
                 break;
             default:
-                $result = new WP_Error('bad_stage', 'অজানা রিস্টোর ধাপ।');
+                $result = new WP_Error('bad_stage', __('অজানা রিস্টোর ধাপ।', 'guardify-pro'));
         }
 
         delete_transient(self::SLICE_LOCK);
@@ -234,7 +234,7 @@ class Guardify_Restore {
 
         if (is_wp_error($response)) {
             @unlink($chunk_file);
-            return new WP_Error('download_failed', 'ডাউনলোড ব্যর্থ: ' . $response->get_error_message());
+            return new WP_Error('download_failed', __('ডাউনলোড ব্যর্থ: ', 'guardify-pro') . $response->get_error_message());
         }
 
         $code = (int) wp_remote_retrieve_response_code($response);
@@ -243,18 +243,18 @@ class Guardify_Restore {
         // file, which is still usable as long as nothing was appended before it.
         if ($code === 200 && $from > 0) {
             @unlink($chunk_file);
-            return new WP_Error('no_range', 'সার্ভার আংশিক ডাউনলোড সাপোর্ট করছে না।');
+            return new WP_Error('no_range', __('সার্ভার আংশিক ডাউনলোড সাপোর্ট করছে না।', 'guardify-pro'));
         }
         if ($code !== 200 && $code !== 206) {
             @unlink($chunk_file);
-            return new WP_Error('download_failed', 'ডাউনলোড ব্যর্থ (HTTP ' . $code . ')');
+            return new WP_Error('download_failed', __('ডাউনলোড ব্যর্থ (HTTP ', 'guardify-pro') . $code . ')');
         }
 
         $written = $this->append_file($job['archive'], $chunk_file);
         @unlink($chunk_file);
 
         if ($written === false) {
-            return new WP_Error('append_failed', 'ডাউনলোড করা অংশ যুক্ত করা যায়নি।');
+            return new WP_Error('append_failed', __('ডাউনলোড করা অংশ যুক্ত করা যায়নি।', 'guardify-pro'));
         }
 
         $job['downloaded'] += $written;
@@ -281,19 +281,19 @@ class Guardify_Restore {
     private function step_verify(array &$job) {
         $size = @filesize($job['archive']);
         if ($size === false || $size <= 0) {
-            return new WP_Error('empty_archive', 'ডাউনলোড করা ফাইল খালি।');
+            return new WP_Error('empty_archive', __('ডাউনলোড করা ফাইল খালি।', 'guardify-pro'));
         }
         if ($job['expected'] > 0 && $size !== (int) $job['expected']) {
             return new WP_Error(
                 'size_mismatch',
-                sprintf('ফাইলের আকার মেলেনি (%d বনাম %d বাইট)।', $size, (int) $job['expected'])
+                sprintf(__('ফাইলের আকার মেলেনি (%d বনাম %d বাইট)।', 'guardify-pro'), $size, (int) $job['expected'])
             );
         }
 
         if ($job['checksum'] !== '') {
             $actual = hash_file('sha256', $job['archive']);
             if (!hash_equals($job['checksum'], (string) $actual)) {
-                return new WP_Error('checksum_mismatch', 'ফাইলের চেকসাম মেলেনি — ডাউনলোড সম্পূর্ণ হয়নি।');
+                return new WP_Error('checksum_mismatch', __('ফাইলের চেকসাম মেলেনি — ডাউনলোড সম্পূর্ণ হয়নি।', 'guardify-pro'));
             }
         }
 
@@ -319,18 +319,18 @@ class Guardify_Restore {
     private function step_decompress(array &$job) {
         $gz = gzopen($job['archive'], 'rb');
         if (!$gz) {
-            return new WP_Error('gz_open', 'আর্কাইভ খোলা যায়নি।');
+            return new WP_Error('gz_open', __('আর্কাইভ খোলা যায়নি।', 'guardify-pro'));
         }
 
         if ((int) $job['gz_offset'] > 0 && gzseek($gz, (int) $job['gz_offset']) !== 0) {
             gzclose($gz);
-            return new WP_Error('gz_seek', 'আর্কাইভের অবস্থানে ফেরা যায়নি।');
+            return new WP_Error('gz_seek', __('আর্কাইভের অবস্থানে ফেরা যায়নি।', 'guardify-pro'));
         }
 
         $out = fopen($job['sql'], (int) $job['gz_offset'] > 0 ? 'ab' : 'wb');
         if (!$out) {
             gzclose($gz);
-            return new WP_Error('sql_open', 'অস্থায়ী ফাইল লেখা যায়নি।');
+            return new WP_Error('sql_open', __('অস্থায়ী ফাইল লেখা যায়নি।', 'guardify-pro'));
         }
 
         $deadline = microtime(true) + self::DECOMPRESS_BUDGET;
@@ -341,7 +341,7 @@ class Guardify_Restore {
             if ($buf === false) {
                 fclose($out);
                 gzclose($gz);
-                return new WP_Error('gz_read', 'আর্কাইভ পড়া যায়নি — ফাইলটি ক্ষতিগ্রস্ত হতে পারে।');
+                return new WP_Error('gz_read', __('আর্কাইভ পড়া যায়নি — ফাইলটি ক্ষতিগ্রস্ত হতে পারে।', 'guardify-pro'));
             }
             if ($buf === '') {
                 $done = true;
@@ -371,7 +371,7 @@ class Guardify_Restore {
 
         $fh = fopen($job['sql'], 'rb');
         if (!$fh) {
-            return new WP_Error('sql_open', 'SQL ফাইল খোলা যায়নি।');
+            return new WP_Error('sql_open', __('SQL ফাইল খোলা যায়নি।', 'guardify-pro'));
         }
         if ((int) $job['sql_offset'] > 0) {
             fseek($fh, (int) $job['sql_offset']);
@@ -439,7 +439,7 @@ class Guardify_Restore {
                 // tables. That is the whole point of importing into them first.
                 return new WP_Error(
                     'import_failed',
-                    'ইম্পোর্ট ব্যর্থ: ' . $wpdb->last_error . ' (কোনো লাইভ টেবিল পরিবর্তন হয়নি)'
+                    __('ইম্পোর্ট ব্যর্থ: ', 'guardify-pro') . $wpdb->last_error . __(' (কোনো লাইভ টেবিল পরিবর্তন হয়নি)', 'guardify-pro')
                 );
             }
             $job['statements']++;
@@ -449,7 +449,7 @@ class Guardify_Restore {
 
         if ($done) {
             if (empty($job['tables'])) {
-                return new WP_Error('no_tables', 'আর্কাইভে কোনো টেবিল পাওয়া যায়নি।');
+                return new WP_Error('no_tables', __('আর্কাইভে কোনো টেবিল পাওয়া যায়নি।', 'guardify-pro'));
             }
             $job['stage'] = 'swap';
         }
@@ -486,14 +486,14 @@ class Guardify_Restore {
         }
 
         if (empty($pairs)) {
-            return new WP_Error('nothing_to_swap', 'পরিবর্তন করার মতো কিছু পাওয়া যায়নি।');
+            return new WP_Error('nothing_to_swap', __('পরিবর্তন করার মতো কিছু পাওয়া যায়নি।', 'guardify-pro'));
         }
 
         // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- identifiers built from SHOW TABLES
         if ($wpdb->query('RENAME TABLE ' . implode(', ', $pairs)) === false) {
             return new WP_Error(
                 'swap_failed',
-                'টেবিল পরিবর্তন ব্যর্থ: ' . $wpdb->last_error . ' (সাইট অপরিবর্তিত আছে)'
+                __('টেবিল পরিবর্তন ব্যর্থ: ', 'guardify-pro') . $wpdb->last_error . __(' (সাইট অপরিবর্তিত আছে)', 'guardify-pro')
             );
         }
 
@@ -597,7 +597,7 @@ class Guardify_Restore {
 
         update_option(self::LAST_RESULT, [
             'ok'         => true,
-            'message'    => 'ডাটাবেইজ সফলভাবে রিস্টোর হয়েছে।',
+            'message'    => __('ডাটাবেইজ সফলভাবে রিস্টোর হয়েছে।', 'guardify-pro'),
             'statements' => (int) $job['statements'],
             'tables'     => count($job['tables']),
             'time'       => time(),
@@ -707,12 +707,12 @@ class Guardify_Restore {
 
         $token = isset($_POST['token']) ? sanitize_text_field(wp_unslash($_POST['token'])) : '';
         if ($token === '' || !preg_match('/^[a-f0-9]{64}$/i', $token)) {
-            wp_send_json_error('সঠিক রিস্টোর কোড দিন। কোডটি Guardify ড্যাশবোর্ড থেকে পাবেন।');
+            wp_send_json_error(__('সঠিক রিস্টোর কোড দিন। কোডটি Guardify ড্যাশবোর্ড থেকে পাবেন।', 'guardify-pro'));
         }
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error('প্লাগইন সংযুক্ত নয়।');
+            wp_send_json_error(__('প্লাগইন সংযুক্ত নয়।', 'guardify-pro'));
         }
 
         $started = $this->start([
@@ -727,7 +727,7 @@ class Guardify_Restore {
 
         wp_send_json_success([
             'queued'  => true,
-            'message' => 'রিস্টোর শুরু হয়েছে। আপনার সাইট চালু থাকবে — নতুন ডাটা প্রস্তুত হলেই কেবল বদল হবে।',
+            'message' => __('রিস্টোর শুরু হয়েছে। আপনার সাইট চালু থাকবে — নতুন ডাটা প্রস্তুত হলেই কেবল বদল হবে।', 'guardify-pro'),
         ]);
     }
 
@@ -738,16 +738,16 @@ class Guardify_Restore {
 
         if (is_array($job) && !empty($job['stage'])) {
             $labels = [
-                'download'   => 'ব্যাকআপ ডাউনলোড হচ্ছে…',
-                'verify'     => 'ফাইল যাচাই হচ্ছে…',
-                'decompress' => 'ফাইল খোলা হচ্ছে…',
-                'import'     => 'নতুন টেবিল তৈরি হচ্ছে (সাইট চালু আছে)…',
-                'swap'       => 'পরিবর্তন প্রয়োগ হচ্ছে…',
+                'download'   => __('ব্যাকআপ ডাউনলোড হচ্ছে…', 'guardify-pro'),
+                'verify'     => __('ফাইল যাচাই হচ্ছে…', 'guardify-pro'),
+                'decompress' => __('ফাইল খোলা হচ্ছে…', 'guardify-pro'),
+                'import'     => __('নতুন টেবিল তৈরি হচ্ছে (সাইট চালু আছে)…', 'guardify-pro'),
+                'swap'       => __('পরিবর্তন প্রয়োগ হচ্ছে…', 'guardify-pro'),
             ];
             wp_send_json_success([
                 'running'    => true,
                 'stage'      => $job['stage'],
-                'message'    => isset($labels[$job['stage']]) ? $labels[$job['stage']] : 'চলছে…',
+                'message'    => isset($labels[$job['stage']]) ? $labels[$job['stage']] : __('চলছে…', 'guardify-pro'),
                 'statements' => (int) $job['statements'],
                 'downloaded' => (int) $job['downloaded'],
                 'expected'   => (int) $job['expected'],
@@ -767,11 +767,11 @@ class Guardify_Restore {
     public function ajax_abort() {
         $this->guard();
 
-        if (!$this->abort('ব্যবহারকারী রিস্টোর বাতিল করেছেন।')) {
-            wp_send_json_success(['message' => 'কোনো রিস্টোর চলছে না।']);
+        if (!$this->abort(__('ব্যবহারকারী রিস্টোর বাতিল করেছেন।', 'guardify-pro'))) {
+            wp_send_json_success(['message' => __('কোনো রিস্টোর চলছে না।', 'guardify-pro')]);
         }
 
-        wp_send_json_success(['message' => 'রিস্টোর বাতিল হয়েছে। সাইটে কোনো পরিবর্তন হয়নি।']);
+        wp_send_json_success(['message' => __('রিস্টোর বাতিল হয়েছে। সাইটে কোনো পরিবর্তন হয়নি।', 'guardify-pro')]);
     }
 
     /**
@@ -791,7 +791,7 @@ class Guardify_Restore {
             return false;
         }
 
-        $this->fail($job, $reason !== '' ? $reason : 'রিস্টোর বাতিল করা হয়েছে।');
+        $this->fail($job, $reason !== '' ? $reason : __('রিস্টোর বাতিল করা হয়েছে।', 'guardify-pro'));
         return true;
     }
 }

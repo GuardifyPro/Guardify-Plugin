@@ -161,30 +161,15 @@ class Guardify_VPN_Block {
     }
 
     /**
-     * Get the real client IP with proxy header support.
+     * The visitor's address, from the one helper that decides what may be believed.
+     *
+     * This used to walk the proxy headers and trust the first one that parsed. For a feature
+     * that refuses checkouts, that meant anyone could pick which address they were judged on
+     * — including picking a clean one to look like an ordinary customer, which is exactly
+     * what VPN detection exists to notice.
      */
     private function get_client_ip() {
-        $headers = [
-            'HTTP_CF_CONNECTING_IP',  // Cloudflare
-            'HTTP_X_REAL_IP',         // Nginx
-            'HTTP_X_FORWARDED_FOR',   // Proxy
-            'REMOTE_ADDR',            // Direct
-        ];
-
-        foreach ($headers as $header) {
-            if (!empty($_SERVER[$header])) {
-                $ip = sanitize_text_field(wp_unslash($_SERVER[$header]));
-                // X-Forwarded-For can have comma-separated IPs; take the first
-                if (strpos($ip, ',') !== false) {
-                    $ip = trim(explode(',', $ip)[0]);
-                }
-                if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                    return $ip;
-                }
-            }
-        }
-
-        return isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+        return Guardify_Client_IP::get();
     }
 
     /**

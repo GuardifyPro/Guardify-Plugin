@@ -53,7 +53,7 @@ class Guardify_Repeat_Blocker {
 
     public function get_error_message() {
         $time_limit = $this->get_time_limit();
-        $default    = sprintf('এই ফোন নম্বর থেকে ইতিমধ্যে অর্ডার করা হয়েছে। অনুগ্রহ করে %d ঘণ্টা পর আবার চেষ্টা করুন।', $time_limit);
+        $default    = sprintf(__('এই ফোন নম্বর থেকে ইতিমধ্যে অর্ডার করা হয়েছে। অনুগ্রহ করে %d ঘণ্টা পর আবার চেষ্টা করুন।', 'guardify-pro'), $time_limit);
         $message    = get_option('guardify_repeat_blocker_message', $default);
         return sprintf($message, $time_limit);
     }
@@ -98,7 +98,7 @@ class Guardify_Repeat_Blocker {
             wp_send_json_error([
                 'blocked'        => false,
                 'invalid_format' => true,
-                'message'        => 'ভ্যালিড ফোন নম্বর দিন',
+                'message'        => __('ভ্যালিড ফোন নম্বর দিন', 'guardify-pro'),
             ]);
         }
 
@@ -185,8 +185,8 @@ class Guardify_Repeat_Blocker {
             'supportNumber'        => $this->get_support_number(),
             'disablePlaceOrder'    => true,
             'placeOrderButtonText' => __('Place order', 'woocommerce'),
-            'validatingText'       => 'ফোন যাচাই হচ্ছে...',
-            'invalidText'          => 'ফোন নম্বর অবৈধ',
+            'validatingText'       => __('ফোন যাচাই হচ্ছে...', 'guardify-pro'),
+            'invalidText'          => __('ফোন নম্বর অবৈধ', 'guardify-pro'),
             'forceBlock'           => true,
         ]);
     }
@@ -301,7 +301,7 @@ class Guardify_Repeat_Blocker {
         ];
 
         if (!$this->is_enabled()) {
-            $result['message'] = 'রিপিট অর্ডার ব্লকার নিষ্ক্রিয়';
+            $result['message'] = __('রিপিট অর্ডার ব্লকার নিষ্ক্রিয়', 'guardify-pro');
             return $result;
         }
 
@@ -310,7 +310,7 @@ class Guardify_Repeat_Blocker {
             $result['message']         = $this->get_error_message();
             $result['hours_remaining'] = $this->calculate_hours_remaining($phone);
         } else {
-            $result['message'] = 'এই ফোন নম্বরে সাম্প্রতিক কোনো অর্ডার নেই';
+            $result['message'] = __('এই ফোন নম্বরে সাম্প্রতিক কোনো অর্ডার নেই', 'guardify-pro');
         }
 
         return $result;
@@ -412,7 +412,7 @@ class Guardify_Repeat_Blocker {
 
         $phone = isset($_POST['phone']) ? sanitize_text_field(wp_unslash($_POST['phone'])) : '';
         if (empty($phone)) {
-            wp_send_json_error('ফোন নম্বর প্রয়োজন');
+            wp_send_json_error(__('ফোন নম্বর প্রয়োজন', 'guardify-pro'));
         }
 
         wp_send_json_success($this->debug_time_check($phone));

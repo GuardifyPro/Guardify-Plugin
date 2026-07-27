@@ -27,8 +27,8 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>
             </div>
             <div>
-                <h1 class="gf-page-title">ডাটাবেইজ ব্যাকআপ</h1>
-                <p class="gf-page-desc">আপনার WooCommerce ডাটাবেইজের অটোমেটিক ব্যাকআপ ও এক ক্লিকে রিস্টোর।</p>
+                <h1 class="gf-page-title"><?php esc_html_e('ডাটাবেইজ ব্যাকআপ', 'guardify-pro'); ?></h1>
+                <p class="gf-page-desc"><?php esc_html_e('আপনার WooCommerce ডাটাবেইজের অটোমেটিক ব্যাকআপ ও এক ক্লিকে রিস্টোর।', 'guardify-pro'); ?></p>
             </div>
         </div>
     </div>
@@ -41,10 +41,10 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
                 <div class="gf-empty-state-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h12v9a3 3 0 01-3 3H5a3 3 0 01-3-3z"/></svg>
                 </div>
-                <p class="gf-empty-state-title">প্লাগইন সংযুক্ত নয়</p>
-                <p class="gf-empty-state-desc">ব্যাকআপ Guardify সার্ভারে সংরক্ষিত হয়, তাই প্রথমে API কী দিয়ে সংযুক্ত করতে হবে।</p>
+                <p class="gf-empty-state-title"><?php esc_html_e('প্লাগইন সংযুক্ত নয়', 'guardify-pro'); ?></p>
+                <p class="gf-empty-state-desc"><?php esc_html_e('ব্যাকআপ Guardify সার্ভারে সংরক্ষিত হয়, তাই প্রথমে API কী দিয়ে সংযুক্ত করতে হবে।', 'guardify-pro'); ?></p>
                 <div class="gf-empty-state-actions">
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-pro')); ?>" class="gf-btn gf-btn-primary">সেটিংসে যান</a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-pro')); ?>" class="gf-btn gf-btn-primary"><?php esc_html_e('সেটিংসে যান', 'guardify-pro'); ?></a>
                 </div>
             </div>
         </div>
@@ -55,8 +55,8 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
     <div class="gf-card">
         <div class="gf-card-header">
             <div class="gf-card-heading">
-                <h2 class="gf-card-title">ব্যাকআপ শিডিউল</h2>
-                <p class="gf-card-desc">অটো ব্যাকআপ চালু থাকলে আপনাকে কিছু মনে রাখতে হবে না। রাতের দিকে সময় দিলে দোকানের ব্যস্ত সময়ে সাইট ধীর হবে না।</p>
+                <h2 class="gf-card-title"><?php esc_html_e('ব্যাকআপ শিডিউল', 'guardify-pro'); ?></h2>
+                <p class="gf-card-desc"><?php esc_html_e('অটো ব্যাকআপ চালু থাকলে আপনাকে কিছু মনে রাখতে হবে না। রাতের দিকে সময় দিলে দোকানের ব্যস্ত সময়ে সাইট ধীর হবে না।', 'guardify-pro'); ?></p>
             </div>
             <?php if ($schedule_info['next_run']) : ?>
             <div class="gf-card-header-actions">
@@ -68,8 +68,8 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
             <div class="gf-settings-list">
                 <label class="gf-toggle-row">
                     <span class="gf-toggle-info">
-                        <span class="gf-toggle-label">অটো ব্যাকআপ চালু করুন</span>
-                        <span class="gf-toggle-desc">বন্ধ থাকলে ব্যাকআপ শুধু আপনি নিজে নিলে হবে — কোনো শিডিউল চলবে না।</span>
+                        <span class="gf-toggle-label"><?php esc_html_e('অটো ব্যাকআপ চালু করুন', 'guardify-pro'); ?></span>
+                        <span class="gf-toggle-desc"><?php esc_html_e('বন্ধ থাকলে ব্যাকআপ শুধু আপনি নিজে নিলে হবে — কোনো শিডিউল চলবে না।', 'guardify-pro'); ?></span>
                     </span>
                     <span class="gf-switch">
                         <input type="checkbox" id="gf-backup-enabled" <?php checked($schedule_info['enabled'], 'yes'); ?> />
@@ -80,48 +80,48 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
 
             <div class="gf-form-grid">
                 <div class="gf-field">
-                    <label class="gf-label" for="gf-backup-frequency">ফ্রিকোয়েন্সি</label>
+                    <label class="gf-label" for="gf-backup-frequency"><?php esc_html_e('ফ্রিকোয়েন্সি', 'guardify-pro'); ?></label>
                     <select id="gf-backup-frequency" class="gf-select">
-                        <option value="every_6h" <?php selected($schedule_info['frequency'], 'every_6h'); ?>>প্রতি ৬ ঘণ্টায়</option>
-                        <option value="every_12h" <?php selected($schedule_info['frequency'], 'every_12h'); ?>>প্রতি ১২ ঘণ্টায়</option>
-                        <option value="daily" <?php selected($schedule_info['frequency'], 'daily'); ?>>প্রতিদিন</option>
-                        <option value="weekly" <?php selected($schedule_info['frequency'], 'weekly'); ?>>প্রতি সপ্তাহে</option>
+                        <option value="every_6h" <?php selected($schedule_info['frequency'], 'every_6h'); ?>><?php esc_html_e('প্রতি ৬ ঘণ্টায়', 'guardify-pro'); ?></option>
+                        <option value="every_12h" <?php selected($schedule_info['frequency'], 'every_12h'); ?>><?php esc_html_e('প্রতি ১২ ঘণ্টায়', 'guardify-pro'); ?></option>
+                        <option value="daily" <?php selected($schedule_info['frequency'], 'daily'); ?>><?php esc_html_e('প্রতিদিন', 'guardify-pro'); ?></option>
+                        <option value="weekly" <?php selected($schedule_info['frequency'], 'weekly'); ?>><?php esc_html_e('প্রতি সপ্তাহে', 'guardify-pro'); ?></option>
                     </select>
-                    <span class="gf-help">দিনে অনেক অর্ডার এলে ৬ বা ১২ ঘণ্টা বেছে নিন।</span>
+                    <span class="gf-help"><?php esc_html_e('দিনে অনেক অর্ডার এলে ৬ বা ১২ ঘণ্টা বেছে নিন।', 'guardify-pro'); ?></span>
                 </div>
 
                 <div class="gf-field">
-                    <label class="gf-label" for="gf-backup-time">সময় (২৪ ঘণ্টা ফরম্যাট)</label>
+                    <label class="gf-label" for="gf-backup-time"><?php esc_html_e('সময় (২৪ ঘণ্টা ফরম্যাট)', 'guardify-pro'); ?></label>
                     <input type="time" id="gf-backup-time" class="gf-input" value="<?php echo esc_attr($schedule_info['time']); ?>" />
-                    <span class="gf-help">দিনের কোন সময়ে ব্যাকআপ শুরু হবে।</span>
+                    <span class="gf-help"><?php esc_html_e('দিনের কোন সময়ে ব্যাকআপ শুরু হবে।', 'guardify-pro'); ?></span>
                 </div>
 
                 <div class="gf-field">
-                    <label class="gf-label" for="gf-backup-timezone">টাইমজোন</label>
+                    <label class="gf-label" for="gf-backup-timezone"><?php esc_html_e('টাইমজোন', 'guardify-pro'); ?></label>
                     <select id="gf-backup-timezone" class="gf-select">
-                        <option value="Asia/Dhaka" <?php selected($schedule_info['timezone'], 'Asia/Dhaka'); ?>>Asia/Dhaka (বাংলাদেশ)</option>
-                        <option value="Asia/Kolkata" <?php selected($schedule_info['timezone'], 'Asia/Kolkata'); ?>>Asia/Kolkata (ভারত)</option>
+                        <option value="Asia/Dhaka" <?php selected($schedule_info['timezone'], 'Asia/Dhaka'); ?>><?php esc_html_e('Asia/Dhaka (বাংলাদেশ)', 'guardify-pro'); ?></option>
+                        <option value="Asia/Kolkata" <?php selected($schedule_info['timezone'], 'Asia/Kolkata'); ?>><?php esc_html_e('Asia/Kolkata (ভারত)', 'guardify-pro'); ?></option>
                         <option value="UTC" <?php selected($schedule_info['timezone'], 'UTC'); ?>>UTC</option>
                     </select>
-                    <span class="gf-help">উপরের সময়টি কোন টাইমজোনে ধরা হবে।</span>
+                    <span class="gf-help"><?php esc_html_e('উপরের সময়টি কোন টাইমজোনে ধরা হবে।', 'guardify-pro'); ?></span>
                 </div>
             </div>
         </div>
         <div class="gf-card-footer">
-            <button type="button" id="gf-save-schedule" class="gf-btn gf-btn-primary">শিডিউল সেভ করুন</button>
+            <button type="button" id="gf-save-schedule" class="gf-btn gf-btn-primary"><?php esc_html_e('শিডিউল সেভ করুন', 'guardify-pro'); ?></button>
         </div>
     </div>
 
     <div class="gf-card">
         <div class="gf-card-header">
             <div class="gf-card-heading">
-                <h2 class="gf-card-title">ম্যানুয়াল ব্যাকআপ</h2>
-                <p class="gf-card-desc">বড় কোনো পরিবর্তনের আগে — নতুন প্লাগইন, থিম আপডেট, দাম পরিবর্তন — এখনই একটি ব্যাকআপ নিয়ে রাখুন।</p>
+                <h2 class="gf-card-title"><?php esc_html_e('ম্যানুয়াল ব্যাকআপ', 'guardify-pro'); ?></h2>
+                <p class="gf-card-desc"><?php esc_html_e('বড় কোনো পরিবর্তনের আগে — নতুন প্লাগইন, থিম আপডেট, দাম পরিবর্তন — এখনই একটি ব্যাকআপ নিয়ে রাখুন।', 'guardify-pro'); ?></p>
             </div>
         </div>
         <div class="gf-card-body">
             <div class="gf-row">
-                <button type="button" id="gf-backup-now" class="gf-btn gf-btn-secondary">এখনই ব্যাকআপ নিন</button>
+                <button type="button" id="gf-backup-now" class="gf-btn gf-btn-secondary"><?php esc_html_e('এখনই ব্যাকআপ নিন', 'guardify-pro'); ?></button>
                 <span id="gf-backup-status" class="gf-help"></span>
             </div>
         </div>
@@ -131,10 +131,15 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
     <div class="gf-card">
         <div class="gf-card-header">
             <div class="gf-card-heading">
-                <h2 class="gf-card-title">ছবি ও মিডিয়া ব্যাকআপ</h2>
+                <h2 class="gf-card-title"><?php esc_html_e('ছবি ও মিডিয়া ব্যাকআপ', 'guardify-pro'); ?></h2>
                 <p class="gf-card-desc">
-                    ডাটাবেইজ ব্যাকআপে আপনার অর্ডার ও পণ্যের তথ্য থাকে, কিন্তু ছবিগুলো থাকে না।
-                    এটি চালু করলে <code>wp-content/uploads</code> ফোল্ডারের ছবিও Guardify-তে জমা থাকবে।
+                    <?php
+                    printf(
+                        /* translators: %s is the folder name wp-content/uploads */
+                        esc_html__('ডাটাবেইজ ব্যাকআপে আপনার অর্ডার ও পণ্যের তথ্য থাকে, কিন্তু ছবিগুলো থাকে না। এটি চালু করলে %s ফোল্ডারের ছবিও Guardify-তে জমা থাকবে।', 'guardify-pro'),
+                        '<code>wp-content/uploads</code>'
+                    );
+                    ?>
                 </p>
             </div>
             <div class="gf-card-header-actions">
@@ -145,18 +150,16 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
             <div class="gf-alert gf-alert-info">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 <div>
-                    <strong class="gf-alert-title">আপনার সার্ভারে চাপ পড়বে না</strong>
-                    আপনার সাইট শুধু ফাইলের নাম, আকার ও তারিখ পড়ে পাঠায় — কোনো ফাইল স্ক্যান বা
-                    হিসাব করে না। কোন ছবিটি নতুন সেটা Guardify ঠিক করে, আর যেগুলো আগেই জমা আছে
-                    সেগুলো আবার আপলোড হয় না। কাজটি ছোট ছোট ভাগে পটভূমিতে চলে।
+                    <strong class="gf-alert-title"><?php esc_html_e('আপনার সার্ভারে চাপ পড়বে না', 'guardify-pro'); ?></strong>
+                    <?php esc_html_e('আপনার সাইট শুধু ফাইলের নাম, আকার ও তারিখ পড়ে পাঠায় — কোনো ফাইল স্ক্যান বা হিসাব করে না। কোন ছবিটি নতুন সেটা Guardify ঠিক করে, আর যেগুলো আগেই জমা আছে সেগুলো আবার আপলোড হয় না। কাজটি ছোট ছোট ভাগে পটভূমিতে চলে।', 'guardify-pro'); ?>
                 </div>
             </div>
 
             <div class="gf-settings-list">
                 <label class="gf-toggle-row">
                     <span class="gf-toggle-info">
-                        <span class="gf-toggle-label">মিডিয়া ব্যাকআপ চালু করুন</span>
-                        <span class="gf-toggle-desc">প্রথমবার সব ছবি আপলোড হতে সময় লাগবে। এরপর শুধু নতুন ও পরিবর্তিত ছবি যাবে।</span>
+                        <span class="gf-toggle-label"><?php esc_html_e('মিডিয়া ব্যাকআপ চালু করুন', 'guardify-pro'); ?></span>
+                        <span class="gf-toggle-desc"><?php esc_html_e('প্রথমবার সব ছবি আপলোড হতে সময় লাগবে। এরপর শুধু নতুন ও পরিবর্তিত ছবি যাবে।', 'guardify-pro'); ?></span>
                     </span>
                     <span class="gf-switch">
                         <input type="checkbox" id="gf-media-enabled" <?php checked(get_option('guardify_media_enabled', 'no'), 'yes'); ?> />
@@ -169,15 +172,19 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
             <div id="gf-media-status"></div>
 
             <div class="gf-row">
-                <button type="button" id="gf-media-sync" class="gf-btn gf-btn-secondary">এখনই মিডিয়া ব্যাকআপ নিন</button>
-                <button type="button" id="gf-media-restore" class="gf-btn gf-btn-ghost">মিডিয়া রিস্টোর</button>
-                <button type="button" id="gf-media-cancel" class="gf-btn gf-btn-ghost gf-hidden">বাতিল করুন</button>
+                <button type="button" id="gf-media-sync" class="gf-btn gf-btn-secondary"><?php esc_html_e('এখনই মিডিয়া ব্যাকআপ নিন', 'guardify-pro'); ?></button>
+                <button type="button" id="gf-media-restore" class="gf-btn gf-btn-ghost"><?php esc_html_e('মিডিয়া রিস্টোর', 'guardify-pro'); ?></button>
+                <button type="button" id="gf-media-cancel" class="gf-btn gf-btn-ghost gf-hidden"><?php esc_html_e('বাতিল করুন', 'guardify-pro'); ?></button>
             </div>
 
             <p class="gf-help">
-                <strong>মিডিয়া রিস্টোর</strong> Guardify-তে জমা ছবিগুলো আবার সাইটে নামায়। এটি কোনো
-                ফাইল মুছে না — যেগুলো ঠিক আছে সেগুলোতে হাত দেয় না, তাই সাইট চালু থাকা অবস্থায়ও
-                নিরাপদে চালানো যায়। সাইট নতুন সার্ভারে নেওয়ার পর এটিই ছবিগুলো ফিরিয়ে আনে।
+                <?php
+                printf(
+                    /* translators: %s is the name of the "media restore" button, emphasised */
+                    esc_html__('%s Guardify-তে জমা ছবিগুলো আবার সাইটে নামায়। এটি কোনো ফাইল মুছে না — যেগুলো ঠিক আছে সেগুলোতে হাত দেয় না, তাই সাইট চালু থাকা অবস্থায়ও নিরাপদে চালানো যায়। সাইট নতুন সার্ভারে নেওয়ার পর এটিই ছবিগুলো ফিরিয়ে আনে।', 'guardify-pro'),
+                    '<strong>' . esc_html__('মিডিয়া রিস্টোর', 'guardify-pro') . '</strong>'
+                );
+                ?>
             </p>
 
             <div id="gf-media-skips"></div>
@@ -188,10 +195,9 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
     <div class="gf-card gf-card-danger">
         <div class="gf-card-header">
             <div class="gf-card-heading">
-                <h2 class="gf-card-title">রিস্টোর</h2>
+                <h2 class="gf-card-title"><?php esc_html_e('রিস্টোর', 'guardify-pro'); ?></h2>
                 <p class="gf-card-desc">
-                    আগের কোনো ব্যাকআপ থেকে ডাটাবেইজ ফিরিয়ে আনুন। রিস্টোর শুরু করতে হয় Guardify
-                    ড্যাশবোর্ড থেকে — সেখানে আমরা ফাইলটি পুরোপুরি যাচাই করে একটি কোড দিই।
+                    <?php esc_html_e('আগের কোনো ব্যাকআপ থেকে ডাটাবেইজ ফিরিয়ে আনুন। রিস্টোর শুরু করতে হয় Guardify ড্যাশবোর্ড থেকে — সেখানে আমরা ফাইলটি পুরোপুরি যাচাই করে একটি কোড দিই।', 'guardify-pro'); ?>
                 </p>
             </div>
         </div>
@@ -199,43 +205,48 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
             <div class="gf-alert gf-alert-info">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 <div>
-                    <strong class="gf-alert-title">আপনার সাইট চালু থাকবে</strong>
-                    Guardify নতুন ডাটা আলাদা টেবিলে তৈরি করে, তারপর এক ধাপে বদলে দেয়। মাঝপথে কিছু ভুল হলে
-                    আপনার বর্তমান ডাটাবেইজে কোনো পরিবর্তন হবে না।
+                    <strong class="gf-alert-title"><?php esc_html_e('আপনার সাইট চালু থাকবে', 'guardify-pro'); ?></strong>
+                    <?php esc_html_e('Guardify নতুন ডাটা আলাদা টেবিলে তৈরি করে, তারপর এক ধাপে বদলে দেয়। মাঝপথে কিছু ভুল হলে আপনার বর্তমান ডাটাবেইজে কোনো পরিবর্তন হবে না।', 'guardify-pro'); ?>
                 </div>
             </div>
 
             <div class="gf-alert gf-alert-warning">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9L2.4 17.5c-.8.9.2 2.5 1.7 2.5h15.8c1.5 0 2.5-1.6 1.7-2.5L13.7 3.9c-.8-.8-2.7-.8-3.4 0z"/></svg>
                 <div>
-                    <strong class="gf-alert-title">ব্যাকআপের পরের অর্ডারগুলো থাকবে না</strong>
-                    যে সময়ের ব্যাকআপ ফেরাচ্ছেন, তার পরে আসা অর্ডার ও পরিবর্তন মুছে যাবে।
+                    <strong class="gf-alert-title"><?php esc_html_e('ব্যাকআপের পরের অর্ডারগুলো থাকবে না', 'guardify-pro'); ?></strong>
+                    <?php esc_html_e('যে সময়ের ব্যাকআপ ফেরাচ্ছেন, তার পরে আসা অর্ডার ও পরিবর্তন মুছে যাবে।', 'guardify-pro'); ?>
                 </div>
             </div>
 
             <div id="gf-restore-live" class="gf-hidden"></div>
 
             <div class="gf-field gf-field-wide">
-                <label class="gf-label" for="gf-restore-token">রিস্টোর কোড</label>
+                <label class="gf-label" for="gf-restore-token"><?php esc_html_e('রিস্টোর কোড', 'guardify-pro'); ?></label>
                 <input type="text" id="gf-restore-token" class="gf-input gf-input-mono"
-                       autocomplete="off" spellcheck="false" placeholder="Guardify ড্যাশবোর্ড থেকে পাওয়া কোড">
+                       autocomplete="off" spellcheck="false" placeholder="<?php echo esc_attr__('Guardify ড্যাশবোর্ড থেকে পাওয়া কোড', 'guardify-pro'); ?>">
                 <span class="gf-help">
-                    <a href="https://guardify.pro/backups" target="_blank" rel="noopener">ড্যাশবোর্ডে যান</a> —
-                    ব্যাকআপ বেছে নিয়ে সাইটের ডোমেইন লিখে নিশ্চিত করলে কোডটি পাবেন। কোড ৩০ মিনিট পর্যন্ত বৈধ।
+                    <?php
+                    printf(
+                        /* translators: %s is a link to the Guardify dashboard */
+                        esc_html__('%s — ব্যাকআপ বেছে নিয়ে সাইটের ডোমেইন লিখে নিশ্চিত করলে কোডটি পাবেন। কোড ৩০ মিনিট পর্যন্ত বৈধ।', 'guardify-pro'),
+                        '<a href="https://guardify.pro/backups" target="_blank" rel="noopener">'
+                            . esc_html__('ড্যাশবোর্ডে যান', 'guardify-pro') . '</a>'
+                    );
+                    ?>
                 </span>
             </div>
 
             <div id="gf-restore-status"></div>
 
             <div class="gf-row">
-                <button type="button" id="gf-restore-btn" class="gf-btn gf-btn-danger">রিস্টোর শুরু করুন</button>
-                <button type="button" id="gf-restore-abort" class="gf-btn gf-btn-ghost gf-hidden">বাতিল করুন</button>
+                <button type="button" id="gf-restore-btn" class="gf-btn gf-btn-danger"><?php esc_html_e('রিস্টোর শুরু করুন', 'guardify-pro'); ?></button>
+                <button type="button" id="gf-restore-abort" class="gf-btn gf-btn-ghost gf-hidden"><?php esc_html_e('বাতিল করুন', 'guardify-pro'); ?></button>
             </div>
 
             <div id="gf-backup-list-container">
                 <div class="gf-loading">
                     <span class="gf-spinner" aria-hidden="true"></span>
-                    ব্যাকআপ লোড হচ্ছে…
+                    <?php esc_html_e('ব্যাকআপ লোড হচ্ছে…', 'guardify-pro'); ?>
                 </div>
             </div>
         </div>
@@ -245,10 +256,9 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
     <div class="gf-card">
         <div class="gf-card-header">
             <div class="gf-card-heading">
-                <h2 class="gf-card-title">ডোমেইন পরিবর্তন</h2>
+                <h2 class="gf-card-title"><?php esc_html_e('ডোমেইন পরিবর্তন', 'guardify-pro'); ?></h2>
                 <p class="gf-card-desc">
-                    সাইট নতুন ডোমেইনে নিয়ে যাচ্ছেন? এক ক্লিকে সব ঠিকানা বদলে যাবে — পোস্ট, পণ্যের ছবি,
-                    থিম ও প্লাগইনের সেটিংস, সবকিছু।
+                    <?php esc_html_e('সাইট নতুন ডোমেইনে নিয়ে যাচ্ছেন? এক ক্লিকে সব ঠিকানা বদলে যাবে — পোস্ট, পণ্যের ছবি, থিম ও প্লাগইনের সেটিংস, সবকিছু।', 'guardify-pro'); ?>
                 </p>
             </div>
             <div class="gf-card-header-actions">
@@ -259,39 +269,35 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
             <div class="gf-alert gf-alert-info">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                 <div>
-                    <strong class="gf-alert-title">সাধারণ সার্চ-রিপ্লেস প্লাগইনের মতো নয়</strong>
-                    WordPress অনেক সেটিংস এমন ফরম্যাটে রাখে যেখানে লেখার দৈর্ঘ্যও সংরক্ষিত থাকে। সাধারণ
-                    রিপ্লেস করলে ওই হিসাব ভেঙে যায় আর উইজেট, থিম ও পেমেন্ট সেটিংস চুপচাপ মুছে যায় —
-                    কোনো এরর ছাড়াই। Guardify কাজটি নিজের সার্ভারে করে, সঠিক হিসাব রেখে।
+                    <strong class="gf-alert-title"><?php esc_html_e('সাধারণ সার্চ-রিপ্লেস প্লাগইনের মতো নয়', 'guardify-pro'); ?></strong>
+                    <?php esc_html_e('WordPress অনেক সেটিংস এমন ফরম্যাটে রাখে যেখানে লেখার দৈর্ঘ্যও সংরক্ষিত থাকে। সাধারণ রিপ্লেস করলে ওই হিসাব ভেঙে যায় আর উইজেট, থিম ও পেমেন্ট সেটিংস চুপচাপ মুছে যায় — কোনো এরর ছাড়াই। Guardify কাজটি নিজের সার্ভারে করে, সঠিক হিসাব রেখে।', 'guardify-pro'); ?>
                 </div>
             </div>
 
             <div id="gf-domain-live" class="gf-hidden"></div>
 
             <div class="gf-field gf-field-wide" id="gf-domain-input-wrap">
-                <label class="gf-label" for="gf-domain-new">নতুন ডোমেইন</label>
+                <label class="gf-label" for="gf-domain-new"><?php esc_html_e('নতুন ডোমেইন', 'guardify-pro'); ?></label>
                 <input type="text" id="gf-domain-new" class="gf-input gf-input-mono"
                        autocomplete="off" spellcheck="false" placeholder="newshop.com.bd">
                 <span class="gf-help">
-                    শুধু ঠিকানাটি লিখুন — https:// বা www. লেখার দরকার নেই। শুরু করার আগে নিশ্চিত করুন
-                    নতুন ডোমেইনটি এই সাইটের দিকেই পয়েন্ট করা আছে।
+                    <?php esc_html_e('শুধু ঠিকানাটি লিখুন — https:// বা www. লেখার দরকার নেই। শুরু করার আগে নিশ্চিত করুন নতুন ডোমেইনটি এই সাইটের দিকেই পয়েন্ট করা আছে।', 'guardify-pro'); ?>
                 </span>
             </div>
 
             <div class="gf-alert gf-alert-warning">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9L2.4 17.5c-.8.9.2 2.5 1.7 2.5h15.8c1.5 0 2.5-1.6 1.7-2.5L13.7 3.9c-.8-.8-2.7-.8-3.4 0z"/></svg>
                 <div>
-                    <strong class="gf-alert-title">শেষ হলে আপনাকে নতুন ঠিকানায় লগইন করতে হবে</strong>
-                    পরিবর্তনের সময় সাইট চালু থাকবে। শেষ ধাপে ঠিকানা বদলে যাবে, তাই তখন
-                    পুরোনো ঠিকানায় wp-admin আর খুলবে না।
+                    <strong class="gf-alert-title"><?php esc_html_e('শেষ হলে আপনাকে নতুন ঠিকানায় লগইন করতে হবে', 'guardify-pro'); ?></strong>
+                    <?php esc_html_e('পরিবর্তনের সময় সাইট চালু থাকবে। শেষ ধাপে ঠিকানা বদলে যাবে, তাই তখন পুরোনো ঠিকানায় wp-admin আর খুলবে না।', 'guardify-pro'); ?>
                 </div>
             </div>
 
             <div id="gf-domain-status"></div>
 
             <div class="gf-row">
-                <button type="button" id="gf-domain-start" class="gf-btn gf-btn-primary">ডোমেইন পরিবর্তন করুন</button>
-                <button type="button" id="gf-domain-cancel" class="gf-btn gf-btn-ghost gf-hidden">বাতিল করুন</button>
+                <button type="button" id="gf-domain-start" class="gf-btn gf-btn-primary"><?php esc_html_e('ডোমেইন পরিবর্তন করুন', 'guardify-pro'); ?></button>
+                <button type="button" id="gf-domain-cancel" class="gf-btn gf-btn-ghost gf-hidden"><?php esc_html_e('বাতিল করুন', 'guardify-pro'); ?></button>
             </div>
         </div>
     </div>
@@ -301,6 +307,60 @@ $is_connected    = !empty(get_option('guardify_api_key', ''));
 </div>
 
 <script>
+/* Every Bengali string on this page, translated by PHP and handed to the
+   script as one object. Inline JavaScript cannot call __() itself, and opening
+   a PHP tag inside a JS string literal produces something neither PHP nor the
+   browser can parse — so the strings are lifted out rather than wrapped where
+   they sit. wp_json_encode does the escaping, once. */
+var GF_I18N = <?php echo wp_json_encode([
+        's1aa80bab' => __(' ঠিকানায় চলবে।', 'guardify-pro'),
+        's1d3a00d2' => __('কোনো ফাইল মুছে ফেলা হবে না — যেগুলো ইতিমধ্যে ঠিক আছে সেগুলোতে হাত দেওয়া হবে না।', 'guardify-pro'),
+        's20f15402' => __('ডোমেইন পরিবর্তন ব্যর্থ হয়েছে।', 'guardify-pro'),
+        's2880bb05' => __('আপনি কি নিশ্চিত?
+
+এই ব্যাকআপের পরে আসা সব অর্ডার ও পরিবর্তন মুছে যাবে। নতুন ডাটা প্রস্তুত না হওয়া পর্যন্ত আপনার সাইট স্বাভাবিকভাবে চলবে।', 'guardify-pro'),
+        's2900b4cd' => __('ব্যাকআপ লোড করা যায়নি।', 'guardify-pro'),
+        's402f5858' => __('ব্যাকআপ ব্যর্থ হয়েছে।', 'guardify-pro'),
+        's43bf0afd' => __('টি নামানো হয়েছে, ', 'guardify-pro'),
+        's4ab577e9' => __('টি ফাইল', 'guardify-pro'),
+        's4eb5bd5b' => __('সংযোগ বিচ্ছিন্ন হয়েছে — সম্ভবত সাইটটি নতুন ঠিকানায় চলে গেছে। নতুন ঠিকানায় গিয়ে দেখুন।', 'guardify-pro'),
+        's4f8f4fca' => __('ডোমেইন পরিবর্তন বাতিল করবেন? আপনার সাইটে কোনো পরিবর্তন হয়নি।', 'guardify-pro'),
+        's53727483' => __('নতুন ডোমেইনটি লিখুন।', 'guardify-pro'),
+        's58f493b2' => __('টি আগেই ঠিক আছে।', 'guardify-pro'),
+        's599ec958' => __('সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।', 'guardify-pro'),
+        's5acba387' => __('রিস্টোর শুরু করা যায়নি।', 'guardify-pro'),
+        's6cfa66f6' => __('ডোমেইন পরিবর্তন সম্পন্ন হয়েছে। এখন থেকে সাইটটি ', 'guardify-pro'),
+        's71b0d613' => __('সেভ করা যায়নি।', 'guardify-pro'),
+        's742bfd23' => __('শুরু করা যায়নি।', 'guardify-pro'),
+        's7c188d46' => __('১,২৪০টি ফাইল', 'guardify-pro'),
+        's7d0f8c60' => __('কোডটি সঠিক নয়। Guardify ড্যাশবোর্ড থেকে কোডটি কপি করে বসান।', 'guardify-pro'),
+        's7f9559b5' => __('ব্যাকআপ শুরু হয়েছে।', 'guardify-pro'),
+        's83d9157f' => __(' এ বদলে যাবে। ', 'guardify-pro'),
+        's93e44ce6' => __('মোট ', 'guardify-pro'),
+        'sa04a9e57' => __('বাতিল হয়েছে।', 'guardify-pro'),
+        'sa30ee22f' => __('শিডিউল সেভ করা যায়নি।', 'guardify-pro'),
+        'sa5a4c3d9' => __('পরিবর্তনের সময় সাইট চালু থাকবে, তবে শেষ হলে আপনাকে নতুন ঠিকানায় লগইন করতে হবে।', 'guardify-pro'),
+        'sa5e466c0' => __('টি দেখানো হচ্ছে)', 'guardify-pro'),
+        'sa8a4af8f' => __('টি আপলোড হয়েছে (', 'guardify-pro'),
+        'saa963b21' => __('টি ফাইল দেখা হয়েছে।', 'guardify-pro'),
+        'sae82c296' => __('আপনি কি নিশ্চিত?
+
+সাইটের সব ঠিকানা ', 'guardify-pro'),
+        'sbe97a263' => __('ব্যাকআপ সম্পন্ন হয়েছে।', 'guardify-pro'),
+        'sc6660d40' => __('কিছু ফাইল বাদ পড়েছে (', 'guardify-pro'),
+        'scc4234d9' => __('চলমান মিডিয়া কাজটি বাতিল করবেন? যা আপলোড হয়েছে তা জমা থাকবে।', 'guardify-pro'),
+        'scddd1823' => __('শিডিউল সেভ হয়েছে।', 'guardify-pro'),
+        'scfaeac3f' => __('Guardify-তে জমা ছবিগুলো এই সাইটে নামানো হবে।
+
+', 'guardify-pro'),
+        'sd5bad13b' => __('ব্যাকআপ চলছে… ', 'guardify-pro'),
+        'sded0d5f4' => __('রিস্টোর বাতিল করবেন? আপনার সাইটে কোনো পরিবর্তন হয়নি।', 'guardify-pro'),
+        'se633db51' => __('আগে মিডিয়া ব্যাকআপ চালু করুন।', 'guardify-pro'),
+        'sf2a30502' => __('কোনো ব্যাকআপ নেই। উপরের বাটনে ক্লিক করে প্রথম ব্যাকআপ নিন।', 'guardify-pro'),
+        'sf4b5d46d' => __('সংরক্ষিত ব্যাকআপ', 'guardify-pro'),
+        'sfc3c1d8d' => __(' টি ব্যাকআপ আছে। কোনটি ফেরাবেন তা Guardify ড্যাশবোর্ড থেকে বেছে নিন।', 'guardify-pro'),
+    ]); ?>;
+
 jQuery(function ($) {
     var ajaxUrl = guardifyData.ajaxUrl;
     var nonce   = guardifyData.nonce;
@@ -313,7 +373,7 @@ jQuery(function ($) {
             var $container = $('#gf-backup-list-container').empty();
 
             if (!res.success || !res.data) {
-                $container.append($('<p>').addClass('gf-help').text('ব্যাকআপ লোড করা যায়নি।'));
+                $container.append($('<p>').addClass('gf-help').text(GF_I18N.s2900b4cd));
                 return;
             }
 
@@ -322,7 +382,7 @@ jQuery(function ($) {
 
             if (!backups.length) {
                 $container.append(
-                    $('<p>').addClass('gf-help').text('কোনো ব্যাকআপ নেই। উপরের বাটনে ক্লিক করে প্রথম ব্যাকআপ নিন।')
+                    $('<p>').addClass('gf-help').text(GF_I18N.sf2a30502)
                 );
                 return;
             }
@@ -344,10 +404,10 @@ jQuery(function ($) {
             });
 
             $container.append(
-                $('<p>').addClass('gf-label').text('সংরক্ষিত ব্যাকআপ'),
+                $('<p>').addClass('gf-label').text(GF_I18N.sf4b5d46d),
                 $list,
                 $('<p>').addClass('gf-help').text(
-                    'মোট ' + count + ' টি ব্যাকআপ আছে। কোনটি ফেরাবেন তা Guardify ড্যাশবোর্ড থেকে বেছে নিন।'
+                    GF_I18N.s93e44ce6 + count + GF_I18N.sfc3c1d8d
                 )
             );
         });
@@ -372,7 +432,7 @@ jQuery(function ($) {
             if (res.data.running) {
                 var pct = res.data.percent || 0;
                 $status.removeClass('gf-success gf-error')
-                    .text('ব্যাকআপ চলছে… ' + pct + '%');
+                    .text(GF_I18N.sd5bad13b + pct + '%');
                 pollTimer = setTimeout(function () { pollBackup($btn, $status); }, 3000);
                 return;
             }
@@ -381,17 +441,17 @@ jQuery(function ($) {
 
             var last = res.data.last;
             if (last && last.ok) {
-                $status.addClass('gf-success').text(last.message || 'ব্যাকআপ সম্পন্ন হয়েছে।');
-                GF.toast(last.message || 'ব্যাকআপ সম্পন্ন হয়েছে।', { type: 'success' });
+                $status.addClass('gf-success').text(last.message || GF_I18N.sbe97a263);
+                GF.toast(last.message || GF_I18N.sbe97a263, { type: 'success' });
                 loadBackups();
             } else if (last) {
-                $status.addClass('gf-error').text(last.message || 'ব্যাকআপ ব্যর্থ হয়েছে।');
+                $status.addClass('gf-error').text(last.message || GF_I18N.s402f5858);
             } else {
                 $status.text('');
             }
         }).fail(function () {
             GF.setLoading($btn, false);
-            $status.addClass('gf-error').text('সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+            $status.addClass('gf-error').text(GF_I18N.s599ec958);
         });
     }
 
@@ -404,15 +464,15 @@ jQuery(function ($) {
 
         $.post(ajaxUrl, { action: 'guardify_backup_now', _ajax_nonce: nonce }, function (res) {
             if (res.success) {
-                $status.text(res.data.message || 'ব্যাকআপ শুরু হয়েছে।');
+                $status.text(res.data.message || GF_I18N.s7f9559b5);
                 pollTimer = setTimeout(function () { pollBackup($btn, $status); }, 2000);
             } else {
                 GF.setLoading($btn, false);
-                $status.addClass('gf-error').text(res.data || 'ব্যাকআপ ব্যর্থ হয়েছে।');
+                $status.addClass('gf-error').text(res.data || GF_I18N.s402f5858);
             }
         }).fail(function () {
             GF.setLoading($btn, false);
-            $status.addClass('gf-error').text('সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+            $status.addClass('gf-error').text(GF_I18N.s599ec958);
         });
     });
 
@@ -474,7 +534,7 @@ jQuery(function ($) {
             })
             .fail(function () {
                 GF.setLoading($('#gf-restore-btn'), false);
-                restoreNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+                restoreNotice('error', GF_I18N.s599ec958);
             });
     }
 
@@ -483,11 +543,11 @@ jQuery(function ($) {
         var token = $.trim($('#gf-restore-token').val());
 
         if (!/^[a-f0-9]{64}$/i.test(token)) {
-            restoreNotice('error', 'কোডটি সঠিক নয়। Guardify ড্যাশবোর্ড থেকে কোডটি কপি করে বসান।');
+            restoreNotice('error', GF_I18N.s7d0f8c60);
             return;
         }
 
-        if (!confirm('আপনি কি নিশ্চিত?\n\nএই ব্যাকআপের পরে আসা সব অর্ডার ও পরিবর্তন মুছে যাবে। নতুন ডাটা প্রস্তুত না হওয়া পর্যন্ত আপনার সাইট স্বাভাবিকভাবে চলবে।')) {
+        if (!confirm(GF_I18N.s2880bb05)) {
             return;
         }
 
@@ -499,7 +559,7 @@ jQuery(function ($) {
             .done(function (res) {
                 if (!res.success) {
                     GF.setLoading($btn, false);
-                    restoreNotice('error', res.data || 'রিস্টোর শুরু করা যায়নি।');
+                    restoreNotice('error', res.data || GF_I18N.s5acba387);
                     return;
                 }
                 $('#gf-restore-token').val('');
@@ -508,12 +568,12 @@ jQuery(function ($) {
             })
             .fail(function () {
                 GF.setLoading($btn, false);
-                restoreNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+                restoreNotice('error', GF_I18N.s599ec958);
             });
     });
 
     $('#gf-restore-abort').on('click', function () {
-        if (!confirm('রিস্টোর বাতিল করবেন? আপনার সাইটে কোনো পরিবর্তন হয়নি।')) { return; }
+        if (!confirm(GF_I18N.sded0d5f4)) { return; }
         $.post(ajaxUrl, { action: 'guardify_restore_abort', _ajax_nonce: nonce })
             .always(function () {
                 if (restoreTimer) { clearTimeout(restoreTimer); restoreTimer = null; }
@@ -557,7 +617,7 @@ jQuery(function ($) {
             .done(function (res) {
                 if (!res.success) {
                     domainRunning(false);
-                    domainNotice('error', res.data || 'ডোমেইন পরিবর্তন ব্যর্থ হয়েছে।');
+                    domainNotice('error', res.data || GF_I18N.s20f15402);
                     return;
                 }
 
@@ -574,7 +634,7 @@ jQuery(function ($) {
                     domainRunning(false);
                     $('#gf-domain-live').addClass('gf-hidden').empty();
                     domainNotice('success',
-                        'ডোমেইন পরিবর্তন সম্পন্ন হয়েছে। এখন থেকে সাইটটি ' + d.new + ' ঠিকানায় চলবে।');
+                        GF_I18N.s6cfa66f6 + d.new + GF_I18N.s1aa80bab);
                     // The old address no longer serves wp-admin, so staying here would show
                     // a screen whose every subsequent request fails. Sent on rather than
                     // left to discover it.
@@ -593,7 +653,7 @@ jQuery(function ($) {
                 // still on the old address and admin-ajax is answering from the new one.
                 domainRunning(false);
                 domainNotice('warning',
-                    'সংযোগ বিচ্ছিন্ন হয়েছে — সম্ভবত সাইটটি নতুন ঠিকানায় চলে গেছে। নতুন ঠিকানায় গিয়ে দেখুন।');
+                    GF_I18N.s4eb5bd5b);
             });
     }
 
@@ -601,12 +661,12 @@ jQuery(function ($) {
         var newDomain = $.trim($('#gf-domain-new').val());
 
         if (!newDomain) {
-            domainNotice('error', 'নতুন ডোমেইনটি লিখুন।');
+            domainNotice('error', GF_I18N.s53727483);
             return;
         }
 
-        if (!confirm('আপনি কি নিশ্চিত?\n\nসাইটের সব ঠিকানা ' + newDomain + ' এ বদলে যাবে। ' +
-                     'পরিবর্তনের সময় সাইট চালু থাকবে, তবে শেষ হলে আপনাকে নতুন ঠিকানায় লগইন করতে হবে।')) {
+        if (!confirm(GF_I18N.sae82c296 + newDomain + GF_I18N.s83d9157f +
+                     GF_I18N.sa5a4c3d9)) {
             return;
         }
 
@@ -618,7 +678,7 @@ jQuery(function ($) {
             .done(function (res) {
                 if (!res.success) {
                     domainRunning(false);
-                    domainNotice('error', res.data || 'শুরু করা যায়নি।');
+                    domainNotice('error', res.data || GF_I18N.s742bfd23);
                     return;
                 }
                 $('#gf-domain-live').removeClass('gf-hidden')
@@ -627,12 +687,12 @@ jQuery(function ($) {
             })
             .fail(function () {
                 domainRunning(false);
-                domainNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+                domainNotice('error', GF_I18N.s599ec958);
             });
     });
 
     $('#gf-domain-cancel').on('click', function () {
-        if (!confirm('ডোমেইন পরিবর্তন বাতিল করবেন? আপনার সাইটে কোনো পরিবর্তন হয়নি।')) { return; }
+        if (!confirm(GF_I18N.s4f8f4fca)) { return; }
 
         if (domainTimer) { clearTimeout(domainTimer); domainTimer = null; }
 
@@ -640,7 +700,7 @@ jQuery(function ($) {
             .done(function (res) {
                 domainRunning(false);
                 $('#gf-domain-live').addClass('gf-hidden').empty();
-                domainNotice('info', (res.data && res.data.message) || 'বাতিল হয়েছে।');
+                domainNotice('info', (res.data && res.data.message) || GF_I18N.sa04a9e57);
             });
     });
 
@@ -676,7 +736,7 @@ jQuery(function ($) {
     }
 
     // Sizes are shown in Bengali numerals to match the rest of the product. A merchant reading
-    // "৪.২ GB" beside "১,২৪০টি ফাইল" should not find one of the two in Latin digits.
+    // "৪.২ GB" beside GF_I18N.s7c188d46 should not find one of the two in Latin digits.
     function bnDigits(text) {
         var map = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
         return String(text).replace(/[0-9]/g, function (d) { return map[+d]; });
@@ -704,7 +764,7 @@ jQuery(function ($) {
 
         $badge.removeClass('gf-hidden').text(
             humanBytes(usage.bytes) + ' / ' + humanBytes(usage.ceiling) +
-            '  ·  ' + bnDigits(usage.files) + 'টি ফাইল'
+            '  ·  ' + bnDigits(usage.files) + GF_I18N.s4ab577e9
         );
     }
 
@@ -718,7 +778,7 @@ jQuery(function ($) {
         // can look at and understand.
         var $alert = $('<div>').addClass('gf-alert gf-alert-warning');
         $alert.append($('<strong>').addClass('gf-alert-title')
-            .text('কিছু ফাইল বাদ পড়েছে (' + bnDigits(skips.length) + 'টি দেখানো হচ্ছে)'));
+            .text(GF_I18N.sc6660d40 + bnDigits(skips.length) + GF_I18N.sa5e466c0));
 
         var $list = $('<ul>').addClass('gf-alert-list');
         skips.forEach(function (s) {
@@ -743,8 +803,8 @@ jQuery(function ($) {
                     $('#gf-media-live').removeClass('gf-hidden').html(
                         $('<div>').addClass('gf-alert gf-alert-info').text(
                             d.message + '  ' +
-                            bnDigits(d.uploaded) + 'টি আপলোড হয়েছে (' + humanBytes(d.bytes) + '), ' +
-                            bnDigits(d.seen) + 'টি ফাইল দেখা হয়েছে।'
+                            bnDigits(d.uploaded) + GF_I18N.sa8a4af8f + humanBytes(d.bytes) + '), ' +
+                            bnDigits(d.seen) + GF_I18N.saa963b21
                         )
                     );
                     mediaTimer = setTimeout(pollMedia, 5000);
@@ -755,8 +815,8 @@ jQuery(function ($) {
                     mediaRunning(true);
                     $('#gf-media-live').removeClass('gf-hidden').html(
                         $('<div>').addClass('gf-alert gf-alert-info').text(
-                            d.message + '  ' + bnDigits(d.written) + 'টি নামানো হয়েছে, ' +
-                            bnDigits(d.present) + 'টি আগেই ঠিক আছে।'
+                            d.message + '  ' + bnDigits(d.written) + GF_I18N.s43bf0afd +
+                            bnDigits(d.present) + GF_I18N.s58f493b2
                         )
                     );
                     mediaTimer = setTimeout(pollMedia, 5000);
@@ -788,14 +848,14 @@ jQuery(function ($) {
             if (res.success) {
                 GF.toast(res.data.message, { type: 'success' });
             } else {
-                GF.toast(res.data || 'সেভ করা যায়নি।', { type: 'error' });
+                GF.toast(res.data || GF_I18N.s71b0d613, { type: 'error' });
             }
         });
     });
 
     $('#gf-media-sync').on('click', function () {
         if (!$('#gf-media-enabled').is(':checked')) {
-            mediaNotice('warning', 'আগে মিডিয়া ব্যাকআপ চালু করুন।');
+            mediaNotice('warning', GF_I18N.se633db51);
             return;
         }
 
@@ -808,7 +868,7 @@ jQuery(function ($) {
             .done(function (res) {
                 if (!res.success) {
                     mediaRunning(false);
-                    mediaNotice('error', res.data || 'শুরু করা যায়নি।');
+                    mediaNotice('error', res.data || GF_I18N.s742bfd23);
                     return;
                 }
                 $('#gf-media-live').removeClass('gf-hidden')
@@ -817,13 +877,13 @@ jQuery(function ($) {
             })
             .fail(function () {
                 mediaRunning(false);
-                mediaNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+                mediaNotice('error', GF_I18N.s599ec958);
             });
     });
 
     $('#gf-media-restore').on('click', function () {
-        if (!confirm('Guardify-তে জমা ছবিগুলো এই সাইটে নামানো হবে।\n\n' +
-                     'কোনো ফাইল মুছে ফেলা হবে না — যেগুলো ইতিমধ্যে ঠিক আছে সেগুলোতে হাত দেওয়া হবে না।')) {
+        if (!confirm(GF_I18N.scfaeac3f +
+                     GF_I18N.s1d3a00d2)) {
             return;
         }
 
@@ -835,7 +895,7 @@ jQuery(function ($) {
             .done(function (res) {
                 if (!res.success) {
                     mediaRunning(false);
-                    mediaNotice('error', res.data || 'রিস্টোর শুরু করা যায়নি।');
+                    mediaNotice('error', res.data || GF_I18N.s5acba387);
                     return;
                 }
                 $('#gf-media-live').removeClass('gf-hidden')
@@ -844,12 +904,12 @@ jQuery(function ($) {
             })
             .fail(function () {
                 mediaRunning(false);
-                mediaNotice('error', 'সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।');
+                mediaNotice('error', GF_I18N.s599ec958);
             });
     });
 
     $('#gf-media-cancel').on('click', function () {
-        if (!confirm('চলমান মিডিয়া কাজটি বাতিল করবেন? যা আপলোড হয়েছে তা জমা থাকবে।')) { return; }
+        if (!confirm(GF_I18N.scc4234d9)) { return; }
 
         if (mediaTimer) { clearTimeout(mediaTimer); mediaTimer = null; }
 
@@ -857,7 +917,7 @@ jQuery(function ($) {
             .done(function (res) {
                 mediaRunning(false);
                 $('#gf-media-live').addClass('gf-hidden').empty();
-                mediaNotice('info', (res.data && res.data.message) || 'বাতিল হয়েছে।');
+                mediaNotice('info', (res.data && res.data.message) || GF_I18N.sa04a9e57);
             });
     });
 
@@ -883,12 +943,12 @@ jQuery(function ($) {
             guardify_backup_timezone: $('#gf-backup-timezone').val()
         }, function (res) {
             if (res.success) {
-                GF.toast(res.data.message || 'শিডিউল সেভ হয়েছে।', { type: 'success' });
+                GF.toast(res.data.message || GF_I18N.scddd1823, { type: 'success' });
             } else {
-                GF.toast(res.data || 'শিডিউল সেভ করা যায়নি।', { type: 'error' });
+                GF.toast(res.data || GF_I18N.sa30ee22f, { type: 'error' });
             }
         }).fail(function () {
-            GF.toast('সার্ভারের সাথে যোগাযোগ ব্যর্থ হয়েছে।', { type: 'error' });
+            GF.toast(GF_I18N.s599ec958, { type: 'error' });
         }).always(function () {
             GF.setLoading($btn, false);
         });

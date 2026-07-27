@@ -72,7 +72,7 @@ class Guardify_Domain {
         // to whoever runs the shop; rewriting every URL in the database is scoped to
         // whoever owns the installation.
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('এই কাজটি করার অনুমতি আপনার নেই।');
+            wp_send_json_error(__('এই কাজটি করার অনুমতি আপনার নেই।', 'guardify-pro'));
         }
     }
 
@@ -116,30 +116,30 @@ class Guardify_Domain {
         $this->guard();
 
         if ($this->state()) {
-            wp_send_json_error('একটি ডোমেইন পরিবর্তন ইতিমধ্যে চলছে।');
+            wp_send_json_error(__('একটি ডোমেইন পরিবর্তন ইতিমধ্যে চলছে।', 'guardify-pro'));
         }
 
         $new = isset($_POST['new_domain']) ? sanitize_text_field(wp_unslash($_POST['new_domain'])) : '';
         $new = $this->normalize($new);
 
         if ($new === '') {
-            wp_send_json_error('নতুন ডোমেইনটি লিখুন — যেমন newshop.com.bd');
+            wp_send_json_error(__('নতুন ডোমেইনটি লিখুন — যেমন newshop.com.bd', 'guardify-pro'));
         }
         if ($new === self::current_domain()) {
-            wp_send_json_error('নতুন ও বর্তমান ডোমেইন একই।');
+            wp_send_json_error(__('নতুন ও বর্তমান ডোমেইন একই।', 'guardify-pro'));
         }
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error('প্লাগইন সংযুক্ত নয়।');
+            wp_send_json_error(__('প্লাগইন সংযুক্ত নয়।', 'guardify-pro'));
         }
         if (Guardify_Backup::get_instance()->job_active() || Guardify_Restore::get_instance()->job_active()) {
-            wp_send_json_error('একটি ব্যাকআপ বা রিস্টোর চলছে। শেষ হলে আবার চেষ্টা করুন।');
+            wp_send_json_error(__('একটি ব্যাকআপ বা রিস্টোর চলছে। শেষ হলে আবার চেষ্টা করুন।', 'guardify-pro'));
         }
 
         $result = $api->post('/api/v1/domain/prepare', ['new_domain' => $new]);
         if (!is_array($result) || (isset($result['success']) && $result['success'] === false)) {
-            wp_send_json_error(isset($result['error']) ? $result['error'] : 'ডোমেইন পরিবর্তন শুরু করা যায়নি।');
+            wp_send_json_error(isset($result['error']) ? $result['error'] : __('ডোমেইন পরিবর্তন শুরু করা যায়নি।', 'guardify-pro'));
         }
 
         // A fresh backup, not last night's. Restoring an old archive to change a domain
@@ -147,11 +147,11 @@ class Guardify_Domain {
         // the sort of thing a merchant discovers by a customer ringing about a parcel that
         // no longer exists.
         $started = Guardify_Backup::get_instance()->start_backup(
-            sprintf('ডোমেইন পরিবর্তনের আগে (%s → %s)', self::current_domain(), $new)
+            sprintf(__('ডোমেইন পরিবর্তনের আগে (%s → %s)', 'guardify-pro'), self::current_domain(), $new)
         );
         if (is_wp_error($started)) {
             $api->post('/api/v1/domain/cancel', []);
-            wp_send_json_error('ব্যাকআপ শুরু করা যায়নি: ' . $started->get_error_message());
+            wp_send_json_error(__('ব্যাকআপ শুরু করা যায়নি: ', 'guardify-pro') . $started->get_error_message());
         }
 
         update_option(self::STATE_OPTION, [
@@ -191,14 +191,14 @@ class Guardify_Domain {
                 $this->advance_from_restore($state);
                 break;
             default:
-                $this->fail($state, 'অজানা ধাপ।');
+                $this->fail($state, __('অজানা ধাপ।', 'guardify-pro'));
         }
 
         $state = $this->state();
         wp_send_json_success([
             'stage'   => $state ? $state['stage'] : 'done',
             'done'    => $state === null,
-            'message' => $state ? $this->stage_message($state['stage']) : 'ডোমেইন পরিবর্তন সম্পন্ন হয়েছে।',
+            'message' => $state ? $this->stage_message($state['stage']) : __('ডোমেইন পরিবর্তন সম্পন্ন হয়েছে।', 'guardify-pro'),
             'error'   => $state && !empty($state['error']) ? $state['error'] : '',
             'new'     => $state ? $state['new_domain'] : '',
         ]);
@@ -214,28 +214,28 @@ class Guardify_Domain {
 
         $last = get_option(Guardify_Backup::LAST_RESULT, null);
         if (!is_array($last) || empty($last['ok'])) {
-            $this->fail($state, 'ব্যাকআপ ব্যর্থ হয়েছে: ' .
-                (is_array($last) && !empty($last['message']) ? $last['message'] : 'অজানা কারণ'));
+            $this->fail($state, __('ব্যাকআপ ব্যর্থ হয়েছে: ', 'guardify-pro') .
+                (is_array($last) && !empty($last['message']) ? $last['message'] : __('অজানা কারণ', 'guardify-pro')));
             return;
         }
 
         $api = new Guardify_API();
         $list = $api->get('/api/v1/backup/list');
         if (!is_array($list) || empty($list['backups'])) {
-            $this->fail($state, 'ব্যাকআপটি খুঁজে পাওয়া যায়নি।');
+            $this->fail($state, __('ব্যাকআপটি খুঁজে পাওয়া যায়নি।', 'guardify-pro'));
             return;
         }
 
         // The newest archive is the one just uploaded. The list comes back newest-first.
         $backup_id = isset($list['backups'][0]['id']) ? $list['backups'][0]['id'] : '';
         if ($backup_id === '') {
-            $this->fail($state, 'ব্যাকআপটি খুঁজে পাওয়া যায়নি।');
+            $this->fail($state, __('ব্যাকআপটি খুঁজে পাওয়া যায়নি।', 'guardify-pro'));
             return;
         }
 
         $auth = $api->post('/api/v1/domain/authorise', ['backup_id' => $backup_id]);
         if (!is_array($auth) || empty($auth['token'])) {
-            $this->fail($state, isset($auth['error']) ? $auth['error'] : 'ঠিকানা বদলানো ফাইল তৈরি করা যায়নি।');
+            $this->fail($state, isset($auth['error']) ? $auth['error'] : __('ঠিকানা বদলানো ফাইল তৈরি করা যায়নি।', 'guardify-pro'));
             return;
         }
 
@@ -245,7 +245,7 @@ class Guardify_Domain {
             'file_size' => isset($auth['file_size']) ? (int) $auth['file_size'] : 0,
         ]);
         if (is_wp_error($started)) {
-            $this->fail($state, 'রিস্টোর শুরু করা যায়নি: ' . $started->get_error_message());
+            $this->fail($state, __('রিস্টোর শুরু করা যায়নি: ', 'guardify-pro') . $started->get_error_message());
             return;
         }
 
@@ -264,9 +264,9 @@ class Guardify_Domain {
 
         $last = get_option(Guardify_Restore::LAST_RESULT, null);
         if (!is_array($last) || empty($last['ok'])) {
-            $this->fail($state, 'রিস্টোর ব্যর্থ হয়েছে: ' .
-                (is_array($last) && !empty($last['message']) ? $last['message'] : 'অজানা কারণ') .
-                ' — আপনার সাইটে কোনো পরিবর্তন হয়নি।');
+            $this->fail($state, __('রিস্টোর ব্যর্থ হয়েছে: ', 'guardify-pro') .
+                (is_array($last) && !empty($last['message']) ? $last['message'] : __('অজানা কারণ', 'guardify-pro')) .
+                __(' — আপনার সাইটে কোনো পরিবর্তন হয়নি।', 'guardify-pro'));
             return;
         }
 
@@ -306,11 +306,11 @@ class Guardify_Domain {
         // removed and the engine told. Forgetting the job row instead would leave a full
         // copy of the database on the merchant's disk.
         if ($state && $state['stage'] === 'restore') {
-            Guardify_Restore::get_instance()->abort('ডোমেইন পরিবর্তন বাতিল করা হয়েছে।');
+            Guardify_Restore::get_instance()->abort(__('ডোমেইন পরিবর্তন বাতিল করা হয়েছে।', 'guardify-pro'));
         }
 
         delete_option(self::STATE_OPTION);
-        wp_send_json_success(['message' => 'ডোমেইন পরিবর্তন বাতিল হয়েছে। সাইটে কোনো পরিবর্তন হয়নি।']);
+        wp_send_json_success(['message' => __('ডোমেইন পরিবর্তন বাতিল হয়েছে। সাইটে কোনো পরিবর্তন হয়নি।', 'guardify-pro')]);
     }
 
     // ─── internals ───────────────────────────────────────────────────────
@@ -328,9 +328,9 @@ class Guardify_Domain {
 
     private function stage_message($stage) {
         $messages = [
-            'backup'  => 'বর্তমান অবস্থার ব্যাকআপ নেওয়া হচ্ছে…',
-            'restore' => 'নতুন ঠিকানা বসানো হচ্ছে (আপনার সাইট এখনো চালু আছে)…',
-            'failed'  => 'ডোমেইন পরিবর্তন ব্যর্থ হয়েছে।',
+            'backup'  => __('বর্তমান অবস্থার ব্যাকআপ নেওয়া হচ্ছে…', 'guardify-pro'),
+            'restore' => __('নতুন ঠিকানা বসানো হচ্ছে (আপনার সাইট এখনো চালু আছে)…', 'guardify-pro'),
+            'failed'  => __('ডোমেইন পরিবর্তন ব্যর্থ হয়েছে।', 'guardify-pro'),
         ];
         return isset($messages[$stage]) ? $messages[$stage] : '';
     }

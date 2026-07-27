@@ -33,16 +33,16 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2l1.5 3h12L21 8l-1.6 8H8L6 2H3"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg>
             </div>
             <div>
-                <h1 class="gf-page-title">ইনকমপ্লিট অর্ডার</h1>
-                <p class="gf-page-desc">চেকআউটে এসেছে কিন্তু অর্ডার শেষ করেনি — ফোন বা SMS দিয়ে ফিরিয়ে আনার সুযোগ।</p>
+                <h1 class="gf-page-title"><?php esc_html_e('ইনকমপ্লিট অর্ডার', 'guardify-pro'); ?></h1>
+                <p class="gf-page-desc"><?php esc_html_e('চেকআউটে এসেছে কিন্তু অর্ডার শেষ করেনি — ফোন বা SMS দিয়ে ফিরিয়ে আনার সুযোগ।', 'guardify-pro'); ?></p>
             </div>
         </div>
         <div class="gf-page-header-actions">
             <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-ajax.php?action=guardify_export_incomplete'), 'guardify_export_nonce', 'nonce')); ?>" class="gf-btn gf-btn-secondary gf-btn-sm">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                CSV এক্সপোর্ট
+                <?php esc_html_e('CSV এক্সপোর্ট', 'guardify-pro'); ?>
             </a>
-            <button type="button" id="gf-io-show-statistics" class="gf-btn gf-btn-secondary gf-btn-sm" data-gf-open="#gf-io-statistics-modal">পরিসংখ্যান</button>
+            <button type="button" id="gf-io-show-statistics" class="gf-btn gf-btn-secondary gf-btn-sm" data-gf-open="#gf-io-statistics-modal"><?php esc_html_e('পরিসংখ্যান', 'guardify-pro'); ?></button>
         </div>
     </div>
 
@@ -52,7 +52,7 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4m0 4h.01M10.3 3.9L2.4 17.5c-.8.9.2 2.5 1.7 2.5h15.8c1.5 0 2.5-1.6 1.7-2.5L13.7 3.9c-.8-.8-2.7-.8-3.4 0z"/></svg>
             </div>
             <div class="gf-stat-body">
-                <p class="gf-stat-label">পেন্ডিং</p>
+                <p class="gf-stat-label"><?php esc_html_e('পেন্ডিং', 'guardify-pro'); ?></p>
                 <p class="gf-stat-value"><?php echo esc_html(number_format_i18n($stats->pending)); ?></p>
             </div>
         </div>
@@ -61,7 +61,7 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
             </div>
             <div class="gf-stat-body">
-                <p class="gf-stat-label">রিকভার্ড</p>
+                <p class="gf-stat-label"><?php esc_html_e('রিকভার্ড', 'guardify-pro'); ?></p>
                 <p class="gf-stat-value"><?php echo esc_html(number_format_i18n($stats->recovered)); ?></p>
             </div>
         </div>
@@ -70,7 +70,7 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7h8v8"/><path d="M21 7l-8 8-4-4-6 6"/></svg>
             </div>
             <div class="gf-stat-body">
-                <p class="gf-stat-label">রিকভারি রেট</p>
+                <p class="gf-stat-label"><?php esc_html_e('রিকভারি রেট', 'guardify-pro'); ?></p>
                 <p class="gf-stat-value"><?php echo esc_html($recovery_rate); ?>%</p>
             </div>
         </div>
@@ -80,19 +80,19 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
         <div class="gf-card-header">
             <div class="gf-card-heading">
                 <h2 class="gf-card-title">
-                    অসম্পন্ন অর্ডার
+                    <?php esc_html_e('অসম্পন্ন অর্ডার', 'guardify-pro'); ?>
                     <span class="gf-count-pill"><?php echo esc_html(number_format_i18n($total_count)); ?></span>
                 </h2>
-                <p class="gf-card-desc">সবচেয়ে নতুন উপরে। গ্রাহক রিপোর্ট কলামে ক্লিক করলে তার আগের অর্ডার ও ডেলিভারি রেকর্ড দেখা যাবে।</p>
+                <p class="gf-card-desc"><?php esc_html_e('সবচেয়ে নতুন উপরে। গ্রাহক রিপোর্ট কলামে ক্লিক করলে তার আগের অর্ডার ও ডেলিভারি রেকর্ড দেখা যাবে।', 'guardify-pro'); ?></p>
             </div>
             <div class="gf-card-header-actions">
                 <form method="get" class="gf-row">
                     <input type="hidden" name="page" value="guardify-incomplete" />
-                    <label class="gf-sr-only" for="gf-io-search">ফোন বা নাম খুঁজুন</label>
-                    <input type="search" id="gf-io-search" name="s" value="<?php echo esc_attr($search); ?>" class="gf-input" placeholder="ফোন বা নাম খুঁজুন…" style="width: min(100%, 220px);" />
-                    <button type="submit" class="gf-btn gf-btn-secondary gf-btn-sm">সার্চ</button>
+                    <label class="gf-sr-only" for="gf-io-search"><?php esc_html_e('ফোন বা নাম খুঁজুন', 'guardify-pro'); ?></label>
+                    <input type="search" id="gf-io-search" name="s" value="<?php echo esc_attr($search); ?>" class="gf-input" placeholder="<?php echo esc_attr__('ফোন বা নাম খুঁজুন…', 'guardify-pro'); ?>" style="width: min(100%, 220px);" />
+                    <button type="submit" class="gf-btn gf-btn-secondary gf-btn-sm"><?php esc_html_e('সার্চ', 'guardify-pro'); ?></button>
                     <?php if ($search !== '') : ?>
-                    <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-incomplete')); ?>" class="gf-btn gf-btn-ghost gf-btn-sm">সার্চ বাতিল</a>
+                    <a href="<?php echo esc_url(admin_url('admin.php?page=guardify-incomplete')); ?>" class="gf-btn gf-btn-ghost gf-btn-sm"><?php esc_html_e('সার্চ বাতিল', 'guardify-pro'); ?></a>
                     <?php endif; ?>
                 </form>
             </div>
@@ -100,9 +100,9 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
 
         <div id="gf-io-bulk-bar" class="gf-row" style="display:none;padding:0.625rem 1.375rem;background:var(--gf-accent);border-bottom:1px solid var(--gf-border);">
             <strong id="gf-io-selected-count" class="gf-text-sm"></strong>
-            <button type="button" id="gf-io-bulk-sms" class="gf-btn gf-btn-secondary gf-btn-sm">SMS পাঠান</button>
-            <button type="button" id="gf-io-bulk-convert" class="gf-btn gf-btn-secondary gf-btn-sm">অর্ডারে কনভার্ট</button>
-            <button type="button" id="gf-io-bulk-delete" class="gf-btn gf-btn-ghost gf-btn-sm gf-text-danger">মুছুন</button>
+            <button type="button" id="gf-io-bulk-sms" class="gf-btn gf-btn-secondary gf-btn-sm"><?php esc_html_e('SMS পাঠান', 'guardify-pro'); ?></button>
+            <button type="button" id="gf-io-bulk-convert" class="gf-btn gf-btn-secondary gf-btn-sm"><?php esc_html_e('অর্ডারে কনভার্ট', 'guardify-pro'); ?></button>
+            <button type="button" id="gf-io-bulk-delete" class="gf-btn gf-btn-ghost gf-btn-sm gf-text-danger"><?php esc_html_e('মুছুন', 'guardify-pro'); ?></button>
         </div>
 
         <div class="gf-card-body gf-flush">
@@ -112,13 +112,13 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
                 </div>
                 <p class="gf-empty-state-title">
-                    <?php echo $search !== '' ? esc_html('কোনো ফলাফল মেলেনি') : esc_html('কোনো অসম্পন্ন অর্ডার নেই'); ?>
+                    <?php echo $search !== '' ? esc_html(__('কোনো ফলাফল মেলেনি', 'guardify-pro')) : esc_html(__('কোনো অসম্পন্ন অর্ডার নেই', 'guardify-pro')); ?>
                 </p>
                 <p class="gf-empty-state-desc">
                     <?php
                     echo $search !== ''
-                        ? esc_html('অন্য ফোন নম্বর বা নাম দিয়ে চেষ্টা করুন।')
-                        : esc_html('এই মুহূর্তে সবাই চেকআউট শেষ করছেন। ফিচারটি চালু আছে কি না সেটিংস পেজ থেকে দেখে নিন।');
+                        ? esc_html(__('অন্য ফোন নম্বর বা নাম দিয়ে চেষ্টা করুন।', 'guardify-pro'))
+                        : esc_html(__('এই মুহূর্তে সবাই চেকআউট শেষ করছেন। ফিচারটি চালু আছে কি না সেটিংস পেজ থেকে দেখে নিন।', 'guardify-pro'));
                     ?>
                 </p>
             </div>
@@ -128,16 +128,16 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                     <thead>
                         <tr>
                             <th class="gf-col-check" data-label="">
-                                <input type="checkbox" id="gf-io-select-all" class="gf-check" aria-label="সব সিলেক্ট করুন" />
+                                <input type="checkbox" id="gf-io-select-all" class="gf-check" aria-label="<?php echo esc_attr__('সব সিলেক্ট করুন', 'guardify-pro'); ?>" />
                             </th>
-                            <th>নাম</th>
-                            <th>ফোন</th>
-                            <th>শহর</th>
-                            <th>কার্ট</th>
-                            <th class="gf-table-num">মোট</th>
-                            <th>সময়</th>
-                            <th>গ্রাহক রিপোর্ট</th>
-                            <th class="gf-col-action" data-label="">অ্যাকশন</th>
+                            <th><?php esc_html_e('নাম', 'guardify-pro'); ?></th>
+                            <th><?php esc_html_e('ফোন', 'guardify-pro'); ?></th>
+                            <th><?php esc_html_e('শহর', 'guardify-pro'); ?></th>
+                            <th><?php esc_html_e('কার্ট', 'guardify-pro'); ?></th>
+                            <th class="gf-table-num"><?php esc_html_e('মোট', 'guardify-pro'); ?></th>
+                            <th><?php esc_html_e('সময়', 'guardify-pro'); ?></th>
+                            <th><?php esc_html_e('গ্রাহক রিপোর্ট', 'guardify-pro'); ?></th>
+                            <th class="gf-col-action" data-label=""><?php esc_html_e('অ্যাকশন', 'guardify-pro'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -175,7 +175,7 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                                 <?php echo $cart_total ? '৳' . esc_html(number_format($cart_total)) : '—'; ?>
                             </td>
                             <td class="gf-table-nowrap gf-text-muted">
-                                <?php echo esc_html(human_time_diff(strtotime($row->created_at)) . ' আগে'); ?>
+                                <?php echo esc_html(human_time_diff(strtotime($row->created_at)) . __(' আগে', 'guardify-pro')); ?>
                             </td>
                             <td class="gf-report-cell">
                                 <?php
@@ -187,29 +187,29 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                             <td class="gf-col-action">
                                 <div class="gf-row" style="gap: 0.25rem;">
                                     <button type="button" class="gf-icon-btn gf-icon-btn-success gf-io-sms gf-tooltip"
-                                        data-tooltip="রিকভারি SMS পাঠান"
+                                        data-tooltip="<?php echo esc_attr__('রিকভারি SMS পাঠান', 'guardify-pro'); ?>"
                                         data-id="<?php echo esc_attr($row->id); ?>"
                                         data-phone="<?php echo esc_attr($row->phone); ?>"
                                         data-name="<?php echo esc_attr($row->name); ?>"
-                                        aria-label="রিকভারি SMS পাঠান">
+                                        aria-label="<?php echo esc_attr__('রিকভারি SMS পাঠান', 'guardify-pro'); ?>">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                                     </button>
                                     <?php if (!empty($row->phone)) : ?>
                                     <a href="tel:<?php echo esc_attr($row->phone); ?>" class="gf-icon-btn gf-icon-btn-info gf-tooltip"
-                                        data-tooltip="কল করুন" aria-label="কল করুন">
+                                        data-tooltip="<?php echo esc_attr__('কল করুন', 'guardify-pro'); ?>" aria-label="<?php echo esc_attr__('কল করুন', 'guardify-pro'); ?>">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
                                     </a>
                                     <?php endif; ?>
                                     <button type="button" class="gf-icon-btn gf-io-convert gf-tooltip"
-                                        data-tooltip="WooCommerce অর্ডার তৈরি করুন"
+                                        data-tooltip="<?php echo esc_attr__('WooCommerce অর্ডার তৈরি করুন', 'guardify-pro'); ?>"
                                         data-id="<?php echo esc_attr($row->id); ?>"
-                                        aria-label="অর্ডারে কনভার্ট">
+                                        aria-label="<?php echo esc_attr__('অর্ডারে কনভার্ট', 'guardify-pro'); ?>">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
                                     </button>
                                     <button type="button" class="gf-icon-btn gf-icon-btn-danger gf-io-delete gf-tooltip"
-                                        data-tooltip="রেকর্ড মুছুন"
+                                        data-tooltip="<?php echo esc_attr__('রেকর্ড মুছুন', 'guardify-pro'); ?>"
                                         data-id="<?php echo esc_attr($row->id); ?>"
-                                        aria-label="মুছুন">
+                                        aria-label="<?php echo esc_attr__('মুছুন', 'guardify-pro'); ?>">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
                                     </button>
                                 </div>
@@ -224,7 +224,7 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
     </div>
 
     <?php if ($total_pages > 1) : ?>
-    <nav class="gf-pagination" aria-label="পেজ নেভিগেশন">
+    <nav class="gf-pagination" aria-label="<?php echo esc_attr__('পেজ নেভিগেশন', 'guardify-pro'); ?>">
         <?php
         $base_url = admin_url('admin.php?page=guardify-incomplete');
         if ($search) {
@@ -232,7 +232,7 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
         }
 
         if ($current_page > 1) :
-            echo '<a href="' . esc_url($base_url . '&gf_page=' . ($current_page - 1)) . '" aria-label="আগের পেজ">&laquo;</a>';
+            echo '<a href="' . esc_url($base_url . '&gf_page=' . ($current_page - 1)) . __('" aria-label="আগের পেজ">&laquo;</a>', 'guardify-pro');
         else :
             echo '<span class="gf-page-disabled">&laquo;</span>';
         endif;
@@ -248,7 +248,7 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
         endfor;
 
         if ($current_page < $total_pages) :
-            echo '<a href="' . esc_url($base_url . '&gf_page=' . ($current_page + 1)) . '" aria-label="পরের পেজ">&raquo;</a>';
+            echo '<a href="' . esc_url($base_url . '&gf_page=' . ($current_page + 1)) . __('" aria-label="পরের পেজ">&raquo;</a>', 'guardify-pro');
         else :
             echo '<span class="gf-page-disabled">&raquo;</span>';
         endif;
@@ -260,38 +260,56 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
     <div id="gf-io-sms-modal" class="gf-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gf-io-sms-title" style="display:none;">
         <div class="gf-modal">
             <div class="gf-modal-header">
-                <h2 class="gf-modal-title" id="gf-io-sms-title">রিকভারি SMS পাঠান</h2>
-                <button type="button" class="gf-modal-close gf-io-modal-close" data-gf-close aria-label="বন্ধ করুন">&times;</button>
+                <h2 class="gf-modal-title" id="gf-io-sms-title"><?php esc_html_e('রিকভারি SMS পাঠান', 'guardify-pro'); ?></h2>
+                <button type="button" class="gf-modal-close gf-io-modal-close" data-gf-close aria-label="<?php echo esc_attr__('বন্ধ করুন', 'guardify-pro'); ?>">&times;</button>
             </div>
             <div class="gf-modal-body">
                 <div class="gf-field">
-                    <span class="gf-label">প্রাপক</span>
+                    <span class="gf-label"><?php esc_html_e('প্রাপক', 'guardify-pro'); ?></span>
                     <div id="gf-sms-recipients-list" class="gf-stack-sm" style="max-height:120px;overflow-y:auto;padding:0.5rem;border:1px solid var(--gf-border);border-radius:var(--gf-radius);background:var(--gf-surface);"></div>
                     <input type="hidden" id="gf-sms-phone" />
                 </div>
                 <div class="gf-field">
-                    <label class="gf-label" for="gf-sms-message">মেসেজ</label>
+                    <label class="gf-label" for="gf-sms-message"><?php esc_html_e('মেসেজ', 'guardify-pro'); ?></label>
                     <textarea id="gf-sms-message" class="gf-input" rows="7"><?php
                         $site_host = wp_parse_url(get_site_url(), PHP_URL_HOST);
-                        echo esc_textarea("আসসালামু আলাইকুম {customer_name},
 
-আপনার কার্টে {product_name} রয়েছে, যা এখনও আপনার জন্য সংরক্ষিত আছে।
-
-মোট মূল্য: {order_total}
-
-অর্ডার সম্পন্ন করতে এখানে যান: " . get_permalink(wc_get_page_id('checkout')) . "
-
-ধন্যবাদ,
-{$site_host}");
+                        // One string with two placeholders rather than three concatenated
+                        // pieces. A translator needs the whole message to reorder it, and the
+                        // checkout URL and the shop's own hostname must stay *outside* the
+                        // msgid — a msgid containing this site's hostname is a key no
+                        // catalogue could ever match, so the message would silently never
+                        // translate on any site but the one it was extracted from.
+                        //
+                        // {customer_name}, {product_name} and {order_total} are the plugin's
+                        // own merge tags, filled per recipient when the SMS is sent, and are
+                        // deliberately left in the text for the merchant to move around.
+                        printf(
+                            /* translators: 1: checkout URL, 2: the shop's domain name */
+                            // On one line, unattractive as that is: bin/make-pot.php scans
+                            // line by line, and a msgid built by concatenation across lines
+                            // is one the catalogue never learns about.
+                            esc_textarea(__("আসসালামু আলাইকুম {customer_name},\n\nআপনার কার্টে {product_name} রয়েছে, যা এখনও আপনার জন্য সংরক্ষিত আছে।\n\nমোট মূল্য: {order_total}\n\nঅর্ডার সম্পন্ন করতে এখানে যান: %1\$s\n\nধন্যবাদ,\n%2\$s", 'guardify-pro')),
+                            esc_textarea(get_permalink(wc_get_page_id('checkout'))),
+                            esc_textarea($site_host)
+                        );
                     ?></textarea>
                     <span class="gf-help">
-                        প্লেসহোল্ডার: <code>{customer_name}</code>, <code>{product_name}</code>, <code>{order_total}</code>, <code>{siteurl}</code> — প্রতিটি গ্রাহকের তথ্য দিয়ে আপনা-আপনি বসে যাবে।
+                        <?php
+                        printf(
+                            /* translators: %s is a comma-separated list of placeholder tokens */
+                            esc_html__('প্লেসহোল্ডার: %s — প্রতিটি গ্রাহকের তথ্য দিয়ে আপনা-আপনি বসে যাবে।', 'guardify-pro'),
+                            implode(', ', array_map(function ($gf_token) {
+                                return '<code>' . esc_html($gf_token) . '</code>';
+                            }, ['{customer_name}', '{product_name}', '{order_total}', '{siteurl}']))
+                        );
+                        ?>
                     </span>
                 </div>
             </div>
             <div class="gf-modal-footer">
-                <button type="button" class="gf-btn gf-btn-secondary gf-io-modal-close" data-gf-close>বাতিল</button>
-                <button type="button" id="gf-sms-send" class="gf-btn gf-btn-primary">পাঠান</button>
+                <button type="button" class="gf-btn gf-btn-secondary gf-io-modal-close" data-gf-close><?php esc_html_e('বাতিল', 'guardify-pro'); ?></button>
+                <button type="button" id="gf-sms-send" class="gf-btn gf-btn-primary"><?php esc_html_e('পাঠান', 'guardify-pro'); ?></button>
             </div>
         </div>
     </div>
@@ -300,29 +318,35 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
     <div id="gf-io-convert-modal" class="gf-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gf-io-convert-title" style="display:none;">
         <div class="gf-modal gf-modal-sm">
             <div class="gf-modal-header">
-                <h2 class="gf-modal-title" id="gf-io-convert-title">WooCommerce অর্ডার তৈরি করুন</h2>
-                <button type="button" class="gf-modal-close gf-io-modal-close" data-gf-close aria-label="বন্ধ করুন">&times;</button>
+                <h2 class="gf-modal-title" id="gf-io-convert-title"><?php esc_html_e('WooCommerce অর্ডার তৈরি করুন', 'guardify-pro'); ?></h2>
+                <button type="button" class="gf-modal-close gf-io-modal-close" data-gf-close aria-label="<?php echo esc_attr__('বন্ধ করুন', 'guardify-pro'); ?>">&times;</button>
             </div>
             <div class="gf-modal-body">
                 <div class="gf-field">
-                    <label class="gf-label" for="gf-convert-status">অর্ডার স্ট্যাটাস</label>
+                    <label class="gf-label" for="gf-convert-status"><?php esc_html_e('অর্ডার স্ট্যাটাস', 'guardify-pro'); ?></label>
                     <select id="gf-convert-status" class="gf-select">
                         <option value="pending">Pending</option>
                         <option value="processing">Processing</option>
                         <option value="on-hold">On Hold</option>
                         <option value="completed">Completed</option>
                     </select>
-                    <span class="gf-help">গ্রাহকের সাথে ফোনে কথা বলে নিশ্চিত হলে Processing দিন; এখনো নিশ্চিত না হলে Pending।</span>
+                    <span class="gf-help"><?php esc_html_e('গ্রাহকের সাথে ফোনে কথা বলে নিশ্চিত হলে Processing দিন; এখনো নিশ্চিত না হলে Pending।', 'guardify-pro'); ?></span>
                 </div>
                 <input type="hidden" id="gf-convert-id" />
                 <input type="hidden" id="gf-convert-mode" value="single" />
                 <p id="gf-convert-summary" class="gf-help" style="display:none;">
-                    আপনি <strong id="gf-convert-count">0</strong> টি ইনকমপ্লিট অর্ডার WooCommerce অর্ডারে রূপান্তর করতে যাচ্ছেন।
+                    <?php
+                    printf(
+                        /* translators: %s is a count the page fills in, so it stays markup */
+                        esc_html__('আপনি %s টি ইনকমপ্লিট অর্ডার WooCommerce অর্ডারে রূপান্তর করতে যাচ্ছেন।', 'guardify-pro'),
+                        '<strong id="gf-convert-count">0</strong>'
+                    );
+                    ?>
                 </p>
             </div>
             <div class="gf-modal-footer">
-                <button type="button" class="gf-btn gf-btn-secondary gf-io-modal-close" data-gf-close>বাতিল</button>
-                <button type="button" id="gf-convert-submit" class="gf-btn gf-btn-primary">তৈরি করুন</button>
+                <button type="button" class="gf-btn gf-btn-secondary gf-io-modal-close" data-gf-close><?php esc_html_e('বাতিল', 'guardify-pro'); ?></button>
+                <button type="button" id="gf-convert-submit" class="gf-btn gf-btn-primary"><?php esc_html_e('তৈরি করুন', 'guardify-pro'); ?></button>
             </div>
         </div>
     </div>
@@ -331,8 +355,8 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
     <div id="gf-io-statistics-modal" class="gf-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="gf-io-stats-title" style="display:none;">
         <div class="gf-modal gf-modal-lg">
             <div class="gf-modal-header">
-                <h2 class="gf-modal-title" id="gf-io-stats-title">ইনকমপ্লিট অর্ডার পরিসংখ্যান</h2>
-                <button type="button" class="gf-modal-close gf-io-modal-close" data-gf-close aria-label="বন্ধ করুন">&times;</button>
+                <h2 class="gf-modal-title" id="gf-io-stats-title"><?php esc_html_e('ইনকমপ্লিট অর্ডার পরিসংখ্যান', 'guardify-pro'); ?></h2>
+                <button type="button" class="gf-modal-close gf-io-modal-close" data-gf-close aria-label="<?php echo esc_attr__('বন্ধ করুন', 'guardify-pro'); ?>">&times;</button>
             </div>
             <div class="gf-modal-body">
                 <?php $ds = Guardify_Incomplete_Orders::get_detailed_stats(); ?>
@@ -340,54 +364,54 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                 <div class="gf-stats-grid" style="margin-bottom: 0;">
                     <div class="gf-stat-card">
                         <div class="gf-stat-body">
-                            <p class="gf-stat-label">মোট ইনকমপ্লিট</p>
+                            <p class="gf-stat-label"><?php esc_html_e('মোট ইনকমপ্লিট', 'guardify-pro'); ?></p>
                             <p class="gf-stat-value"><?php echo esc_html(number_format_i18n($ds->total)); ?></p>
                         </div>
                     </div>
                     <div class="gf-stat-card">
                         <div class="gf-stat-body">
-                            <p class="gf-stat-label">রিকভার্ড</p>
+                            <p class="gf-stat-label"><?php esc_html_e('রিকভার্ড', 'guardify-pro'); ?></p>
                             <p class="gf-stat-value gf-text-success"><?php echo esc_html(number_format_i18n($ds->recovered)); ?></p>
                         </div>
                     </div>
                     <div class="gf-stat-card">
                         <div class="gf-stat-body">
-                            <p class="gf-stat-label">রিকভারি রেট</p>
+                            <p class="gf-stat-label"><?php esc_html_e('রিকভারি রেট', 'guardify-pro'); ?></p>
                             <p class="gf-stat-value"><?php echo esc_html($ds->recovery_rate); ?>%</p>
                         </div>
                     </div>
                     <div class="gf-stat-card">
                         <div class="gf-stat-body">
-                            <p class="gf-stat-label">রিকভার্ড রেভিনিউ</p>
+                            <p class="gf-stat-label"><?php esc_html_e('রিকভার্ড রেভিনিউ', 'guardify-pro'); ?></p>
                             <p class="gf-stat-value">৳<?php echo esc_html(number_format($ds->revenue_recovered)); ?></p>
                         </div>
                     </div>
                 </div>
 
                 <div class="gf-section">
-                    <h3 class="gf-section-title">সাম্প্রতিক কার্যকলাপ</h3>
+                    <h3 class="gf-section-title"><?php esc_html_e('সাম্প্রতিক কার্যকলাপ', 'guardify-pro'); ?></h3>
                     <div class="gf-section-body">
                         <table class="gf-table">
                             <thead>
                                 <tr>
-                                    <th>সময়কাল</th>
-                                    <th class="gf-table-num">নতুন</th>
-                                    <th class="gf-table-num">কনভার্টেড</th>
+                                    <th><?php esc_html_e('সময়কাল', 'guardify-pro'); ?></th>
+                                    <th class="gf-table-num"><?php esc_html_e('নতুন', 'guardify-pro'); ?></th>
+                                    <th class="gf-table-num"><?php esc_html_e('কনভার্টেড', 'guardify-pro'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td class="gf-text-strong">আজ</td>
+                                    <td class="gf-text-strong"><?php esc_html_e('আজ', 'guardify-pro'); ?></td>
                                     <td class="gf-table-num"><?php echo esc_html(number_format_i18n($ds->today_new)); ?></td>
                                     <td class="gf-table-num gf-text-success"><?php echo esc_html(number_format_i18n($ds->today_converted)); ?></td>
                                 </tr>
                                 <tr>
-                                    <td class="gf-text-strong">গতকাল</td>
+                                    <td class="gf-text-strong"><?php esc_html_e('গতকাল', 'guardify-pro'); ?></td>
                                     <td class="gf-table-num"><?php echo esc_html(number_format_i18n($ds->yesterday_new)); ?></td>
                                     <td class="gf-table-num gf-text-success"><?php echo esc_html(number_format_i18n($ds->yesterday_converted)); ?></td>
                                 </tr>
                                 <tr>
-                                    <td class="gf-text-strong">এই সপ্তাহ</td>
+                                    <td class="gf-text-strong"><?php esc_html_e('এই সপ্তাহ', 'guardify-pro'); ?></td>
                                     <td class="gf-table-num"><?php echo esc_html(number_format_i18n($ds->week_new)); ?></td>
                                     <td class="gf-table-num gf-text-success"><?php echo esc_html(number_format_i18n($ds->week_converted)); ?></td>
                                 </tr>
@@ -398,15 +422,15 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
 
                 <?php if (!empty($ds->top_products)) : ?>
                 <div class="gf-section">
-                    <h3 class="gf-section-title">সবচেয়ে বেশি পরিত্যক্ত পণ্য</h3>
-                    <p class="gf-section-desc">একই পণ্য বারবার কার্টে ফেলে রাখা হলে দাম, ডেলিভারি চার্জ বা স্টক তথ্য দেখে নিন।</p>
+                    <h3 class="gf-section-title"><?php esc_html_e('সবচেয়ে বেশি পরিত্যক্ত পণ্য', 'guardify-pro'); ?></h3>
+                    <p class="gf-section-desc"><?php esc_html_e('একই পণ্য বারবার কার্টে ফেলে রাখা হলে দাম, ডেলিভারি চার্জ বা স্টক তথ্য দেখে নিন।', 'guardify-pro'); ?></p>
                     <div class="gf-section-body">
                         <table class="gf-table">
                             <thead>
                                 <tr>
                                     <th style="width:48px;" class="gf-table-num">#</th>
-                                    <th>পণ্য</th>
-                                    <th class="gf-table-num">বার</th>
+                                    <th><?php esc_html_e('পণ্য', 'guardify-pro'); ?></th>
+                                    <th class="gf-table-num"><?php esc_html_e('বার', 'guardify-pro'); ?></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -424,13 +448,31 @@ $incomplete    = Guardify_Incomplete_Orders::get_instance();
                 <?php endif; ?>
             </div>
             <div class="gf-modal-footer">
-                <button type="button" class="gf-btn gf-btn-secondary gf-io-modal-close" data-gf-close>বন্ধ</button>
+                <button type="button" class="gf-btn gf-btn-secondary gf-io-modal-close" data-gf-close><?php esc_html_e('বন্ধ', 'guardify-pro'); ?></button>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+/* Every Bengali string on this page, translated by PHP and handed to the
+   script as one object. Inline JavaScript cannot call __() itself, and opening
+   a PHP tag inside a JS string literal produces something neither PHP nor the
+   browser can parse — so the strings are lifted out rather than wrapped where
+   they sit. wp_json_encode does the escaping, once. */
+var GF_I18N = <?php echo wp_json_encode([
+        's165a17c3' => __(' টি সিলেক্টেড', 'guardify-pro'),
+        's479341f8' => __(' টি SMS পাঠানো হয়েছে', 'guardify-pro'),
+        's48abae69' => __('গ্রাহক', 'guardify-pro'),
+        's670ad97e' => __('এই রেকর্ড মুছে ফেলতে চান? গ্রাহকের ফোন নম্বর ও কার্ট তথ্য আর ফেরানো যাবে না।', 'guardify-pro'),
+        's831a65b9' => __(' টি রেকর্ড মুছে ফেলতে চান?', 'guardify-pro'),
+        's85d77d76' => __(' টি ব্যর্থ', 'guardify-pro'),
+        's8ec376cc' => __('মোছা যায়নি।', 'guardify-pro'),
+        'sb9a2dd4d' => __('SMS পাঠানো হয়েছে।', 'guardify-pro'),
+        'scb122681' => __('SMS পাঠানো যায়নি।', 'guardify-pro'),
+        'sf7159368' => __('কনভার্ট করা যায়নি।', 'guardify-pro'),
+    ]); ?>;
+
 jQuery(function ($) {
     var nonce = '<?php echo esc_js(wp_create_nonce('guardify_nonce')); ?>';
     var GF    = window.Guardify;
@@ -445,7 +487,7 @@ jQuery(function ($) {
     function updateBulkBar() {
         var ids = getSelectedIds();
         $bulkBar.css('display', ids.length ? 'flex' : 'none');
-        $('#gf-io-selected-count').text(ids.length + ' টি সিলেক্টেড');
+        $('#gf-io-selected-count').text(ids.length + GF_I18N.s165a17c3);
     }
 
     $selectAll.on('change', function () {
@@ -471,7 +513,7 @@ jQuery(function ($) {
                     borderLeft: '3px solid var(--gf-primary)',
                     borderRadius: '4px',
                     background: 'var(--gf-card)'
-                }).text((r.name || 'গ্রাহক') + ' — ' + r.phone)
+                }).text((r.name || GF_I18N.s48abae69) + ' — ' + r.phone)
             );
         });
     }
@@ -518,7 +560,7 @@ jQuery(function ($) {
                 .always(function () {
                     if (done + fail === ids.length) {
                         GF.setLoading($btn, false);
-                        GF.toast(done + ' টি SMS পাঠানো হয়েছে' + (fail ? ', ' + fail + ' টি ব্যর্থ' : '') + '।',
+                        GF.toast(done + GF_I18N.s479341f8 + (fail ? ', ' + fail + GF_I18N.s85d77d76 : '') + '।',
                             { type: fail ? 'warning' : 'success' });
                         closeModals();
                     }
@@ -532,7 +574,7 @@ jQuery(function ($) {
                 message: msg
             }, function (r) {
                 GF.setLoading($btn, false);
-                GF.toast(r.success ? 'SMS পাঠানো হয়েছে।' : (r.data || 'SMS পাঠানো যায়নি।'),
+                GF.toast(r.success ? GF_I18N.sb9a2dd4d : (r.data || GF_I18N.scb122681),
                     { type: r.success ? 'success' : 'error' });
                 closeModals();
             });
@@ -577,7 +619,7 @@ jQuery(function ($) {
                     GF.toast(r.data.message, { type: 'success' });
                     location.reload();
                 } else {
-                    GF.toast(r.data || 'কনভার্ট করা যায়নি।', { type: 'error' });
+                    GF.toast(r.data || GF_I18N.sf7159368, { type: 'error' });
                 }
                 closeModals();
             });
@@ -594,7 +636,7 @@ jQuery(function ($) {
                     $('#gf-io-row-' + id).fadeOut(180);
                     GF.toast(r.data.message, { type: 'success' });
                 } else {
-                    GF.toast(r.data || 'কনভার্ট করা যায়নি।', { type: 'error' });
+                    GF.toast(r.data || GF_I18N.sf7159368, { type: 'error' });
                 }
                 closeModals();
             });
@@ -604,7 +646,7 @@ jQuery(function ($) {
     /* ── Delete ───────────────────────────────────────────────────────── */
 
     $(document).on('click', '.gf-io-delete', function () {
-        if (!confirm('এই রেকর্ড মুছে ফেলতে চান? গ্রাহকের ফোন নম্বর ও কার্ট তথ্য আর ফেরানো যাবে না।')) {
+        if (!confirm(GF_I18N.s670ad97e)) {
             return;
         }
         var id = $(this).data('id');
@@ -612,14 +654,14 @@ jQuery(function ($) {
             if (r.success) {
                 $('#gf-io-row-' + id).fadeOut(180, updateBulkBar);
             } else {
-                GF.toast(r.data || 'মোছা যায়নি।', { type: 'error' });
+                GF.toast(r.data || GF_I18N.s8ec376cc, { type: 'error' });
             }
         });
     });
 
     $('#gf-io-bulk-delete').on('click', function () {
         var ids = getSelectedIds();
-        if (!ids.length || !confirm(ids.length + ' টি রেকর্ড মুছে ফেলতে চান?')) { return; }
+        if (!ids.length || !confirm(ids.length + GF_I18N.s831a65b9)) { return; }
         var $btn = $(this);
         GF.setLoading($btn, true);
         $.post(ajaxurl, {
@@ -631,7 +673,7 @@ jQuery(function ($) {
                 location.reload();
             } else {
                 GF.setLoading($btn, false);
-                GF.toast(r.data || 'মোছা যায়নি।', { type: 'error' });
+                GF.toast(r.data || GF_I18N.s8ec376cc, { type: 'error' });
             }
         });
     });

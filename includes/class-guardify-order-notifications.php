@@ -131,11 +131,11 @@ class Guardify_Order_Notifications {
      */
     public static function default_templates() {
         return [
-            'wc-processing' => "আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} কনফার্ম হয়েছে ✅\n📦 {product_name}\n💰 {order_total} টাকা\nধন্যবাদ, {siteurl}",
-            'wc-on-hold'    => "আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} হোল্ডে আছে ⏳\nআমরা শীঘ্রই প্রক্রিয়া করব।\nধন্যবাদ, {siteurl}",
-            'wc-completed'  => "আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} সফলভাবে সম্পন্ন হয়েছে ✅\nধন্যবাদ, {siteurl}",
-            'wc-cancelled'  => "আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} বাতিল হয়েছে ❌\nপ্রশ্ন থাকলে যোগাযোগ করুন।\nধন্যবাদ, {siteurl}",
-            'wc-refunded'   => "আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} এর টাকা ফেরত দেওয়া হয়েছে 💰\n{order_total} টাকা\nধন্যবাদ, {siteurl}",
+            'wc-processing' => __("আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} কনফার্ম হয়েছে ✅\n📦 {product_name}\n💰 {order_total} টাকা\nধন্যবাদ, {siteurl}", 'guardify-pro'),
+            'wc-on-hold'    => __("আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} হোল্ডে আছে ⏳\nআমরা শীঘ্রই প্রক্রিয়া করব।\nধন্যবাদ, {siteurl}", 'guardify-pro'),
+            'wc-completed'  => __("আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} সফলভাবে সম্পন্ন হয়েছে ✅\nধন্যবাদ, {siteurl}", 'guardify-pro'),
+            'wc-cancelled'  => __("আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} বাতিল হয়েছে ❌\nপ্রশ্ন থাকলে যোগাযোগ করুন।\nধন্যবাদ, {siteurl}", 'guardify-pro'),
+            'wc-refunded'   => __("আসসালামু আলাইকুম {customer_name},\nআপনার অর্ডার #{order_number} এর টাকা ফেরত দেওয়া হয়েছে 💰\n{order_total} টাকা\nধন্যবাদ, {siteurl}", 'guardify-pro'),
         ];
     }
 

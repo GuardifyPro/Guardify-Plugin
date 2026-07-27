@@ -63,28 +63,39 @@ class Guardify_Phone_Sync {
         add_filter('cron_schedules', function ($schedules) {
             $schedules['guardify_two_minutes'] = [
                 'interval' => 120,
-                'display'  => 'Every 2 minutes',
+                'display'  => __('প্রতি ২ মিনিটে', 'guardify-pro'),
+            ];
+            $schedules['guardify_fifteen_minutes'] = [
+                'interval' => 900,
+                'display'  => __('প্রতি ১৫ মিনিটে', 'guardify-pro'),
             ];
             return $schedules;
         });
 
-        if (!wp_next_scheduled(self::CRON_HOOK)) {
-            wp_schedule_event(time(), 'guardify_two_minutes', self::CRON_HOOK);
-        }
+        // Two minutes while the backlog is being worked through, fifteen once it is done.
+        //
+        // The fast schedule exists to get a shop's order history into the network quickly on
+        // the day they install — that is the pass that takes hours and that the merchant is
+        // waiting on. Afterwards the job only picks up orders placed since the last run, and
+        // a shop taking thirty orders a day does not need to be asked every two minutes.
+        //
+        // The cost is not the query. It is that WP-Cron spawns a loopback HTTP request and
+        // boots WordPress to run it: 720 bootstraps a day at two minutes, 96 at fifteen. On
+        // the shared hosting this plugin lives on, that difference is visible.
+        $wanted = get_option(self::COMPLETE_KEY) === 'yes'
+            ? 'guardify_fifteen_minutes'
+            : 'guardify_two_minutes';
 
-        // Migrate from legacy 5-minute schedule
-        $legacy = wp_next_scheduled('guardify_phone_sync_cron');
-        if ($legacy) {
-            // Already scheduled under our hook — check interval
-            $scheduled = wp_get_scheduled_event(self::CRON_HOOK);
-            if ($scheduled && $scheduled->schedule === 'guardify_five_minutes') {
-                wp_clear_scheduled_hook(self::CRON_HOOK);
-                wp_schedule_event(time(), 'guardify_two_minutes', self::CRON_HOOK);
-            }
-        }
+        $scheduled = wp_get_scheduled_event(self::CRON_HOOK);
 
-        // Clean up legacy option
-        delete_option(self::LEGACY_OFFSET_KEY);
+        if (!$scheduled) {
+            wp_schedule_event(time(), $wanted, self::CRON_HOOK);
+        } elseif ($scheduled->schedule !== $wanted) {
+            // Also the migration path off any earlier interval, including the legacy
+            // five-minute one, without needing to name it.
+            wp_clear_scheduled_hook(self::CRON_HOOK);
+            wp_schedule_event(time() + 60, $wanted, self::CRON_HOOK);
+        }
     }
 
     public function on_activate() {
@@ -343,12 +354,12 @@ class Guardify_Phone_Sync {
     public function ajax_manual_sync() {
         check_ajax_referer('guardify_nonce');
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => 'অনুমতি নেই']);
+            wp_send_json_error(['message' => __('অনুমতি নেই', 'guardify-pro')]);
         }
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error(['message' => 'API সংযুক্ত নেই']);
+            wp_send_json_error(['message' => __('API সংযুক্ত নেই', 'guardify-pro')]);
         }
 
         $start_time = time();
@@ -385,7 +396,7 @@ class Guardify_Phone_Sync {
     public function ajax_sync_status() {
         check_ajax_referer('guardify_nonce');
         if (!current_user_can('manage_woocommerce')) {
-            wp_send_json_error(['message' => 'অনুমতি নেই']);
+            wp_send_json_error(['message' => __('অনুমতি নেই', 'guardify-pro')]);
         }
         wp_send_json_success($this->get_status());
     }

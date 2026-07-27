@@ -503,7 +503,7 @@ class Guardify_Incomplete_Orders {
 
         $ids = isset($_POST['ids']) ? array_map('absint', (array) $_POST['ids']) : [];
         $ids = array_filter($ids);
-        if (empty($ids)) wp_send_json_error('কিছু সিলেক্ট করুন');
+        if (empty($ids)) wp_send_json_error(__('কিছু সিলেক্ট করুন', 'guardify-pro'));
 
         global $wpdb;
         $placeholders = implode(',', array_fill(0, count($ids), '%d'));
@@ -527,11 +527,11 @@ class Guardify_Incomplete_Orders {
         if (empty($phone) || empty($message)) {
             // Fallback: single-row SMS by ID (legacy)
             $id = absint($_POST['id'] ?? 0);
-            if (!$id) wp_send_json_error('ফোন ও মেসেজ আবশ্যক');
+            if (!$id) wp_send_json_error(__('ফোন ও মেসেজ আবশ্যক', 'guardify-pro'));
 
             global $wpdb;
             $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
-            if (!$row) wp_send_json_error('রেকর্ড পাওয়া যায়নি');
+            if (!$row) wp_send_json_error(__('রেকর্ড পাওয়া যায়নি', 'guardify-pro'));
 
             $phone   = $row->phone;
             $message = $this->build_sms_message($row);
@@ -547,7 +547,7 @@ class Guardify_Incomplete_Orders {
 
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_error('API সংযুক্ত নয়');
+            wp_send_json_error(__('API সংযুক্ত নয়', 'guardify-pro'));
         }
 
         $result = $api->post('/api/v1/sms/send', [
@@ -557,18 +557,18 @@ class Guardify_Incomplete_Orders {
         ]);
 
         if (!empty($result['success']) && $result['success'] === true) {
-            wp_send_json_success(['message' => 'SMS পাঠানো হয়েছে']);
+            wp_send_json_success(['message' => __('SMS পাঠানো হয়েছে', 'guardify-pro')]);
         }
 
-        wp_send_json_error(isset($result['error']) ? $result['error'] : 'SMS পাঠানো যায়নি');
+        wp_send_json_error(isset($result['error']) ? $result['error'] : __('SMS পাঠানো যায়নি', 'guardify-pro'));
     }
 
     private function build_sms_message($row) {
         $site = wp_parse_url(get_site_url(), PHP_URL_HOST);
         $checkout_url = get_permalink(wc_get_page_id('checkout'));
         return sprintf(
-            "আসসালামু আলাইকুম %s,\nআপনি %s থেকে অর্ডার সম্পন্ন করেননি। আপনার কার্টে পণ্য অপেক্ষা করছে!\nএখনই অর্ডার করুন: %s\nধন্যবাদ",
-            $row->name ?: 'গ্রাহক',
+            __("আসসালামু আলাইকুম %s,\nআপনি %s থেকে অর্ডার সম্পন্ন করেননি। আপনার কার্টে পণ্য অপেক্ষা করছে!\nএখনই অর্ডার করুন: %s\nধন্যবাদ", 'guardify-pro'),
+            $row->name ?: __('গ্রাহক', 'guardify-pro'),
             $site,
             $checkout_url
         );
@@ -592,8 +592,8 @@ class Guardify_Incomplete_Orders {
         return str_replace(
             ['{customer_name}', '{product_name}', '{order_total}', '{siteurl}'],
             [
-                ($row && $row->name) ? $row->name : 'গ্রাহক',
-                $product_names ?: 'আপনার পণ্য',
+                ($row && $row->name) ? $row->name : __('গ্রাহক', 'guardify-pro'),
+                $product_names ?: __('আপনার পণ্য', 'guardify-pro'),
                 '৳' . number_format($order_total),
                 get_site_url(),
             ],
@@ -615,7 +615,7 @@ class Guardify_Incomplete_Orders {
 
         global $wpdb;
         $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$this->table_name} WHERE id = %d", $id));
-        if (!$row) wp_send_json_error('রেকর্ড পাওয়া যায়নি');
+        if (!$row) wp_send_json_error(__('রেকর্ড পাওয়া যায়নি', 'guardify-pro'));
 
         $order_id = $this->create_wc_order($row, $status);
         if (is_wp_error($order_id)) {
@@ -625,7 +625,7 @@ class Guardify_Incomplete_Orders {
         $wpdb->update($this->table_name, ['status' => 'recovered'], ['id' => $id], ['%s'], ['%d']);
 
         wp_send_json_success([
-            'message'  => 'অর্ডার #' . $order_id . ' তৈরি হয়েছে',
+            'message'  => __('অর্ডার #', 'guardify-pro') . $order_id . __(' তৈরি হয়েছে', 'guardify-pro'),
             'order_id' => $order_id,
         ]);
     }
@@ -640,7 +640,7 @@ class Guardify_Incomplete_Orders {
         $status = isset($_POST['status']) ? sanitize_text_field($_POST['status']) : 'pending';
         $ids    = array_filter($ids);
 
-        if (empty($ids)) wp_send_json_error('কিছু সিলেক্ট করুন');
+        if (empty($ids)) wp_send_json_error(__('কিছু সিলেক্ট করুন', 'guardify-pro'));
 
         $valid_statuses = ['pending', 'processing', 'completed', 'on-hold'];
         if (!in_array($status, $valid_statuses, true)) $status = 'pending';
@@ -661,7 +661,7 @@ class Guardify_Incomplete_Orders {
         }
 
         wp_send_json_success([
-            'message'       => $success . ' টি অর্ডার তৈরি হয়েছে' . ($errors ? ', ' . $errors . ' টি ব্যর্থ' : ''),
+            'message'       => $success . __(' টি অর্ডার তৈরি হয়েছে', 'guardify-pro') . ($errors ? ', ' . $errors . __(' টি ব্যর্থ', 'guardify-pro') : ''),
             'success_count' => $success,
             'error_count'   => $errors,
         ]);
@@ -670,7 +670,7 @@ class Guardify_Incomplete_Orders {
     private function create_wc_order($row, $status = 'pending') {
         $cart_items = json_decode($row->cart_data, true);
         if (empty($cart_items)) {
-            return new WP_Error('no_cart', 'কার্ট ডেটা নেই');
+            return new WP_Error('no_cart', __('কার্ট ডেটা নেই', 'guardify-pro'));
         }
 
         try {
@@ -707,7 +707,7 @@ class Guardify_Incomplete_Orders {
                     $order->add_product($product, $quantity);
                 } else {
                     $fee = new WC_Order_Item_Fee();
-                    $fee->set_name($item['name'] ?? 'পণ্য');
+                    $fee->set_name($item['name'] ?? __('পণ্য', 'guardify-pro'));
                     $fee->set_total(($item['price'] ?? 0) * $quantity);
                     $order->add_item($fee);
                 }
@@ -729,7 +729,7 @@ class Guardify_Incomplete_Orders {
             $order->set_payment_method('cod');
             $order->calculate_totals();
             $order->set_status($status);
-            $order->add_order_note('Guardify: ইনকমপ্লিট অর্ডার থেকে কনভার্ট করা হয়েছে।');
+            $order->add_order_note(__('Guardify: ইনকমপ্লিট অর্ডার থেকে কনভার্ট করা হয়েছে।', 'guardify-pro'));
             $order->save();
 
             return $order->get_id();
@@ -747,7 +747,7 @@ class Guardify_Incomplete_Orders {
         global $wpdb;
         $rows = $wpdb->get_results("SELECT * FROM {$this->table_name} WHERE status = 'pending' ORDER BY created_at DESC");
 
-        if (empty($rows)) wp_die('কোনো ডেটা নেই');
+        if (empty($rows)) wp_die(__('কোনো ডেটা নেই', 'guardify-pro'));
 
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="incomplete-orders-' . gmdate('Y-m-d') . '.csv"');
@@ -755,7 +755,7 @@ class Guardify_Incomplete_Orders {
         $out = fopen('php://output', 'w');
         fwrite($out, "\xEF\xBB\xBF");
 
-        fputcsv($out, ['ID', 'নাম', 'ফোন', 'ইমেইল', 'ঠিকানা', 'শহর', 'পণ্য', 'মোট', 'সময়']);
+        fputcsv($out, ['ID', __('নাম', 'guardify-pro'), __('ফোন', 'guardify-pro'), __('ইমেইল', 'guardify-pro'), __('ঠিকানা', 'guardify-pro'), __('শহর', 'guardify-pro'), __('পণ্য', 'guardify-pro'), __('মোট', 'guardify-pro'), __('সময়', 'guardify-pro')]);
 
         foreach ($rows as $row) {
             $products = '';
@@ -878,12 +878,12 @@ class Guardify_Incomplete_Orders {
      */
     public function get_report_data($phone) {
         if (empty($phone)) {
-            return '<span class="gf-badge gf-badge-muted">ডেটা নেই</span>';
+            return __('<span class="gf-badge gf-badge-muted">ডেটা নেই</span>', 'guardify-pro');
         }
 
         $normalized = $this->normalize_phone($phone);
         if (!$this->validate_phone($normalized)) {
-            return '<span class="gf-badge gf-badge-warning">অবৈধ নম্বর</span>';
+            return __('<span class="gf-badge gf-badge-warning">অবৈধ নম্বর</span>', 'guardify-pro');
         }
 
         $customer_orders = wc_get_orders([
@@ -896,15 +896,15 @@ class Guardify_Incomplete_Orders {
 
         if ($order_count > 0) {
             $badge_class = 'gf-badge-success';
-            $badge_text  = $order_count . ' টি অর্ডার';
+            $badge_text  = $order_count . __(' টি অর্ডার', 'guardify-pro');
         } else {
             $badge_class = 'gf-badge-info';
-            $badge_text  = 'নতুন গ্রাহক';
+            $badge_text  = __('নতুন গ্রাহক', 'guardify-pro');
         }
 
         $html  = '<div class="gf-customer-report">';
         $html .= '<span class="gf-badge ' . $badge_class . '">' . esc_html($badge_text) . '</span> ';
-        $html .= '<button type="button" class="gf-btn-link gf-view-report" data-phone="' . esc_attr($phone) . '" title="রিপোর্ট দেখুন">📊</button>';
+        $html .= '<button type="button" class="gf-btn-link gf-view-report" data-phone="' . esc_attr($phone) . __('" title="রিপোর্ট দেখুন">📊</button>', 'guardify-pro');
         $html .= $this->get_report_popup_html($phone, $customer_orders);
         $html .= '</div>';
 
@@ -929,28 +929,28 @@ class Guardify_Incomplete_Orders {
             }
             $latest = reset($customer_orders);
             $dc     = $latest->get_date_created();
-            $last_order_date = $dc ? $dc->date_i18n(get_option('date_format') . ' ' . get_option('time_format')) : 'অজানা';
+            $last_order_date = $dc ? $dc->date_i18n(get_option('date_format') . ' ' . get_option('time_format')) : __('অজানা', 'guardify-pro');
         }
 
         $html = '<div class="gf-report-popup" id="' . $unique_id . '" style="display:none;">
             <div class="gf-report-popup-content">
                 <div class="gf-report-popup-header">
-                    <h3>' . esc_html($phone) . ' — গ্রাহক রিপোর্ট</h3>
+                    <h3>' . esc_html($phone) . __(' — গ্রাহক রিপোর্ট</h3>
                     <button type="button" class="gf-report-popup-close">&times;</button>
                 </div>
-                <div class="gf-report-popup-body">';
+                <div class="gf-report-popup-body">', 'guardify-pro');
 
         if ($order_count > 0) {
-            $html .= '<div class="gf-report-stats">
-                <div class="gf-report-stat"><strong>মোট অর্ডার:</strong> ' . number_format_i18n($order_count) . '</div>
-                <div class="gf-report-stat"><strong>লাইফটাইম ভ্যালু:</strong> ' . wc_price($total_spent) . '</div>
-                <div class="gf-report-stat"><strong>সর্বশেষ অর্ডার:</strong> ' . esc_html($last_order_date) . '</div>
+            $html .= __('<div class="gf-report-stats">
+                <div class="gf-report-stat"><strong>মোট অর্ডার:</strong> ', 'guardify-pro') . number_format_i18n($order_count) . __('</div>
+                <div class="gf-report-stat"><strong>লাইফটাইম ভ্যালু:</strong> ', 'guardify-pro') . wc_price($total_spent) . __('</div>
+                <div class="gf-report-stat"><strong>সর্বশেষ অর্ডার:</strong> ', 'guardify-pro') . esc_html($last_order_date) . '</div>
             </div>';
 
-            $html .= '<table class="gf-report-orders-table">
+            $html .= __('<table class="gf-report-orders-table">
                 <thead><tr>
                     <th>অর্ডার</th><th>তারিখ</th><th>স্ট্যাটাস</th><th>মোট</th><th>ঠিকানা</th><th>পণ্য</th><th></th>
-                </tr></thead><tbody>';
+                </tr></thead><tbody>', 'guardify-pro');
 
             $counter = 0;
             foreach ($customer_orders as $o) {
@@ -962,7 +962,7 @@ class Guardify_Incomplete_Orders {
                     $o->get_billing_city(),
                     $o->get_billing_state(),
                 ]);
-                $address = !empty($address_parts) ? implode(', ', $address_parts) : 'ঠিকানা নেই';
+                $address = !empty($address_parts) ? implode(', ', $address_parts) : __('ঠিকানা নেই', 'guardify-pro');
 
                 $items  = $o->get_items();
                 $prods  = [];
@@ -970,7 +970,7 @@ class Guardify_Incomplete_Orders {
                     $prods[] = $it->get_quantity() . ' × ' . $it->get_name();
                 }
                 $prod_html = implode('<br>', array_slice($prods, 0, 2));
-                if (count($prods) > 2) $prod_html .= '<br>+' . (count($prods) - 2) . ' আরও';
+                if (count($prods) > 2) $prod_html .= '<br>+' . (count($prods) - 2) . __(' আরও', 'guardify-pro');
 
                 $html .= '<tr>
                     <td><a href="' . esc_url(get_edit_post_link($o->get_id())) . '">#' . $o->get_id() . '</a></td>
@@ -985,16 +985,16 @@ class Guardify_Incomplete_Orders {
 
             $html .= '</tbody></table>';
         } else {
-            $html .= '<p style="text-align:center;padding:1.5rem;color:#666;">এই গ্রাহকের কোনো অর্ডার নেই।</p>';
+            $html .= __('<p style="text-align:center;padding:1.5rem;color:#666;">এই গ্রাহকের কোনো অর্ডার নেই।</p>', 'guardify-pro');
         }
 
         // Delivery report section (loaded via AJAX)
-        $html .= '<div class="gf-delivery-report-section">
+        $html .= __('<div class="gf-delivery-report-section">
             <h4>ডেলিভারি রিপোর্ট</h4>
-            <div class="gf-delivery-report-container" id="gf-delivery-report-' . md5($phone) . '">
+            <div class="gf-delivery-report-container" id="gf-delivery-report-', 'guardify-pro') . md5($phone) . __('">
                 <p style="text-align:center;padding:1rem;color:#999;">লোড হচ্ছে...</p>
             </div>
-        </div>';
+        </div>', 'guardify-pro');
 
         $html .= '</div></div></div>';
         return $html;
@@ -1008,25 +1008,25 @@ class Guardify_Incomplete_Orders {
 
         $phone = isset($_POST['phone']) ? sanitize_text_field($_POST['phone']) : '';
         if (empty($phone)) {
-            wp_send_json_error('ফোন নম্বর আবশ্যক');
+            wp_send_json_error(__('ফোন নম্বর আবশ্যক', 'guardify-pro'));
         }
 
         $normalized = $this->normalize_phone($phone);
         if (!$this->validate_phone($normalized)) {
-            wp_send_json_error('অবৈধ ফোন নম্বর');
+            wp_send_json_error(__('অবৈধ ফোন নম্বর', 'guardify-pro'));
         }
 
         // Try to get delivery data from Guardify Engine API
         $api = new Guardify_API();
         if (!$api->is_connected()) {
-            wp_send_json_success('<p style="text-align:center;color:#999;">API সংযুক্ত নয়</p>');
+            wp_send_json_success(__('<p style="text-align:center;color:#999;">API সংযুক্ত নয়</p>', 'guardify-pro'));
             return;
         }
 
         $result = $api->get('/api/v1/courier/summary?phone=' . urlencode($phone));
 
         if (empty($result) || isset($result['error'])) {
-            wp_send_json_success('<p style="text-align:center;color:#999;">কোনো ডেলিভারি ডেটা পাওয়া যায়নি</p>');
+            wp_send_json_success(__('<p style="text-align:center;color:#999;">কোনো ডেলিভারি ডেটা পাওয়া যায়নি</p>', 'guardify-pro'));
             return;
         }
 
@@ -1040,7 +1040,7 @@ class Guardify_Incomplete_Orders {
      */
     private function render_delivery_data($details) {
         if (empty($details['Summaries'])) {
-            return '<p style="text-align:center;color:#999;">কোনো ডেলিভারি রেকর্ড নেই</p>';
+            return __('<p style="text-align:center;color:#999;">কোনো ডেলিভারি রেকর্ড নেই</p>', 'guardify-pro');
         }
 
         $totalParcels = $totalDelivered = $totalReturned = 0;
@@ -1052,9 +1052,9 @@ class Guardify_Incomplete_Orders {
 
         $success_rate = $totalParcels > 0 ? round(($totalDelivered / $totalParcels) * 100, 1) : 0;
 
-        $html = '<table class="gf-report-orders-table"><thead><tr>
+        $html = __('<table class="gf-report-orders-table"><thead><tr>
             <th>কুরিয়ার</th><th>মোট</th><th>ডেলিভারড</th><th>রিটার্ন</th><th>সাফল্য</th>
-        </tr></thead><tbody>';
+        </tr></thead><tbody>', 'guardify-pro');
 
         foreach ($details['Summaries'] as $service => $summary) {
             $total     = intval($summary['Total Parcels'] ?? $summary['Total Delivery'] ?? 0);
@@ -1071,8 +1071,8 @@ class Guardify_Incomplete_Orders {
             </tr>';
         }
 
-        $html .= '<tr style="font-weight:600;border-top:2px solid #e5e7eb;">
-            <td>মোট</td><td>' . $totalParcels . '</td>
+        $html .= __('<tr style="font-weight:600;border-top:2px solid #e5e7eb;">
+            <td>মোট</td><td>', 'guardify-pro') . $totalParcels . '</td>
             <td style="color:#16a34a;">' . $totalDelivered . '</td>
             <td style="color:#dc2626;">' . $totalReturned . '</td>
             <td>' . $success_rate . '%</td>
@@ -1092,7 +1092,18 @@ class Guardify_Incomplete_Orders {
             return;
         }
 
+        // This script is emitted from inside a PHP string rather than written as literal
+        // markup, so its strings are concatenated in rather than handed over in a GF_I18N
+        // object — opening a PHP tag inside a PHP string produces nothing useful.
+        $gf_load_error = wp_json_encode(
+            '<p style="text-align:center;color:#999;">'
+            . esc_html__('ডেটা লোড করা যায়নি', 'guardify-pro')
+            . '</p>'
+        );
+
         echo '<script>
+var GF_I18N = { s2f40e26d: ' . $gf_load_error . ' };
+
         jQuery(document).ready(function($) {
             window.gf_report = {
                 nonce: "' . wp_create_nonce('guardify_report_nonce') . '",
@@ -1117,7 +1128,7 @@ class Guardify_Incomplete_Orders {
                             nonce: gf_report.nonce,
                             phone: phone
                         }, function(r) {
-                            $container.html(r.success ? r.data : "<p style=\'text-align:center;color:#999;\'>ডেটা লোড করা যায়নি</p>");
+                            $container.html(r.success ? r.data : GF_I18N.s2f40e26d);
                         });
                     }
                 }
